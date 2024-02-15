@@ -12,10 +12,10 @@ const client = new DynamoDBClient();
 const {
   validateEmployeeDetails,
   validateUpdateEmployeeDetails,
-} = require("../../validator/validateRequest");
+} = require("../validator/validateRequest");
 const {
   updateEmployeeAllowedFields,
-} = require("../../validator/validateFields");
+} = require("../validator/validateFields");
 const {
   httpStatusCodes,
   httpStatusMessages,

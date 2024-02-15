@@ -16,10 +16,10 @@ const {
 } = require("../../environment/appconfig");
 const {
   validateUpdateAssignmentDetails,
-} = require("../../validator/validateRequest");
+} = require("../validator/validateRequest");
 const {
   updateAssignmentAllowedFields,
-} = require("../../validator/validateFields");
+} = require("../validator/validateFields");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
