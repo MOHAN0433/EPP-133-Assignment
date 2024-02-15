@@ -14,12 +14,12 @@ const {
   httpStatusCodes,
   httpStatusMessages,
 } = require("../../environment/appconfig");
-const {
-  validateUpdateAssignmentDetails,
-} = require("../validator/validateRequest");
-const {
-  updateAssignmentAllowedFields,
-} = require("../validator/validateFields");
+// const {
+//   validateUpdateAssignmentDetails,
+// } = require("../validator/validateRequest");
+// const {
+//   updateAssignmentAllowedFields,
+// } = require("../validator/validateFields");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
@@ -54,26 +54,16 @@ const updateAssignment = async (event) => {
 
     requestBody.updatedDateTime = formattedDate;
 
-    const objKeys = Object.keys(requestBody).filter((key) => updateAssignmentAllowedFields.includes(key));
-    console.log(`Employee with objKeys ${objKeys} `);
-    const validationResponse = validateUpdateAssignmentDetails(requestBody);
-    console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
+    // const objKeys = Object.keys(requestBody).filter((key) => updateAssignmentAllowedFields.includes(key));
+    // console.log(`Employee with objKeys ${objKeys} `);
+    // const validationResponse = validateUpdateAssignmentDetails(requestBody);
+    // console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
 
-    if (!validationResponse.validation) {
-      console.log(validationResponse.validationMessage);
-      response.statusCode = 400;
-      response.body = JSON.stringify({
-        message: validationResponse.validationMessage,
-      });
-      return response;
-    }
-
-    // const officeEmailAddressExists = await isEmailNotEmployeeIdExists(requestBody.officeEmailAddress, employeeId);
-    // if (officeEmailAddressExists) {
-    //   console.log("officeEmailAddress already exists.");
+    // if (!validationResponse.validation) {
+    //   console.log(validationResponse.validationMessage);
     //   response.statusCode = 400;
     //   response.body = JSON.stringify({
-    //     message: "officeEmailAddress already exists.",
+    //     message: validationResponse.validationMessage,
     //   });
     //   return response;
     // }
@@ -81,6 +71,52 @@ const updateAssignment = async (event) => {
     let onsite = "No"; // Default value
     if (requestBody.branchOffice === "San Antonio, USA") {
       onsite = "Yes";
+    }
+    if (
+      requestBody.branchOffice === null ||
+      !["San Antonio, USA", "Bangalore, INDIA"].includes(
+        requestBody.branchOffice
+      )
+    ) {
+      throw new Error("Incorrect BranchOffice");
+    }
+    if (
+      requestBody.billableResource === null ||
+      !["Yes", "No"].includes(requestBody.billableResource)
+    ) {
+      throw new Error("billableResource should be either 'Yes' or 'No'!");
+    }
+
+    if (
+      requestBody.designation === null ||
+      ![
+        "Software Engineer Trainee",
+        "Software Engineer",
+        "Senior software Engineer",
+        "Testing Engineer Trainee",
+        "Testing Engineer",
+        "Senior Testing Engineer",
+        "Tech Lead",
+        "Testing Lead",
+        "Manager",
+        "Project Manager",
+        "Senior Manager",
+        "Analyst",
+        "Senior Analyst",
+        "Architect",
+        "Senior Architect",
+        "Solution Architect",
+        "Scrum Master",
+        "Data Engineer",
+      ].includes(requestBody.designation)
+    ) {
+      throw new Error("Incorrect Designation!");
+    }
+    if (
+      requestBody.department === null ||
+      !["IT", "Non- IT", "Sales"].includes(requestBody.department)
+    ) {
+      throw new Error("Incorrect Department!");
     }
 
     const params = {
