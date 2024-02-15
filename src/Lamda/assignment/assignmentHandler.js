@@ -11,7 +11,7 @@ const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
 const createAssignment = async (event) => {
-  console.log("Create employee details");
+  console.log("Create Assignment details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
     const requestBody = JSON.parse(event.body);
