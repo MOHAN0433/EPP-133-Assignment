@@ -17,7 +17,9 @@ const httpStatusCodes = {
     SUCCESSFULLY_CREATED_ASSIGNMENT_DETAILS : "Successfully created Assignment details.",
     FAILED_TO_CREATE_ASSIGNMENT_DETAILS : "Failed to create Assignment details.",
     SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS: "Successfully updated Assignment details.",
-    FAILED_TO_UPDATED_EMPLOYEE_DETAILS: "Failed to update Assignment details."
+    FAILED_TO_UPDATED_EMPLOYEE_DETAILS: "Failed to update Assignment details.",
+    SUCCESSFULLY_RETRIEVED_ASSIGNMENTS_FOR_EMPLOYEE: "Assignment details retrieved.",
+    ASSIGNMENTS_NOT_FOUND_FOR_EMPLOYEE: "assignments not found."
   };
   
   module.exports = {

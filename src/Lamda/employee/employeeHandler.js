@@ -1,10 +1,25 @@
-const { DynamoDBClient, PutItemCommand, UpdateItemCommand, DeleteItemCommand, GetItemCommand, ScanCommand } = require("@aws-sdk/client-dynamodb");
+const {
+  DynamoDBClient,
+  PutItemCommand,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  GetItemCommand,
+  ScanCommand,
+} = require("@aws-sdk/client-dynamodb");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
-// const { validateEmployeeDetails, validateUpdateEmployeeDetails } = require("../../validator/validateRequest");
-// const { updateEmployeeAllowedFields } = require("../../validator/validateFields");
-const { httpStatusCodes, httpStatusMessages } = require("../../environment/appconfig");
+const {
+  validateEmployeeDetails,
+  validateUpdateEmployeeDetails,
+} = require("../../validator/validateRequest");
+const {
+  updateEmployeeAllowedFields,
+} = require("../../validator/validateFields");
+const {
+  httpStatusCodes,
+  httpStatusMessages,
+} = require("../../environment/appconfig");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss"); //formating date
 
@@ -73,7 +88,10 @@ const createEmployee = async (event) => {
     };
     const createResult = await client.send(new PutItemCommand(params));
 
-    const requiredAssignmentFields = ["designation", "branchOffice"];
+    const requiredAssignmentFields = [
+      "designation",
+      "branchOffice",
+    ];
     if (!requiredAssignmentFields.every((field) => requestBody[field])) {
       throw new Error("Required Assignment Fields are missing.");
     }
@@ -83,68 +101,58 @@ const createEmployee = async (event) => {
     if (requestBody.branchOffice === "San Antonio, USA") {
       onsite = "Yes";
     }
-    if (requestBody.branchOffice === null || !["San Antonio, USA", "Bangalore, INDIA"].includes(requestBody.branchOffice)) {
+    if (
+      requestBody.branchOffice === null ||
+      !["San Antonio, USA", "Bangalore, INDIA"].includes(
+        requestBody.branchOffice
+      )
+    ) {
       throw new Error("Incorrect BranchOffice");
     }
-    if (
-      requestBody.designation === null ||
-      ![
-        "Software Engineer Trainee",
-        "Software Engineer",
-        "Senior Software Engineer",
-        "Testing Engineer Trainee",
-        "Testing Engineer",
-        "Senior Testing Engineer",
-        "Tech Lead",
-        "Testing Lead",
-        "Manager",
-        "Project Manager",
-        "Senior Manager",
-        "Analyst",
-        "Senior Analyst",
-        "Architect",
-        "Senior Architect",
-        "Solution Architect",
-        "Scrum Master",
-        "Data Engineer",
-      ].includes(requestBody.designation)
-    ) {
+    if (requestBody.designation === null || !["Software Engineer Trainee", "Software Engineer", "Senior Software Engineer", 
+                                             "Testing Engineer Trainee", "Testing Engineer", "Senior Testing Engineer", 
+                                             "Tech Lead", "Testing Lead", "Manager", "Project Manager", "Senior Manager", 
+                                             "Analyst", "Senior Analyst", "Architect", "Senior Architect", "Solution Architect", 
+                                             "Scrum Master", "Data Engineer"].includes(
+    requestBody.designation)
+    ) { 
       throw new Error("Incorrect Designation!");
     }
 
     const highestSerialNumber1 = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber1);
-    const nextSerialNumber1 = highestSerialNumber !== null ? parseInt(highestSerialNumber1) + 1 : 1;
-    async function getHighestSerialNumber() {
-      const params = {
-        TableName: process.env.ASSIGNMENTS_TABLE,
-        ProjectionExpression: "assignmentId",
-        Limit: 100, // Increase the limit to retrieve more items for sorting
-      };
-
-      try {
-        const result = await client.send(new ScanCommand(params));
-
-        // Sort the items in descending order based on assignmentId
-        const sortedItems = result.Items.sort((a, b) => {
-          return parseInt(b.assignmentId.N) - parseInt(a.assignmentId.N);
-        });
-
-        console.log("Sorted Items:", sortedItems); // Log the sorted items
-
-        if (sortedItems.length === 0) {
-          return 0; // If no records found, return null
-        } else {
-          const highestAssignmentId = parseInt(sortedItems[0].assignmentId.N);
-          console.log("Highest Assignment ID:", highestAssignmentId);
-          return highestAssignmentId;
+    const nextSerialNumber1 =
+      highestSerialNumber !== null ? parseInt(highestSerialNumber1) + 1 : 1;
+      async function getHighestSerialNumber() {
+        const params = {
+          TableName: process.env.ASSIGNMENTS_TABLE,
+          ProjectionExpression: "assignmentId",
+          Limit: 100, // Increase the limit to retrieve more items for sorting
+        };
+      
+        try {
+          const result = await client.send(new ScanCommand(params));
+          
+          // Sort the items in descending order based on assignmentId
+          const sortedItems = result.Items.sort((a, b) => {
+            return parseInt(b.assignmentId.N) - parseInt(a.assignmentId.N);
+          });
+      
+          console.log("Sorted Items:", sortedItems); // Log the sorted items
+      
+          if (sortedItems.length === 0) {
+            return 0; // If no records found, return null
+          } else {
+            const highestAssignmentId = parseInt(sortedItems[0].assignmentId.N);
+            console.log("Highest Assignment ID:", highestAssignmentId);
+            return highestAssignmentId;
+          }
+        } catch (error) {
+          console.error("Error retrieving highest serial number:", error);
+          throw error; // Propagate the error up the call stack
         }
-      } catch (error) {
-        console.error("Error retrieving highest serial number:", error);
-        throw error; // Propagate the error up the call stack
       }
-    }
-
+      
     const assignmentParams = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
@@ -163,7 +171,6 @@ const createEmployee = async (event) => {
     };
 
     const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
-
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
       createResult,
@@ -189,7 +196,9 @@ const updateEmployee = async (event) => {
     console.log("Request Body:", requestBody);
     const currentDate = Date.now();
     const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
-    const employeeId = event.pathParameters ? event.pathParameters.employeeId : null;
+    const employeeId = event.pathParameters
+      ? event.pathParameters.employeeId
+      : null;
     if (!employeeId) {
       console.log("Employee Id is required");
       throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
@@ -211,10 +220,14 @@ const updateEmployee = async (event) => {
 
     requestBody.updatedDateTime = formattedDate;
 
-    const objKeys = Object.keys(requestBody).filter((key) => updateEmployeeAllowedFields.includes(key));
+    const objKeys = Object.keys(requestBody).filter((key) =>
+      updateEmployeeAllowedFields.includes(key)
+    );
     console.log(`Employee with objKeys ${objKeys} `);
     const validationResponse = validateUpdateEmployeeDetails(requestBody);
-    console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
+    console.log(
+      `valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `
+    );
 
     if (!validationResponse.validation) {
       console.log(validationResponse.validationMessage);
@@ -225,7 +238,10 @@ const updateEmployee = async (event) => {
       return response;
     }
 
-    const officeEmailAddressExists = await isEmailNotEmployeeIdExists(requestBody.officeEmailAddress, employeeId);
+    const officeEmailAddressExists = await isEmailNotEmployeeIdExists(
+      requestBody.officeEmailAddress,
+      employeeId
+    );
     if (officeEmailAddressExists) {
       console.log("officeEmailAddress already exists.");
       response.statusCode = 400;
@@ -238,7 +254,9 @@ const updateEmployee = async (event) => {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Key: marshall({ employeeId }),
-      UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`).join(", ")}`,
+      UpdateExpression: `SET ${objKeys
+        .map((_, index) => `#key${index} = :value${index}`)
+        .join(", ")}`,
       ExpressionAttributeNames: objKeys.reduce(
         (acc, key, index) => ({
           ...acc,
@@ -313,7 +331,9 @@ const getEmployee = async (event) => {
 const getAllEmployees = async () => {
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
-    const { Items } = await client.send(new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })); // Getting table name from the servetless.yml and setting to the TableName
+    const { Items } = await client.send(
+      new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
+    ); // Getting table name from the servetless.yml and setting to the TableName
 
     if (Items.length === 0) {
       // If there is no employee details found
@@ -322,7 +342,9 @@ const getAllEmployees = async () => {
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       }); // Setting error message
     } else {
-      const sortedItems = Items.sort((a, b) => a.employeeId.S.localeCompare(b.employeeId.S));
+      const sortedItems = Items.sort((a, b) =>
+        a.employeeId.S.localeCompare(b.employeeId.S)
+      );
 
       // Map and set "password" field to null
       const employeesData = sortedItems.map((item) => {
