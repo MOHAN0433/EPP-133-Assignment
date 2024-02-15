@@ -3,7 +3,7 @@ const { marshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
 const { httpStatusCodes, httpStatusMessages } = require("../../environment/appconfig");
-const { updateAssignmentAllowedFields } = require("../../validator/validateFields");
+//const { updateAssignmentAllowedFields } = require("../../validator/validateFields");
 // const {
 //   validateUpdateAssignmentDetails,
 // } = require("../../validator/validateRequest");
@@ -211,23 +211,13 @@ const updateAssignment = async (event) => {
     const objKeys = Object.keys(requestBody).filter((key) => updateAssignmentAllowedFields.includes(key));
     console.log(`Employee with objKeys ${objKeys} `);
     //const validationResponse = validateUpdateAssignmentDetails(requestBody);
-    console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
+    // console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
 
-    if (!validationResponse.validation) {
-      console.log(validationResponse.validationMessage);
-      response.statusCode = 400;
-      response.body = JSON.stringify({
-        message: validationResponse.validationMessage,
-      });
-      return response;
-    }
-
-    // const officeEmailAddressExists = await isEmailNotEmployeeIdExists(requestBody.officeEmailAddress, employeeId);
-    // if (officeEmailAddressExists) {
-    //   console.log("officeEmailAddress already exists.");
+    // if (!validationResponse.validation) {
+    //   console.log(validationResponse.validationMessage);
     //   response.statusCode = 400;
     //   response.body = JSON.stringify({
-    //     message: "officeEmailAddress already exists.",
+    //     message: validationResponse.validationMessage,
     //   });
     //   return response;
     // }
