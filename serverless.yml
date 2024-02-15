@@ -1,0 +1,123 @@
+service: employee-portal-service
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: us-east-1
+  environment:
+    EMPLOYEE_TABLE: ${self:custom.employeeTableName}
+    ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:GetItem"
+        - "dynamodb:Scan"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Query"
+      Resource:
+        - !GetAtt EmployeeTable.Arn
+        - !GetAtt AssignmentTable.Arn
+custom:
+  employeeTableName: employee-Details-${self:provider.stage}
+  assignmentTableName: assignment-Details-${self:provider.stage}
+plugins:
+  - serverless-iam-roles-per-function
+functions:
+  employeeGet:
+    handler: src/Lamda/employee/employeeHandler.getEmployee
+    name: employeeGet
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: employee/get/{employeeId}
+          method: GET
+  employeeCreate:
+    handler: src/Lamda/employee/employeeHandler.createEmployee
+    name: employeeCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: employee
+          method: POST
+  employeeUpdate:
+    handler: src/Lamda/employee/employeeHandler.updateEmployee
+    name: employeeUpdate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: employee/{employeeId}
+          method: PUT
+  employeeGetAll:
+    handler: src/Lamda/employee/employeeHandler.getAllEmployees
+    name: employeeGetAll
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: employees
+          method: GET
+  assignmentCreate:
+    handler: src/Lamda/assignment/assignmentHandler.createAssignment
+    name: assignmentCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: assignment
+          method: POST
+  assignmentUpdate:
+    handler: src/Lamda/assignment/assignmentHandler.updateAssignment
+    name: assignmentUpdate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: assignment/{employeeId}
+          method: PUT
+resources:
+  Resources:
+    EmployeeTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.employeeTableName}
+        AttributeDefinitions:
+          - AttributeName: employeeId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: employeeId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    AssignmentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.assignmentTableName}
+        AttributeDefinitions:
+          - AttributeName: assignmentId
+            AttributeType: N
+          - AttributeName: employeeId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: assignmentId
+            KeyType: HASH
+          - AttributeName: employeeId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: EmployeeIndex
+            KeySchema:
+              - AttributeName: employeeId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
