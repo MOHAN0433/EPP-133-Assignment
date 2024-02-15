@@ -2,8 +2,8 @@ const { DynamoDBClient, PutItemCommand, UpdateItemCommand, DeleteItemCommand, Ge
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
-//const { validateEmployeeDetails, validateUpdateEmployeeDetails } = require("../../validator/validateRequest");
-const { updateEmployeeAllowedFields } = require("../../validator/validateFields");
+// const { validateEmployeeDetails, validateUpdateEmployeeDetails } = require("../../validator/validateRequest");
+// const { updateEmployeeAllowedFields } = require("../../validator/validateFields");
 const { httpStatusCodes, httpStatusMessages } = require("../../environment/appconfig");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss"); //formating date
