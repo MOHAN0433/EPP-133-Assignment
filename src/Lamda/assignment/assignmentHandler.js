@@ -162,11 +162,6 @@ const updateAssignment = async (event) => {
   return response;
 };
 
-module.exports = {
-  createAssignment,
-  updateAssignment,
-};
-
 const createAssignment = async (event) => {
   console.log("Create employee details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
