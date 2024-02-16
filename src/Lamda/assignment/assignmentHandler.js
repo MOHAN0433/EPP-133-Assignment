@@ -155,7 +155,7 @@ const updateAssignment = async (event) => {
     response.statusCode = 400;
     response.body = JSON.stringify({
       message: httpStatusMessages.FAILED_TO_UPDATED_EMPLOYEE_DETAILS,
-      employeeId: requestBody.employeeId, // If you want to include employeeId in the response
+      //employeeId: requestBody.employeeId, // If you want to include employeeId in the response
       errorMsg: e.message,
     });
   }
