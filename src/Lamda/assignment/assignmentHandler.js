@@ -46,6 +46,11 @@ const updateAssignment = async (event) => {
 
       updateExpression = updateExpression.slice(0, -1); // Remove the trailing comma
 
+      // Filter out undefined values from expressionAttributeValues
+      const filteredExpressionAttributeValues = Object.entries(expressionAttributeValues)
+          .filter(([_, value]) => typeof value !== 'undefined')
+          .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
       const params = {
           TableName: process.env.ASSIGNMENTS_TABLE,
           Key: marshall({ 
@@ -60,7 +65,7 @@ const updateAssignment = async (event) => {
               }),
               {}
           ),
-          ExpressionAttributeValues: marshall(expressionAttributeValues, { removeUndefinedValues: true }), // Remove undefined values
+          ExpressionAttributeValues: marshall(filteredExpressionAttributeValues), // Use filteredExpressionAttributeValues
           ":updatedDateTime": { S: formattedDate }, // Assuming updatedDateTime is a string
       };
 
