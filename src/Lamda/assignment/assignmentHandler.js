@@ -32,19 +32,19 @@ const updateAssignment = async (event) => {
       throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
     }
 
-    const getItemParams = {
-      TableName: process.env.EMPLOYEE_TABLE,
-      Key: marshall({ employeeId }),
-    };
-    const { Item } = await client.send(new GetItemCommand(getItemParams));
-    if (!Item) {
-      console.log(`Employee with employeeId ${employeeId} not found`);
-      response.statusCode = 404;
-      response.body = JSON.stringify({
-        message: `Employee with employeeId ${employeeId} not found`,
-      });
-      return response;
-    }
+    // const getItemParams = {
+    //   TableName: process.env.EMPLOYEE_TABLE,
+    //   Key: marshall({ requestBody.employeeId }),
+    // };
+    // const { Item } = await client.send(new GetItemCommand(getItemParams));
+    // if (!Item) {
+    //   console.log(`Employee with employeeId ${employeeId} not found`);
+    //   response.statusCode = 404;
+    //   response.body = JSON.stringify({
+    //     message: `Employee with employeeId ${employeeId} not found`,
+    //   });
+    //   return response;
+    // }
 
     requestBody.updatedDateTime = formattedDate;
 
