@@ -22,61 +22,115 @@ const updateAssignment = async (event) => {
   const response = { statusCode: httpStatusCodes.SUCCESS };
 
   try {
-      const requestBody = JSON.parse(event.body);
-      console.log("Request Body:", requestBody);
-      const currentDate = Date.now();
-      const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
-      const employeeId = event.pathParameters ? event.pathParameters.employeeId : null;
-      if (!employeeId) {
-          console.log("Employee Id is required");
-          throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
-      }
+    const requestBody = JSON.parse(event.body);
+    console.log("Request Body:", requestBody);
+    const currentDate = Date.now();
+    const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
+    const assignmentId = event.pathParameters ? event.pathParameters.assignmentId : null;
+    if (!assignmentId) {
+      console.log("Assignment Id is required");
+      throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
+    }
 
-      // Construct update expression and attribute values dynamically
-      let updateExpression = 'SET';
-      const expressionAttributeValues = {};
-      const keys = Object.keys(requestBody).filter(key => key !== 'assignmentId'); // Exclude assignmentId
-
-      keys.forEach((key, index) => {
-          if (typeof requestBody[key] !== 'undefined') { // Check if value is defined
-              updateExpression += ` #key${index} = :value${index},`;
-              expressionAttributeValues[`:value${index}`] = requestBody[key];
-          }
-      });
-
-      updateExpression = updateExpression.slice(0, -1); // Remove the trailing comma
-
-      // Filter out undefined values from expressionAttributeValues
-      const filteredExpressionAttributeValues = Object.entries(expressionAttributeValues)
-          .filter(([_, value]) => typeof value !== 'undefined')
-          .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
-
-      const params = {
-          TableName: process.env.ASSIGNMENTS_TABLE,
-          Key: marshall({ 
-              assignmentId: { N: event.pathParameters.assignmentId }, // Assuming assignmentId is provided in the path parameters
-              employeeId: { S: employeeId } // Assuming employeeId is a string
-          }),
-          UpdateExpression: updateExpression,
-          ExpressionAttributeNames: keys.reduce(
-              (acc, key, index) => ({
-                  ...acc,
-                  [`#key${index}`]: key,
-              }),
-              {}
-          ),
-          ExpressionAttributeValues: marshall(filteredExpressionAttributeValues), // Use filteredExpressionAttributeValues
-          ":updatedDateTime": { S: formattedDate }, // Assuming updatedDateTime is a string
-      };
-
-      const updateResult = await client.send(new UpdateItemCommand(params));
-      console.log("Successfully updated Assignment details.");
+    const getItemParams = {
+      TableName: process.env.EMPLOYEE_TABLE,
+      Key: marshall({ employeeId }),
+    };
+    const { Item } = await client.send(new GetItemCommand(getItemParams));
+    if (!Item) {
+      console.log(`Employee with employeeId ${employeeId} not found`);
+      response.statusCode = 404;
       response.body = JSON.stringify({
-          message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
-          employeeId: employeeId,
+        message: `Employee with employeeId ${employeeId} not found`,
       });
+      return response;
+    }
 
-      return response; // Ensure to return the response
+    requestBody.updatedDateTime = formattedDate;
+
+    let onsite = "No"; // Default value
+    if (requestBody.branchOffice === "San Antonio, USA") {
+      onsite = "Yes";
+    }
+    if (
+      requestBody.branchOffice === null ||
+      !["San Antonio, USA", "Bangalore, INDIA"].includes(
+        requestBody.branchOffice
+      )
+    ) {
+      throw new Error("Incorrect BranchOffice");
+    }
+    if (
+      requestBody.billableResource === null ||
+      !["Yes", "No"].includes(requestBody.billableResource)
+    ) {
+      throw new Error("billableResource should be either 'Yes' or 'No'!");
+    }
+
+    if (
+      requestBody.designation === null ||
+      ![
+        "Software Engineer Trainee",
+        "Software Engineer",
+        "Senior software Engineer",
+        "Testing Engineer Trainee",
+        "Testing Engineer",
+        "Senior Testing Engineer",
+        "Tech Lead",
+        "Testing Lead",
+        "Manager",
+        "Project Manager",
+        "Senior Manager",
+        "Analyst",
+        "Senior Analyst",
+        "Architect",
+        "Senior Architect",
+        "Solution Architect",
+        "Scrum Master",
+        "Data Engineer",
+      ].includes(requestBody.designation)
+    ) {
+      throw new Error("Incorrect Designation!");
+    }
+    if (
+      requestBody.department === null ||
+      !["IT", "Non- IT", "Sales"].includes(requestBody.department)
+    ) {
+      throw new Error("Incorrect Department!");
+    }
+
+    const keys = Object.keys(requestBody);
+
+    const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      Key: marshall({ assignmentId }),
+      UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
+      ExpressionAttributeNames: keys.reduce(
+        (acc, key, index) => ({
+          ...acc,
+          [`#key${index}`]: key,
+        }),
+        {}
+      ),
+      ExpressionAttributeValues: marshall(
+        keys.reduce(
+          (acc, key, index) => ({
+            ...acc,
+            [`:value${index}`]: requestBody[key],
+          }),
+          {}
+        )
+      ),
+      ":updatedDateTime": requestBody.updatedDateTime,
+      ":onsite": onsite,
+    };
+
+    const updateResult = await client.send(new UpdateItemCommand(params));
+    console.log("Successfully updated Assignment details.");
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
+      employeeId: employeeId,
+    });
   } catch (e) {
     console.error(e);
     response.statusCode = 400;
