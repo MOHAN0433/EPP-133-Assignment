@@ -109,7 +109,10 @@ const updateAssignment = async (event) => {
 
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: marshall({ employeeId: { S: employeeId } }),
+      Key: marshall({ 
+        assignmentId: { N: assignmentId }, // Assuming assignmentId is a number
+        employeeId: { S: employeeId } // Assuming employeeId is a string
+      }),
       UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
       ExpressionAttributeNames: keys.reduce(
         (acc, key, index) => ({
@@ -130,7 +133,7 @@ const updateAssignment = async (event) => {
       ":updatedDateTime": requestBody.updatedDateTime,
       ":onsite": onsite,
     };
-
+    
     const updateResult = await client.send(new UpdateItemCommand(params));
     console.log("Successfully updated Assignment details.");
     response.body = JSON.stringify({
