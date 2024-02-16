@@ -98,7 +98,6 @@ const updateAssignment = async (event) => {
     ) {
       throw new Error("Incorrect Department!");
     }
-
     const keys = Object.keys(requestBody);
 
     const params = {
