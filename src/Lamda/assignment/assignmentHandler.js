@@ -37,7 +37,11 @@ const updateAssignment = async (event) => {
       console.log("Employee Id is required");
       throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
     }
-
+    const assignmentId = event.pathParameters ? event.pathParameters.assignmentId : null;
+    if (!assignmentId) {
+      console.log("AssignmentId Id is required");
+      throw new Error(httpStatusMessages.ASSIGNMENT_ID_REQUIRED);
+    }
     const getItemParams = {
       TableName: process.env.EMPLOYEE_TABLE,
       Key: marshall({ employeeId }),
