@@ -31,36 +31,26 @@ const updateAssignment = async (event) => {
           console.log("Employee Id is required");
           throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
       }
-      const getItemParams = {
-          TableName: process.env.EMPLOYEE_TABLE,
-          Key: marshall({ employeeId }),
-      };
-      const { Item } = await client.send(new GetItemCommand(getItemParams));
-      if (!Item) {
-          console.log(`Employee with employeeId ${employeeId} not found`);
-          response.statusCode = 404;
-          response.body = JSON.stringify({
-              message: `Employee with employeeId ${employeeId} not found`,
-          });
-          return response;
-      }
 
-      requestBody.updatedDateTime = formattedDate;
+      // Construct update expression and attribute values dynamically
+      let updateExpression = 'SET';
+      const expressionAttributeValues = {};
+      const keys = Object.keys(requestBody).filter(key => key !== 'assignmentId'); // Exclude assignmentId
 
-      let onsite = "No"; // Default value
-      if (requestBody.branchOffice === "San Antonio, USA") {
-          onsite = "Yes";
-      }
+      keys.forEach((key, index) => {
+          updateExpression += ` #key${index} = :value${index},`;
+          expressionAttributeValues[`:value${index}`] = requestBody[key];
+      });
 
-      const keys = Object.keys(requestBody);
+      updateExpression = updateExpression.slice(0, -1); // Remove the trailing comma
 
       const params = {
           TableName: process.env.ASSIGNMENTS_TABLE,
           Key: marshall({ 
-              assignmentId: parseInt(requestBody.assignmentId), // Assuming assignmentId is a number
-              employeeId: employeeId // Assuming employeeId is a string
+              assignmentId: { N: event.pathParameters.assignmentId }, // Assuming assignmentId is provided in the path parameters
+              employeeId: { S: employeeId } // Assuming employeeId is a string
           }),
-          UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
+          UpdateExpression: updateExpression,
           ExpressionAttributeNames: keys.reduce(
               (acc, key, index) => ({
                   ...acc,
@@ -68,17 +58,8 @@ const updateAssignment = async (event) => {
               }),
               {}
           ),
-          ExpressionAttributeValues: marshall(
-              keys.reduce(
-                  (acc, key, index) => ({
-                      ...acc,
-                      [`:value${index}`]: requestBody[key],
-                  }),
-                  {}
-              )
-          ),
-          ":updatedDateTime": { S: requestBody.updatedDateTime }, // Assuming updatedDateTime is a string
-          ":onsite": { S: onsite }, // Assuming onsite is a string
+          ExpressionAttributeValues: marshall(expressionAttributeValues),
+          ":updatedDateTime": { S: formattedDate }, // Assuming updatedDateTime is a string
       };
 
       const updateResult = await client.send(new UpdateItemCommand(params));
