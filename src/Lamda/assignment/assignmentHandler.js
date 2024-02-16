@@ -137,7 +137,7 @@ const updateAssignment = async (event) => {
       ":updatedDateTime": requestBody.updatedDateTime,
       ":onsite": onsite,
     };
-    
+     
     const updateResult = await client.send(new UpdateItemCommand(params));
     console.log("Successfully updated Assignment details.");
     response.body = JSON.stringify({
