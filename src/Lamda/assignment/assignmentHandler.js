@@ -38,8 +38,10 @@ const updateAssignment = async (event) => {
       const keys = Object.keys(requestBody).filter(key => key !== 'assignmentId'); // Exclude assignmentId
 
       keys.forEach((key, index) => {
-          updateExpression += ` #key${index} = :value${index},`;
-          expressionAttributeValues[`:value${index}`] = requestBody[key];
+          if (typeof requestBody[key] !== 'undefined') { // Check if value is defined
+              updateExpression += ` #key${index} = :value${index},`;
+              expressionAttributeValues[`:value${index}`] = requestBody[key];
+          }
       });
 
       updateExpression = updateExpression.slice(0, -1); // Remove the trailing comma
@@ -58,7 +60,7 @@ const updateAssignment = async (event) => {
               }),
               {}
           ),
-          ExpressionAttributeValues: marshall(expressionAttributeValues),
+          ExpressionAttributeValues: marshall(expressionAttributeValues, { removeUndefinedValues: true }), // Remove undefined values
           ":updatedDateTime": { S: formattedDate }, // Assuming updatedDateTime is a string
       };
 
