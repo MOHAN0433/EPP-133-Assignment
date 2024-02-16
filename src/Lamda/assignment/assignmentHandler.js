@@ -14,12 +14,6 @@ const {
   httpStatusCodes,
   httpStatusMessages,
 } = require("../../environment/appconfig");
-// const {
-//   validateUpdateAssignmentDetails,
-// } = require("../validator/validateRequest");
-// const {
-//   updateAssignmentAllowedFields,
-// } = require("../validator/validateFields");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
@@ -36,11 +30,6 @@ const updateAssignment = async (event) => {
     if (!employeeId) {
       console.log("Employee Id is required");
       throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
-    }
-    const assignmentId = event.pathParameters ? event.pathParameters.assignmentId : null;
-    if (!assignmentId) {
-      console.log("AssignmentId Id is required");
-      throw new Error(httpStatusMessages.ASSIGNMENT_ID_REQUIRED);
     }
     const getItemParams = {
       TableName: process.env.EMPLOYEE_TABLE,
@@ -62,59 +51,13 @@ const updateAssignment = async (event) => {
     if (requestBody.branchOffice === "San Antonio, USA") {
       onsite = "Yes";
     }
-    if (
-      requestBody.branchOffice === null ||
-      !["San Antonio, USA", "Bangalore, INDIA"].includes(
-        requestBody.branchOffice
-      )
-    ) {
-      throw new Error("Incorrect BranchOffice");
-    }
-    if (
-      requestBody.billableResource === null ||
-      !["Yes", "No"].includes(requestBody.billableResource)
-    ) {
-      throw new Error("billableResource should be either 'Yes' or 'No'!");
-    }
-
-    if (
-      requestBody.designation === null ||
-      ![
-        "Software Engineer Trainee",
-        "Software Engineer",
-        "Senior software Engineer",
-        "Testing Engineer Trainee",
-        "Testing Engineer",
-        "Senior Testing Engineer",
-        "Tech Lead",
-        "Testing Lead",
-        "Manager",
-        "Project Manager",
-        "Senior Manager",
-        "Analyst",
-        "Senior Analyst",
-        "Architect",
-        "Senior Architect",
-        "Solution Architect",
-        "Scrum Master",
-        "Data Engineer",
-      ].includes(requestBody.designation)
-    ) {
-      throw new Error("Incorrect Designation!");
-    }
-    if (
-      requestBody.department === null ||
-      !["IT", "Non- IT", "Sales"].includes(requestBody.department)
-    ) {
-      throw new Error("Incorrect Department!");
-    }
 
     const keys = Object.keys(requestBody);
 
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
       Key: marshall({ 
-        assignmentId: { N: assignmentId }, // Assuming assignmentId is a number
+        assignmentId: { N: requestBody.assignmentId.toString() }, // Assuming assignmentId is a number
         employeeId: { S: employeeId } // Assuming employeeId is a string
       }),
       UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
@@ -134,8 +77,8 @@ const updateAssignment = async (event) => {
           {}
         )
       ),
-      ":updatedDateTime": requestBody.updatedDateTime,
-      ":onsite": onsite,
+      ":updatedDateTime": { S: requestBody.updatedDateTime }, // Assuming updatedDateTime is a string
+      ":onsite": { S: onsite }, // Assuming onsite is a string
     };
      
     const updateResult = await client.send(new UpdateItemCommand(params));
@@ -144,6 +87,9 @@ const updateAssignment = async (event) => {
       message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
       employeeId: employeeId,
     });
+
+    return response; // Ensure to return the response
+
   } catch (e) {
     console.error(e);
     response.statusCode = 400;
