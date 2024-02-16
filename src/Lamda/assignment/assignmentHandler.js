@@ -54,20 +54,6 @@ const updateAssignment = async (event) => {
 
     requestBody.updatedDateTime = formattedDate;
 
-    // const objKeys = Object.keys(requestBody).filter((key) => updateAssignmentAllowedFields.includes(key));
-    // console.log(`Employee with objKeys ${objKeys} `);
-    // const validationResponse = validateUpdateAssignmentDetails(requestBody);
-    // console.log(`valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `);
-
-    // if (!validationResponse.validation) {
-    //   console.log(validationResponse.validationMessage);
-    //   response.statusCode = 400;
-    //   response.body = JSON.stringify({
-    //     message: validationResponse.validationMessage,
-    //   });
-    //   return response;
-    // }
-
     let onsite = "No"; // Default value
     if (requestBody.branchOffice === "San Antonio, USA") {
       onsite = "Yes";
@@ -124,8 +110,8 @@ const updateAssignment = async (event) => {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Key: marshall({ employeeId }),
-      UpdateExpression: `SET ${objKeys.map((_, index) => `#key${index} = :value${index}`).join(", ")}`,
-      ExpressionAttributeNames: objKeys.reduce(
+      UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
+      ExpressionAttributeNames: keys.reduce(
         (acc, key, index) => ({
           ...acc,
           [`#key${index}`]: key,
@@ -133,7 +119,7 @@ const updateAssignment = async (event) => {
         {}
       ),
       ExpressionAttributeValues: marshall(
-        objKeys.reduce(
+        keys.reduce(
           (acc, key, index) => ({
             ...acc,
             [`:value${index}`]: requestBody[key],
@@ -143,7 +129,6 @@ const updateAssignment = async (event) => {
       ),
       ":updatedDateTime": requestBody.updatedDateTime,
       ":onsite": onsite,
-
     };
 
     const updateResult = await client.send(new UpdateItemCommand(params));
@@ -156,8 +141,7 @@ const updateAssignment = async (event) => {
     console.error(e);
     response.statusCode = 400;
     response.body = JSON.stringify({
-      message: httpStatusMessages.FAILED_TO_UPDATED_EMPLOYEE_DETAILS,
-      //employeeId: requestBody.employeeId, // If you want to include employeeId in the response
+      message: httpStatusMessages.FAILED_TO_UPDATED_ASSIGNMENT_DETAILS,
       errorMsg: e.message,
     });
   }
