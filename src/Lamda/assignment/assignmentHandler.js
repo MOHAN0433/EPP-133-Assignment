@@ -108,7 +108,7 @@ const updateAssignment = async (event) => {
     const keys = Object.keys(requestBody);
 
     const params = {
-      TableName: process.env.EMPLOYEE_TABLE,
+      TableName: process.env.ASSIGNMENTS_TABLE,
       Key: marshall({ employeeId }),
       UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
       ExpressionAttributeNames: keys.reduce(
@@ -141,7 +141,7 @@ const updateAssignment = async (event) => {
     console.error(e);
     response.statusCode = 400;
     response.body = JSON.stringify({
-      message: httpStatusMessages.FAILED_TO_UPDATED_ASSIGNMENT_DETAILS,
+      message: httpStatusMessages.FAILED_TO_UPDATED_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
