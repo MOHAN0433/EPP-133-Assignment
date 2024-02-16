@@ -119,6 +119,8 @@ const updateAssignment = async (event) => {
       throw new Error("Incorrect Department!");
     }
 
+    const keys = Object.keys(requestBody);
+
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Key: marshall({ employeeId }),
