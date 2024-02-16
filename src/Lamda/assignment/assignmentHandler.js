@@ -109,7 +109,7 @@ const updateAssignment = async (event) => {
 
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: marshall({ employeeId }),
+      Key: marshall({ employeeId: { S: employeeId } }),
       UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
       ExpressionAttributeNames: keys.reduce(
         (acc, key, index) => ({
