@@ -22,74 +22,73 @@ const updateAssignment = async (event) => {
   const response = { statusCode: httpStatusCodes.SUCCESS };
 
   try {
-    const requestBody = JSON.parse(event.body);
-    console.log("Request Body:", requestBody);
-    const currentDate = Date.now();
-    const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
-    const employeeId = event.pathParameters ? event.pathParameters.employeeId : null;
-    if (!employeeId) {
-      console.log("Employee Id is required");
-      throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
-    }
-    const getItemParams = {
-      TableName: process.env.EMPLOYEE_TABLE,
-      Key: marshall({ employeeId }),
-    };
-    const { Item } = await client.send(new GetItemCommand(getItemParams));
-    if (!Item) {
-      console.log(`Employee with employeeId ${employeeId} not found`);
-      response.statusCode = 404;
-      response.body = JSON.stringify({
-        message: `Employee with employeeId ${employeeId} not found`,
-      });
-      return response;
-    }
+      const requestBody = JSON.parse(event.body);
+      console.log("Request Body:", requestBody);
+      const currentDate = Date.now();
+      const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
+      const employeeId = event.pathParameters ? event.pathParameters.employeeId : null;
+      if (!employeeId) {
+          console.log("Employee Id is required");
+          throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
+      }
+      const getItemParams = {
+          TableName: process.env.EMPLOYEE_TABLE,
+          Key: marshall({ employeeId }),
+      };
+      const { Item } = await client.send(new GetItemCommand(getItemParams));
+      if (!Item) {
+          console.log(`Employee with employeeId ${employeeId} not found`);
+          response.statusCode = 404;
+          response.body = JSON.stringify({
+              message: `Employee with employeeId ${employeeId} not found`,
+          });
+          return response;
+      }
 
-    requestBody.updatedDateTime = formattedDate;
+      requestBody.updatedDateTime = formattedDate;
 
-    let onsite = "No"; // Default value
-    if (requestBody.branchOffice === "San Antonio, USA") {
-      onsite = "Yes";
-    }
+      let onsite = "No"; // Default value
+      if (requestBody.branchOffice === "San Antonio, USA") {
+          onsite = "Yes";
+      }
 
-    const keys = Object.keys(requestBody);
+      const keys = Object.keys(requestBody);
 
-    const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: marshall({ 
-        assignmentId: { N: requestBody.assignmentId.toString() }, // Assuming assignmentId is a number
-        employeeId: { S: employeeId } // Assuming employeeId is a string
-      }),
-      UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
-      ExpressionAttributeNames: keys.reduce(
-        (acc, key, index) => ({
-          ...acc,
-          [`#key${index}`]: key,
-        }),
-        {}
-      ),
-      ExpressionAttributeValues: marshall(
-        keys.reduce(
-          (acc, key, index) => ({
-            ...acc,
-            [`:value${index}`]: requestBody[key],
+      const params = {
+          TableName: process.env.ASSIGNMENTS_TABLE,
+          Key: marshall({ 
+              assignmentId: parseInt(requestBody.assignmentId), // Assuming assignmentId is a number
+              employeeId: employeeId // Assuming employeeId is a string
           }),
-          {}
-        )
-      ),
-      ":updatedDateTime": { S: requestBody.updatedDateTime }, // Assuming updatedDateTime is a string
-      ":onsite": { S: onsite }, // Assuming onsite is a string
-    };
-     
-    const updateResult = await client.send(new UpdateItemCommand(params));
-    console.log("Successfully updated Assignment details.");
-    response.body = JSON.stringify({
-      message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
-      employeeId: employeeId,
-    });
+          UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
+          ExpressionAttributeNames: keys.reduce(
+              (acc, key, index) => ({
+                  ...acc,
+                  [`#key${index}`]: key,
+              }),
+              {}
+          ),
+          ExpressionAttributeValues: marshall(
+              keys.reduce(
+                  (acc, key, index) => ({
+                      ...acc,
+                      [`:value${index}`]: requestBody[key],
+                  }),
+                  {}
+              )
+          ),
+          ":updatedDateTime": { S: requestBody.updatedDateTime }, // Assuming updatedDateTime is a string
+          ":onsite": { S: onsite }, // Assuming onsite is a string
+      };
 
-    return response; // Ensure to return the response
+      const updateResult = await client.send(new UpdateItemCommand(params));
+      console.log("Successfully updated Assignment details.");
+      response.body = JSON.stringify({
+          message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
+          employeeId: employeeId,
+      });
 
+      return response; // Ensure to return the response
   } catch (e) {
     console.error(e);
     response.statusCode = 400;
