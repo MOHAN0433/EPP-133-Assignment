@@ -32,20 +32,6 @@ const updateAssignment = async (event) => {
       throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
     }
 
-    // const getItemParams = {
-    //   TableName: process.env.EMPLOYEE_TABLE,
-    //   Key: marshall({ requestBody.employeeId }),
-    // };
-    // const { Item } = await client.send(new GetItemCommand(getItemParams));
-    // if (!Item) {
-    //   console.log(`Employee with employeeId ${employeeId} not found`);
-    //   response.statusCode = 404;
-    //   response.body = JSON.stringify({
-    //     message: `Employee with employeeId ${employeeId} not found`,
-    //   });
-    //   return response;
-    // }
-
     requestBody.updatedDateTime = formattedDate;
 
     let onsite = "No"; // Default value
@@ -99,10 +85,11 @@ const updateAssignment = async (event) => {
     ) {
       throw new Error("Incorrect Department!");
     }
-    const keys = Object.keys(requestBody)
+    const keys = Object.keys(requestBody);
+    const key = marshall({ assignmentId }); // Creating Key for DynamoDB operation
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: marshall({ assignmentId }),
+      Key: key,
       UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
       ExpressionAttributeNames: keys.reduce(
         (acc, key, index) => ({
