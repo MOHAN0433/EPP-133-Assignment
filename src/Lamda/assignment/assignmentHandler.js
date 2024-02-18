@@ -115,7 +115,7 @@ const updateAssignment = async (event) => {
     console.log("Successfully updated Assignment details.");
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
-      employeeId: employeeId,
+      //employeeId: employeeId,
     });
   } catch (e) {
     console.error(e);
