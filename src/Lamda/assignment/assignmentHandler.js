@@ -86,7 +86,7 @@ const updateAssignment = async (event) => {
       throw new Error("Incorrect Department!");
     }
     const keys = Object.keys(requestBody);
-    const key = marshall({ assignmentId }); // Creating Key for DynamoDB operation
+    const key = marshall({ assignmentId: parseInt(assignmentId) }); // Adjusted key creation
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
       Key: key,
