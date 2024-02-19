@@ -50,6 +50,54 @@ const updateAssignment = async (event) => {
       requestBody.coreTechnology = requestBody.coreTechnology.map(value => ({ name: value }));
     }
 
+    if (
+      requestBody.branchOffice === null ||
+      !["San Antonio, USA", "Bangalore, INDIA"].includes(
+        requestBody.branchOffice
+      )
+    ) {
+      throw new Error("Incorrect BranchOffice");
+    }
+    
+    if (
+      requestBody.billableResource === null ||
+      !["Yes", "No"].includes(requestBody.billableResource)
+    ) {
+      throw new Error("billableResource should be either 'Yes' or 'No'!");
+    }
+
+    if (
+      requestBody.designation === null ||
+      ![
+        "Software Engineer Trainee",
+        "Software Engineer",
+        "Senior software Engineer",
+        "Testing Engineer Trainee",
+        "Testing Engineer",
+        "Senior Testing Engineer",
+        "Tech Lead",
+        "Testing Lead",
+        "Manager",
+        "Project Manager",
+        "Senior Manager",
+        "Analyst",
+        "Senior Analyst",
+        "Architect",
+        "Senior Architect",
+        "Solution Architect",
+        "Scrum Master",
+        "Data Engineer",
+      ].includes(requestBody.designation)
+    ) {
+      throw new Error("Incorrect Designation!");
+    }
+    if (
+      requestBody.department === null ||
+      !["IT", "Non- IT", "Sales"].includes(requestBody.department)
+    ) {
+      throw new Error("Incorrect Department!");
+    }
+
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
 
