@@ -43,13 +43,14 @@ const updateAssignment = async (event) => {
     };
 
     // Convert coreTechnology field to an array of objects if it's a single value
-    if (typeof requestBody.coreTechnology === 'string') {
-      requestBody.coreTechnology = [{ name: requestBody.coreTechnology }];
-    } else if (Array.isArray(requestBody.coreTechnology)) {
-      // Convert coreTechnology field to an array of objects if it's an array of values
-      requestBody.coreTechnology = requestBody.coreTechnology.map(value => ({ name: value }));
-    }
+    // if (typeof requestBody.coreTechnology === 'string') {
+    //   requestBody.coreTechnology = [{ name: requestBody.coreTechnology }];
+    // } else if (Array.isArray(requestBody.coreTechnology)) {
+    //   // Convert coreTechnology field to an array of objects if it's an array of values
+    //   requestBody.coreTechnology = requestBody.coreTechnology.map(value => ({ name: value }));
+    // }
 
+    if (requestBody.branchOffice !== undefined) {
     if (
       requestBody.branchOffice === null ||
       !["San Antonio, USA", "Bangalore, INDIA"].includes(
@@ -58,38 +59,43 @@ const updateAssignment = async (event) => {
     ) {
       throw new Error("Incorrect BranchOffice");
     }
+  }
 
-    if (
-      requestBody.designation === null ||
-      ![
-        "Software Engineer Trainee",
-        "Software Engineer",
-        "Senior software Engineer",
-        "Testing Engineer Trainee",
-        "Testing Engineer",
-        "Senior Testing Engineer",
-        "Tech Lead",
-        "Testing Lead",
-        "Manager",
-        "Project Manager",
-        "Senior Manager",
-        "Analyst",
-        "Senior Analyst",
-        "Architect",
-        "Senior Architect",
-        "Solution Architect",
-        "Scrum Master",
-        "Data Engineer",
-      ].includes(requestBody.designation)
-    ) {
-      throw new Error("Incorrect Designation!");
+    if (requestBody.designation !== undefined) {
+      if (
+        requestBody.designation === null ||
+        ![
+          "Software Engineer Trainee",
+          "Software Engineer",
+          "Senior software Engineer",
+          "Testing Engineer Trainee",
+          "Testing Engineer",
+          "Senior Testing Engineer",
+          "Tech Lead",
+          "Testing Lead",
+          "Manager",
+          "Project Manager",
+          "Senior Manager",
+          "Analyst",
+          "Senior Analyst",
+          "Architect",
+          "Senior Architect",
+          "Solution Architect",
+          "Scrum Master",
+          "Data Engineer",
+        ].includes(requestBody.designation)
+      ) {
+        throw new Error("Incorrect Designation!");
+      }
     }
+    if (requestBody.department !== undefined) {
     if (
       requestBody.department === null ||
       !["IT", "Non- IT", "Sales"].includes(requestBody.department)
     ) {
       throw new Error("Incorrect Department!");
     }
+  }
 
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
