@@ -36,17 +36,20 @@ const updateAssignment = async (event) => {
       throw new Error('employeeId is required');
     }
 
+    // Allowed fields to be updated
+    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
+
     // Initialize update expression and attribute values
     let updateExpression = 'SET updatedDateTime = :updatedDateTime';
     const expressionAttributeValues = {
       ':updatedDateTime': formattedDate
     };
 
-    // Construct update expression and attribute values for each field in the request body
-    Object.keys(requestBody).forEach((key) => {
-      if (key !== 'employeeId') { // Exclude employeeId from update
-        updateExpression += `, ${key} = :${key}`;
-        expressionAttributeValues[`:${key}`] = requestBody[key];
+    // Construct update expression and attribute values for each allowed field
+    allowedFields.forEach((field) => {
+      if (requestBody[field] !== undefined) {
+        updateExpression += `, ${field} = :${field}`;
+        expressionAttributeValues[`:${field}`] = requestBody[field];
       }
     });
 
