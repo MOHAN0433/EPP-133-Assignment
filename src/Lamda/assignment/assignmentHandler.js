@@ -30,7 +30,7 @@ const updateAssignment = async (event) => {
       throw new Error('Invalid assignmentId provided');
     }
 
-    const employeeId = requestBody.employeeId;
+    const employeeId = event.pathParameters.employeeId;
 
     if (!employeeId) {
       throw new Error('employeeId is required');
