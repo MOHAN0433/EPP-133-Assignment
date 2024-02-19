@@ -18,104 +18,50 @@ const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
 const updateAssignment = async (event) => {
-  console.log("Update Assignment details");
-  const response = { statusCode: httpStatusCodes.SUCCESS };
+  const response = { statusCode: 200 }; // Assuming success by default
 
   try {
     const requestBody = JSON.parse(event.body);
-    console.log("Request Body:", requestBody);
     const currentDate = Date.now();
     const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
-    const assignmentId = event.pathParameters ? event.pathParameters.assignmentId : null;
-    if (!assignmentId) {
-      console.log("Assignment Id is required");
-      throw new Error(httpStatusMessages.EMPLOYEE_ID_REQUIRED);
+    const assignmentId = parseInt(event.pathParameters.assignmentId); // Assuming assignmentId is a number
+
+    if (isNaN(assignmentId)) {
+      throw new Error('Invalid assignmentId provided');
     }
 
-    requestBody.updatedDateTime = formattedDate;
+    const employeeId = requestBody.employeeId;
 
-    let onsite = "No"; // Default value
-    if (requestBody.branchOffice === "San Antonio, USA") {
-      onsite = "Yes";
-    }
-    if (
-      requestBody.branchOffice === null ||
-      !["San Antonio, USA", "Bangalore, INDIA"].includes(
-        requestBody.branchOffice
-      )
-    ) {
-      throw new Error("Incorrect BranchOffice");
-    }
-    
-    if (
-      requestBody.billableResource === null ||
-      !["Yes", "No"].includes(requestBody.billableResource)
-    ) {
-      throw new Error("billableResource should be either 'Yes' or 'No'!");
+    if (!employeeId) {
+      throw new Error('employeeId is required');
     }
 
-    if (
-      requestBody.designation === null ||
-      ![
-        "Software Engineer Trainee",
-        "Software Engineer",
-        "Senior software Engineer",
-        "Testing Engineer Trainee",
-        "Testing Engineer",
-        "Senior Testing Engineer",
-        "Tech Lead",
-        "Testing Lead",
-        "Manager",
-        "Project Manager",
-        "Senior Manager",
-        "Analyst",
-        "Senior Analyst",
-        "Architect",
-        "Senior Architect",
-        "Solution Architect",
-        "Scrum Master",
-        "Data Engineer",
-      ].includes(requestBody.designation)
-    ) {
-      throw new Error("Incorrect Designation!");
-    }
-    if (
-      requestBody.department === null ||
-      !["IT", "Non- IT", "Sales"].includes(requestBody.department)
-    ) {
-      throw new Error("Incorrect Department!");
-    }
-    const keys = Object.keys(requestBody);
-    const key = marshall({ assignmentId: parseInt(assignmentId) }); // Adjusted key creation
+    // Construct the key for the DynamoDB update
+    const key = marshall({
+      assignmentId: assignmentId, // Assuming assignmentId is a number
+      employeeId: employeeId // Assuming employeeId is provided in the path parameters
+    });
+
+    // Construct update expression and attribute values
+    const updateExpression = 'SET updatedDateTime = :updatedDateTime, branchOffice = :branchOffice'; // Adjust as per your requirements
+    const expressionAttributeValues = marshall({
+      ':updatedDateTime': formattedDate,
+      ':branchOffice': requestBody.branchOffice // Assuming branchOffice is a field in the request body
+    });
+
+    // Construct update parameters
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
       Key: key,
-      UpdateExpression: `SET ${keys.map((key, index) => `#key${index} = :value${index}`).join(", ")}`,
-      ExpressionAttributeNames: keys.reduce(
-        (acc, key, index) => ({
-          ...acc,
-          [`#key${index}`]: key,
-        }),
-        {}
-      ),
-      ExpressionAttributeValues: marshall(
-        keys.reduce(
-          (acc, key, index) => ({
-            ...acc,
-            [`:value${index}`]: requestBody[key],
-          }),
-          {}
-        )
-      ),
-      ":updatedDateTime": requestBody.updatedDateTime,
-      ":onsite": onsite,
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: expressionAttributeValues
     };
 
-    const updateResult = await client.send(new UpdateItemCommand(params));
-    console.log("Successfully updated Assignment details.");
+    // Execute the update operation
+    await client.send(new UpdateItemCommand(params));
+
     response.body = JSON.stringify({
-      message: httpStatusMessages.SUCCESSFULLY_UPDATED_EMPLOYEE_DETAILS,
-      //employeeId: employeeId,
+      message: 'Assignment updated successfully'
     });
   } catch (e) {
     console.error(e);

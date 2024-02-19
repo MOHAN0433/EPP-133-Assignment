@@ -7,6 +7,8 @@ provider:
   environment:
     EMPLOYEE_TABLE: ${self:custom.employeeTableName}
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
+    ASSETS_TABLE: ${self:custom.assetTableName}
+
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -19,9 +21,11 @@ provider:
       Resource:
         - !GetAtt EmployeeTable.Arn
         - !GetAtt AssignmentTable.Arn
+        - !GetAtt AssetTable.Arn
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
+  assetTableName: asset-Details-${self:provider.stage}
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -79,6 +83,15 @@ functions:
       - http:
           path: assignment/{employeeId}
           method: GET
+  assetCreate:
+    handler: src/Lamda/asset/assetHandler.createAsset
+    name: assetCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: asset
+          method: POST
   assignmentUpdate:
     handler: src/Lamda/assignment/assignmentHandler.updateAssignment
     name: assignmentUpdate
@@ -110,9 +123,36 @@ resources:
         AttributeDefinitions:
           - AttributeName: assignmentId
             AttributeType: N
+          - AttributeName: employeeId
+            AttributeType: S
         KeySchema:
           - AttributeName: assignmentId
             KeyType: HASH
+          - AttributeName: employeeId
+            KeyType: RANGE
         ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: EmployeeIndex
+            KeySchema:
+              - AttributeName: employeeId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
+    AssetTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.assetTableName}
+        AttributeDefinitions:
+          - AttributeName: assetId
+            AttributeType: N
+        KeySchema:
+          - AttributeName: assetId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
