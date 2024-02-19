@@ -30,23 +30,30 @@ const updateAssignment = async (event) => {
       throw new Error('Invalid assignmentId provided');
     }
 
-    const employeeId = event.pathParameters.employeeId;
+    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
 
     if (!employeeId) {
       throw new Error('employeeId is required');
     }
 
-    // Construct the key for the DynamoDB update
-    const key = marshall({
-      assignmentId: assignmentId, // Assuming assignmentId is a number
-      employeeId: employeeId // Assuming employeeId is provided in the path parameters
+    // Initialize update expression and attribute values
+    let updateExpression = 'SET updatedDateTime = :updatedDateTime';
+    const expressionAttributeValues = {
+      ':updatedDateTime': formattedDate
+    };
+
+    // Construct update expression and attribute values for each field in the request body
+    Object.keys(requestBody).forEach((key) => {
+      if (key !== 'employeeId') { // Exclude employeeId from update
+        updateExpression += `, ${key} = :${key}`;
+        expressionAttributeValues[`:${key}`] = requestBody[key];
+      }
     });
 
-    // Construct update expression and attribute values
-    const updateExpression = 'SET updatedDateTime = :updatedDateTime, branchOffice = :branchOffice'; // Adjust as per your requirements
-    const expressionAttributeValues = marshall({
-      ':updatedDateTime': formattedDate,
-      ':branchOffice': requestBody.branchOffice // Assuming branchOffice is a field in the request body
+    // Construct the key for the DynamoDB update
+    const key = marshall({
+      assignmentId: assignmentId,
+      employeeId: employeeId
     });
 
     // Construct update parameters
@@ -54,7 +61,7 @@ const updateAssignment = async (event) => {
       TableName: process.env.ASSIGNMENTS_TABLE,
       Key: key,
       UpdateExpression: updateExpression,
-      ExpressionAttributeValues: expressionAttributeValues
+      ExpressionAttributeValues: marshall(expressionAttributeValues)
     };
 
     // Execute the update operation
