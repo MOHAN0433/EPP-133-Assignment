@@ -36,14 +36,27 @@ const updateAssignment = async (event) => {
       throw new Error('employeeId is required');
     }
 
-    // Allowed fields to be updated
-    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
-
     // Initialize update expression and attribute values
     let updateExpression = 'SET updatedDateTime = :updatedDateTime';
     const expressionAttributeValues = {
       ':updatedDateTime': formattedDate
     };
+
+    // Add logic to determine the value of the onsite field based on the branchOffice value
+    if (requestBody.branchOffice === "San Antonio, USA") {
+      requestBody.onsite = "Yes";
+    } else if (requestBody.branchOffice === "Bangalore, INDIA") {
+      requestBody.onsite = "No";
+    }
+
+    if (requestBody.assignedProject == null || requestBody.assignedProject === undefined) {
+      requestBody.billableResource = "No";
+    } else {
+      requestBody.billableResource = "Yes";
+    }
+
+    // Allowed fields to be updated
+    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', "assignedProject", 'reportingManager', 'billableResource', 'onsite', "Allocation"];
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((field) => {
