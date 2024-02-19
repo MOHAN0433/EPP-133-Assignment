@@ -1,5 +1,4 @@
 service: employee-portal-service
-
 provider:
   name: aws
   runtime: nodejs18.x
@@ -8,8 +7,6 @@ provider:
   environment:
     EMPLOYEE_TABLE: ${self:custom.employeeTableName}
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
-    ASSETS_TABLE: ${self:custom.assetTableName}
-
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -22,16 +19,11 @@ provider:
       Resource:
         - !GetAtt EmployeeTable.Arn
         - !GetAtt AssignmentTable.Arn
-        - !GetAtt AssetTable.Arn
-
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
-  assetTableName: asset-Details-${self:provider.stage}
-
 plugins:
   - serverless-iam-roles-per-function
-
 functions:
   employeeGet:
     handler: src/Lamda/employee/employeeHandler.getEmployee
@@ -40,9 +32,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: employees/get/{employeeId}
+          path: employee/get/{employeeId}
           method: GET
-
   employeeCreate:
     handler: src/Lamda/employee/employeeHandler.createEmployee
     name: employeeCreate
@@ -50,9 +41,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: employees
+          path: employee
           method: POST
-
   employeeUpdate:
     handler: src/Lamda/employee/employeeHandler.updateEmployee
     name: employeeUpdate
@@ -60,9 +50,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: employees/{employeeId}
+          path: employee/{employeeId}
           method: PUT
-
   employeeGetAll:
     handler: src/Lamda/employee/employeeHandler.getAllEmployees
     name: employeeGetAll
@@ -72,7 +61,6 @@ functions:
       - http:
           path: employees
           method: GET
-
   assignmentCreate:
     handler: src/Lamda/assignment/assignmentHandler.createAssignment
     name: assignmentCreate
@@ -80,9 +68,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: assignments
+          path: assignment
           method: POST
-
   assignmentGet:
     handler: src/Lamda/assignment/assignmentHandler.getAssignmentByEmployeeId
     name: assignmentGet
@@ -90,19 +77,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: assignments/{employeeId}
+          path: assignment/{employeeId}
           method: GET
-
-  assetCreate:
-    handler: src/Lamda/asset/assetHandler.createAsset
-    name: assetCreate
-    memorySize: 128
-    timeout: 120
-    events:
-      - http:
-          path: assets
-          method: POST
-
   assignmentUpdate:
     handler: src/Lamda/assignment/assignmentHandler.updateAssignment
     name: assignmentUpdate
@@ -110,9 +86,8 @@ functions:
     timeout: 120
     events:
       - http:
-          path: assignments/{assignmentId}
+          path: assignment/{assignmentId}
           method: PUT
-
 resources:
   Resources:
     EmployeeTable:
@@ -128,7 +103,6 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-
     AssignmentTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -144,29 +118,5 @@ resources:
           - AttributeName: employeeId
             KeyType: RANGE
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        GlobalSecondaryIndexes:
-          - IndexName: EmployeeIndex
-            KeySchema:
-              - AttributeName: employeeId
-                KeyType: HASH
-            Projection:
-              ProjectionType: ALL
-            ProvisionedThroughput:
-              ReadCapacityUnits: 1
-              WriteCapacityUnits: 1
-
-    AssetTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:custom.assetTableName}
-        AttributeDefinitions:
-          - AttributeName: assetId
-            AttributeType: N
-        KeySchema:
-          - AttributeName: assetId
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
