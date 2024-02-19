@@ -97,6 +97,19 @@ const updateAssignment = async (event) => {
     }
   }
 
+  // Add logic to determine the value of the onsite field based on the branchOffice value
+  if (requestBody.branchOffice === "San Antonio, USA") {
+    requestBody.onsite = "Yes";
+  } else if (requestBody.branchOffice === "Bangalore, INDIA") {
+    requestBody.onsite = "No";
+  }
+
+  if (!requestBody.assignedProject || requestBody.assignedProject.trim() === '') {
+    requestBody.billableResource = "No";
+  } else {
+    requestBody.billableResource = "Yes";
+  }
+
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
 
