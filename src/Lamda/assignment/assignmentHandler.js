@@ -42,21 +42,16 @@ const updateAssignment = async (event) => {
       ':updatedDateTime': formattedDate
     };
 
-    // Add logic to determine the value of the onsite field based on the branchOffice value
-    if (requestBody.branchOffice === "San Antonio, USA") {
-      requestBody.onsite = "Yes";
-    } else if (requestBody.branchOffice === "Bangalore, INDIA") {
-      requestBody.onsite = "No";
-    }
-
-    if (requestBody.assignedProject == null || requestBody.assignedProject === undefined) {
-      requestBody.billableResource = "No";
-    } else {
-      requestBody.billableResource = "Yes";
+    // Convert coreTechnology field to an array of objects if it's a single value
+    if (typeof requestBody.coreTechnology === 'string') {
+      requestBody.coreTechnology = [{ name: requestBody.coreTechnology }];
+    } else if (Array.isArray(requestBody.coreTechnology)) {
+      // Convert coreTechnology field to an array of objects if it's an array of values
+      requestBody.coreTechnology = requestBody.coreTechnology.map(value => ({ name: value }));
     }
 
     // Allowed fields to be updated
-    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', "assignedProject", 'reportingManager', 'billableResource', 'onsite', "Allocation"];
+    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((field) => {
