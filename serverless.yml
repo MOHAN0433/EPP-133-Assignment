@@ -3,7 +3,7 @@ provider:
   name: aws
   runtime: nodejs18.x
   stage: dev
-  region: ap-south-1
+  region: us-east-1
   environment:
     EMPLOYEE_TABLE: ${self:custom.employeeTableName}
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
@@ -77,7 +77,7 @@ functions:
     timeout: 120
     events:
       - http:
-          path: assignment/{employeeId}
+          path: assignment/employee/{employeeId}  # Modify path to ensure uniqueness
           method: GET
   assignmentUpdate:
     handler: src/Lamda/assignment/assignmentHandler.updateAssignment
