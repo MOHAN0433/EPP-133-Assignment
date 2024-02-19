@@ -111,7 +111,7 @@ const updateAssignment = async (event) => {
   }
 
     // Allowed fields to be updated
-    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource'];
+    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject"];
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((field) => {
