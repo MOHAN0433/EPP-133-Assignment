@@ -58,13 +58,6 @@ const updateAssignment = async (event) => {
     ) {
       throw new Error("Incorrect BranchOffice");
     }
-    
-    if (
-      requestBody.billableResource === null ||
-      !["Yes", "No"].includes(requestBody.billableResource)
-    ) {
-      throw new Error("billableResource should be either 'Yes' or 'No'!");
-    }
 
     if (
       requestBody.designation === null ||
