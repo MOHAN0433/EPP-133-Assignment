@@ -43,6 +43,7 @@ const updateAssignment = async (event) => {
     };
 
     // Convert coreTechnology field to an array of objects if it's a single value
+    //or else call the designation table and set the id
     // if (typeof requestBody.coreTechnology === 'string') {
     //   requestBody.coreTechnology = [{ name: requestBody.coreTechnology }];
     // } else if (Array.isArray(requestBody.coreTechnology)) {
@@ -111,7 +112,7 @@ const updateAssignment = async (event) => {
   }
 
     // Allowed fields to be updated
-    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject"];
+    const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((field) => {
