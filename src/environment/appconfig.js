@@ -20,7 +20,10 @@ const httpStatusCodes = {
     FAILED_TO_UPDATED_EMPLOYEE_DETAILS: "Failed to update Assignment details.",
     SUCCESSFULLY_RETRIEVED_ASSIGNMENTS_FOR_EMPLOYEE: "Assignment details retrieved.",
     ASSIGNMENTS_NOT_FOUND_FOR_EMPLOYEE: "Assignments not found.",
-    ASSIGNMENT_ID_REQUIRED: "AssignmenId required."
+    ASSIGNMENT_ID_REQUIRED: "AssignmenId required.",
+    FAILED_TO_RETRIEVE_METADATA_DETAILS: "Failed to retrieve Metadata Details.",
+    SUCCESSFULLY_RETRIEVED_METADATA_DETAILS : "Successfully retrieved metadata.",
+    METADATA_DETAILS_NOT_FOUND : "Metadata details not found.",
   };
   
   module.exports = {
