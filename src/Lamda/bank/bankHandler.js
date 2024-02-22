@@ -16,6 +16,7 @@ const createBankDetails = async (event) => {
     // Retrieve onsite value based on employeeId
     const onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
     console.log("Onsite Status:", onsiteStatus);
+
     const getOnsiteStatus = async (employeeId) => {
         const params = {
             TableName: process.env.ASSIGNMENTS_TABLE,
@@ -37,6 +38,7 @@ const createBankDetails = async (event) => {
           throw error;
         }
       };
+    
 
     // If onsite status is true, perform validation for required fields
     if (onsiteStatus === 'Yes') {
