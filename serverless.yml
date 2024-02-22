@@ -92,14 +92,19 @@ functions:
           path: assignment/{assignmentId}/employee/{employeeId}
           method: PUT
   metadataGetAll:
-    handler: src/Lamda/metadata/metadataHandler.getAllMeatadatas
-    name: metadataGetAll
-    memorySize: 128
-    timeout: 120
-    events:
-      - http:
-          path: metadata/getAll
-          method: GET
+   handler: src/Lamda/metadata/metadataHandler.getAllMeatadatas
+   name: metadataGetAll
+   memorySize: 128
+   timeout: 120
+   events:
+    - http:
+        path: metadata/getAll
+        method: GET
+        request:
+          parameters:
+            querystrings:
+              filterConditions: true
+
 resources:
   Resources:
     EmployeeTable:
