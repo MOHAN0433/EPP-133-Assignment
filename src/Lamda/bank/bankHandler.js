@@ -6,11 +6,12 @@ const { httpStatusCodes, httpStatusMessages } = require("../../environment/appco
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
+const requestBody = JSON.parse(event.body);
 const createBankDetails = async (event) => {
   console.log("Create employee details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
-    const requestBody = JSON.parse(event.body);
+    //const requestBody = JSON.parse(event.body);
     console.log("Request Body:", requestBody);
 
     // Retrieve onsite value based on employeeId
@@ -112,7 +113,7 @@ const createBankDetails = async (event) => {
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
-        assignmentId: nextSerialNumber1,
+        bankId: nextSerialNumber1,
         employeeId: requestBody.employeeId,
         bankName: requestBody.bankName,
         bankAddress:requestBody.bankAddress,
