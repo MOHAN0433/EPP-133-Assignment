@@ -22,7 +22,7 @@ provider:
         - !GetAtt EmployeeTable.Arn
         - !GetAtt AssignmentTable.Arn
         - !GetAtt MetadataTable.Arn
-        - !GetAtt bankTable.Arn
+        - !GetAtt BankTable.Arn
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
