@@ -105,12 +105,12 @@ functions:
           method: GET
   bankCreate:
     handler: src/Lamda/bank/bankHandler.createBankDetails
-    name: assignmentCreate
+    name: bankCreate
     memorySize: 128
     timeout: 120
     events:
       - http:
-          path: assignment
+          path: bank
           method: POST
 
 resources:
