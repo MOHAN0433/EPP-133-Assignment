@@ -6,7 +6,7 @@ const { httpStatusCodes, httpStatusMessages } = require("../../environment/appco
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
-const createBankDetail = async (event) => {
+const createBankDetails = async (event) => {
   console.log("Create employee details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
@@ -168,5 +168,5 @@ const getOnsiteStatus = async (employeeId) => {
   };
 
 module.exports = {
-  createBankDetail,
+    createBankDetails,
 };
