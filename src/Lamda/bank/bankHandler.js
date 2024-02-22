@@ -150,6 +150,7 @@ const getOnsiteStatus = async (employeeId) => {
     const params = {
         TableName: process.env.ASSIGNMENTS_TABLE,
       Key: marshall({
+        assignmentId : requestBody.assignmentId,
         employeeId: employeeId,
       }),
     };
