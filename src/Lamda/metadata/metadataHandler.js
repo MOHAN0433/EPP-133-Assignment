@@ -38,9 +38,6 @@ const getAllMeatadatas = async () => {
       // Map and set "password" field to null
       const metadataList = sortedItems.map((item) => {
         const metadata = unmarshall(item);
-      //   if (employee.hasOwnProperty("password")) {
-      //     employee.password = null;
-      //   }
         return metadata;
       });
 

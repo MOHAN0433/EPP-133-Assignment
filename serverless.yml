@@ -8,6 +8,7 @@ provider:
     EMPLOYEE_TABLE: ${self:custom.employeeTableName}
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
     METADATA_TABLE: ${self:custom.metadataTableName}
+    BANK_TABLE: ${self:custom.bankTableName}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -21,10 +22,12 @@ provider:
         - !GetAtt EmployeeTable.Arn
         - !GetAtt AssignmentTable.Arn
         - !GetAtt MetadataTable.Arn
+        - !GetAtt bankTable.Arn
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
   metadataTableName: metadata
+  bankTableName: bank
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -100,6 +103,15 @@ functions:
       - http:
           path: metadata/getAll
           method: GET
+  bankCreate:
+    handler: src/Lamda/bank/bankHandler.createBankDetails
+    name: assignmentCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: assignment
+          method: POST
 
 resources:
   Resources:
@@ -146,3 +158,20 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    BankTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.bankTableName}
+        AttributeDefinitions:
+          - AttributeName: bankId
+            AttributeType: N
+          - AttributeName: employeeId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: bankId
+            KeyType: HASH
+          - AttributeName: employeeId
+            KeyType: RANGE
+        ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
