@@ -35,43 +35,42 @@ const {
 };
 
 const getAllMeatadatas = async (event) => {
-    const filterConditions = event.queryStringParameters || {}; // Extract filter conditions from query parameters
-    const response = { statusCode: httpStatusCodes.SUCCESS };
-    try {
-        const { Items } = await client.send(
-            new ScanCommand({ TableName: process.env.METADATA_TABLE })
-        );
+  const filterConditions = event.queryStringParameters || {}; // Extract filter conditions from query parameters
+  const response = { statusCode: httpStatusCodes.SUCCESS };
+  try {
+      const { Items } = await client.send(
+          new ScanCommand({ TableName: process.env.METADATA_TABLE })
+      );
 
-        if (Items.length === 0) {
-            response.statusCode = httpStatusCodes.NOT_FOUND;
-            response.body = JSON.stringify({
-                message: httpStatusMessages.METADATA_DETAILS_NOT_FOUND,
-            });
-        } else {
-            const sortedItems = Items.sort((a, b) =>
-                a.metadataId.N.localeCompare(b.metadataId.N)
-            );
+      if (Items.length === 0) {
+          response.statusCode = httpStatusCodes.NOT_FOUND;
+          response.body = JSON.stringify({
+              message: httpStatusMessages.METADATA_DETAILS_NOT_FOUND,
+          });
+      } else {
+          const sortedItems = Items.sort((a, b) =>
+              a.metadataId.N.localeCompare(b.metadataId.N)
+          );
 
-            const filteredItems = filterItems(sortedItems, filterConditions);
+          let filteredItems = sortedItems;
+          if (Object.keys(filterConditions).length > 0) {
+              filteredItems = filterItems(sortedItems, filterConditions);
+          }
 
-            const metadataList = filteredItems.map(item => unmarshall(item));
+          const metadataList = filteredItems.map(item => unmarshall(item));
 
-            response.body = JSON.stringify({
-                message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_METADATA_DETAILS,
-                data: metadataList,
-            });
-        }
-    } catch (e) {
-        console.error(e);
-        response.body = JSON.stringify({
-            statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
-            message: httpStatusMessages.FAILED_TO_RETRIEVE_METADATA_DETAILS,
-            errorMsg: e.message,
-        });
-    }
-    return response;
-};
-
-module.exports = {
-    getAllMeatadatas,
+          response.body = JSON.stringify({
+              message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_METADATA_DETAILS,
+              data: metadataList,
+          });
+      }
+  } catch (e) {
+      console.error(e);
+      response.body = JSON.stringify({
+          statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
+          message: httpStatusMessages.FAILED_TO_RETRIEVE_METADATA_DETAILS,
+          errorMsg: e.message,
+      });
+  }
+  return response;
 };
