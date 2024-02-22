@@ -14,7 +14,8 @@ const createBankDetails = async (event) => {
     console.log("Request Body:", requestBody);
 
     // Retrieve onsite value based on employeeId
-    const onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
+    let onsiteStatus = null;
+     onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
     console.log("Onsite Status:", onsiteStatus);
 
     const getOnsiteStatus = async (employeeId) => {
