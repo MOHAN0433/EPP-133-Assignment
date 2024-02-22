@@ -148,7 +148,7 @@ const createBankDetails = async (event) => {
 
 const getOnsiteStatus = async (employeeId) => {
     const params = {
-      TableName: process.env.ASSIGNMENT_TABLE,
+        TableName: process.env.ASSIGNMENTS_TABLE,
       Key: marshall({
         employeeId: employeeId,
       }),
