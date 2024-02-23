@@ -58,7 +58,7 @@ const createBankDetails = async (event) => {
 
     const highestSerialNumber1 = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber1);
-    const nextSerialNumber1 = highestSerialNumber !== null ? parseInt(highestSerialNumber1) + 1 : 1;
+    const nextSerialNumber1 = highestSerialNumber1 !== null ? parseInt(highestSerialNumber1) + 1 : 1;
     async function getHighestSerialNumber() {
       const params = {
         TableName: process.env.BANK_TABLE,
