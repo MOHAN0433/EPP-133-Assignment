@@ -62,7 +62,7 @@ const createBankDetails = async (event) => {
     async function getHighestSerialNumber() {
       const params = {
         TableName: process.env.BANK_TABLE,
-        ProjectionExpression: "assignmentId",
+        ProjectionExpression: "bankId",
         Limit: 100, // Increase the limit to retrieve more items for sorting
       };
 
