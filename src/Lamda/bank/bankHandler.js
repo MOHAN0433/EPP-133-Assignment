@@ -138,18 +138,18 @@ const createBankDetails = async (event) => {
       Item: marshall({
         bankId: nextSerialNumber1,
         employeeId: requestBody.employeeId,
-        bankName: requestBody.bankName,
-        bankAddress:requestBody.bankAddress,
+        bankName: requestBody.bankName || null,
+        bankAddress:requestBody.bankAddress || null,
         ifscCode: requestBody.ifscCode,
-        accountHolderName: requestBody.accountHolderName,
-        accountNumber: requestBody.accountNumber,
-        accountType: requestBody.accountType,
+        accountHolderName: requestBody.accountHolderName || null,
+        accountNumber: requestBody.accountNumber || null,
+        accountType: requestBody.accountType || null,
         //onsite: onsite,
-        branchAddress: requestBody.branchAddress,
-        routingNumber: requestBody.routingNumber,
-        accountHolderResidentialAddress : requestBody.accountHolderResidentialAddress,
+        branchAddress: requestBody.branchAddress || null,
+        routingNumber: requestBody.routingNumber || null,
+        accountHolderResidentialAddress : requestBody.accountHolderResidentialAddress || null,
         createdDateTime: formattedDate,
-        updatedDateTime: requestBody.updatedDateTime
+        updatedDateTime: requestBody.updatedDateTime || null
       }),
     };
 
