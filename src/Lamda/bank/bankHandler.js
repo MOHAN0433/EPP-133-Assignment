@@ -69,9 +69,9 @@ const createBankDetails = async (event) => {
       try {
         const result = await client.send(new ScanCommand(params));
 
-        // Sort the items in descending order based on assignmentId
+        // Sort the items in descending order based on bankId
         const sortedItems = result.Items.sort((a, b) => {
-          return parseInt(b.assignmentId.N) - parseInt(a.assignmentId.N);
+          return parseInt(b.bankId.N) - parseInt(a.bankId.N);
         });
 
         console.log("Sorted Items:", sortedItems); // Log the sorted items
@@ -79,9 +79,9 @@ const createBankDetails = async (event) => {
         if (sortedItems.length === 0) {
           return 0; // If no records found, return null
         } else {
-          const highestAssignmentId = parseInt(sortedItems[0].assignmentId.N);
-          console.log("Highest Assignment ID:", highestAssignmentId);
-          return highestAssignmentId;
+          const highestbankId = parseInt(sortedItems[0].assignmentId.N);
+          console.log("Highest bank ID:", highestbankId);
+          return highestbankId;
         }
       } catch (error) {
         console.error("Error retrieving highest serial number:", error);
