@@ -15,7 +15,7 @@ const createBankDetails = async (event) => {
 
     // Retrieve onsite value based on employeeId
     //let onsiteStatus = requestBody.onsite;
-    const onsiteStatus = await getOnsiteStatus(requestBody.assignmentId, requestBody);
+    const onsiteStatus = await getOnsiteStatus(parseInt(requestBody.assignmentId), requestBody.employeeId);
     console.log("Onsite Status:", onsiteStatus);
 
     // If onsite status is true, perform validation for required fields
@@ -166,27 +166,27 @@ const createBankDetails = async (event) => {
 //     }
 //   };
 
-const getOnsiteStatus = async (employeeId, requestBody) => {
-        const params = {
-            TableName: process.env.ASSIGNMENTS_TABLE,
-          Key: marshall({
-            assignmentId : requestBody.assignmentId,
-            employeeId: employeeId,
-          }),
-        };
-      
-        try {
-          const result = await client.send(new GetItemCommand(params));
-          if (!result.Item) {
-            throw new Error("Employee not found in ASSIGNMENT_TABLE.");
-          }
-          // Assuming onsite status is stored as a String attribute named 'onsite'
-          return result.Item.onsite.S;
-        } catch (error) {
-          console.error("Error retrieving employee onsite status:", error);
-          throw error;
-        }
-      };
+const getOnsiteStatus = async (assignmentId, employeeId) => {
+  const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      Key: marshall({
+          assignmentId: assignmentId,
+          employeeId: employeeId,
+      }),
+  };
+
+  try {
+      const result = await client.send(new GetItemCommand(params));
+      if (!result.Item) {
+          throw new Error("Employee not found in ASSIGNMENT_TABLE.");
+      }
+      // Assuming onsite status is stored as a String attribute named 'onsite'
+      return result.Item.onsite.S;
+  } catch (error) {
+      console.error("Error retrieving employee onsite status:", error);
+      throw error;
+  }
+};
 
 module.exports = {
     createBankDetails,
