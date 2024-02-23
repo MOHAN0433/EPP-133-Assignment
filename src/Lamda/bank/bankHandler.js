@@ -28,9 +28,18 @@ const createBankDetails = async (event) => {
         accountHolderName: requestBody.accountHolderName || null,
         accountNumber: requestBody.accountNumber || null,
         accountType: requestBody.accountType || null,
+        routingNumber : null,
+        accountHolderResidentialAddress : null
+
       };
     } else if (onsiteStatus === 'Yes') {
       bankFields = {
+        bankName: requestBody.bankName || null,
+        bankAddress: requestBody.bankAddress || null,
+        ifscCode: requestBody.ifscCode || null,
+        accountHolderName: requestBody.accountHolderName || null,
+        accountNumber: requestBody.accountNumber || null,
+        accountType: requestBody.accountType || null,
         routingNumber: requestBody.routingNumber || null,
         accountHolderResidentialAddress: requestBody.accountHolderResidentialAddress || null,
       };
