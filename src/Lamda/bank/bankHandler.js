@@ -19,13 +19,13 @@ const createBankDetails = async (event) => {
     console.log("Onsite Status:", onsiteStatus);
 
     // If onsite status is true, perform validation for required fields
-    if (onsiteStatus === 'Yes') {
+    if (onsiteStatus === 'No') {
         const requiredFields = ["bankName", "bankAddress", "ifscCode", "accountHolderName", "accountNumber", "accountType"];
         if (!requiredFields.every((field) => requestBody[field])) {
           throw new Error("Required fields are missing.");
         }
-      } else if (onsiteStatus === 'No') {
-        const requiredFields = ["bankName", "branchAddress", "accountHolderName", "accountNumber", "accountType", "routingNumber", "accountHolderResidentialAddress"];
+      } else if (onsiteStatus === 'Yes') {
+        const requiredFields = ["bankName", "bankAddress", "accountHolderName", "accountNumber", "accountType", "routingNumber", "accountHolderResidentialAddress"];
         if (!requiredFields.every((field) => requestBody[field])) {
           throw new Error("Required fields are missing.");
         }
