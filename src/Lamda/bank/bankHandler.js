@@ -136,7 +136,8 @@ const createBankDetails = async (event) => {
     const createResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_BANK_DETAILS,
-      createResult,
+      bankId : nextSerialNumber1,
+      employeeId : employeeId
     });
   } catch (e) {
     console.error(e);
@@ -149,25 +150,6 @@ const createBankDetails = async (event) => {
   }
   return response;
 };
-
-// const getOnsiteStatus = async (assignmentId) => {
-//   const params = {
-//     TableName: process.env.ASSIGNMENTS_TABLE,
-//     ProjectionExpression: "assignmentId",
-//   };
-  
-//     try {
-//       const result = await client.send(new GetItemCommand(params));
-//       if (!result.Item) {
-//         throw new Error("Employee not found in ASSIGNMENT_TABLE.");
-//       }
-//       // Assuming onsite status is stored as a String attribute named 'onsite'
-//       return result.Item.onsite.S;
-//     } catch (error) {
-//       console.error("Error retrieving employee onsite status:", error);
-//       throw error;
-//     }
-//   };
 
 const getOnsiteStatus = async (assignmentId, employeeId) => {
   const params = {
