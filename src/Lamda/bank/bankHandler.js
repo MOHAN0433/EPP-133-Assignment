@@ -79,7 +79,7 @@ const createBankDetails = async (event) => {
         if (sortedItems.length === 0) {
           return 0; // If no records found, return null
         } else {
-          const highestbankId = parseInt(sortedItems[0].assignmentId.N);
+          const highestbankId = parseInt(sortedItems[0].bankId.N);
           console.log("Highest bank ID:", highestbankId);
           return highestbankId;
         }
