@@ -134,7 +134,7 @@ const createBankDetails = async (event) => {
     await checkEmployeeExistence(requestBody.employeeId);
 
     const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
+      TableName: process.env.BANK_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
         bankId: nextSerialNumber1,
         employeeId: requestBody.employeeId,
