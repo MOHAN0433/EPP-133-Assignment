@@ -16,22 +16,25 @@ const createBankDetails = async (event) => {
     // Retrieve onsite value based on employeeId
     //let onsiteStatus = requestBody.onsite;
     const onsiteStatus = await getOnsiteStatus(parseInt(requestBody.assignmentId), requestBody.employeeId);
-    console.log("Onsite Status:", onsiteStatus);
+    console.log("Onsite Status:", onsiteStatus); 
+    
+    let bankFields = {};
 
-    // If onsite status is true, perform validation for required fields
     if (onsiteStatus === 'No') {
-        const requiredFields = ["bankName", "bankAddress", "ifscCode", "accountHolderName", "accountNumber", "accountType"];
-        if (!requiredFields.every((field) => requestBody[field])) {
-          throw new Error("Required fields are missing.");
-        }
-      } else if (onsiteStatus === 'Yes') {
-        const requiredFields = ["bankName", "bankAddress", "accountHolderName", "accountNumber", "accountType", "routingNumber", "accountHolderResidentialAddress"];
-        if (!requiredFields.every((field) => requestBody[field])) {
-          throw new Error("Required fields are missing.");
-        }
-      } else {
-        throw new Error("Invalid onsite status."); // Handle other cases if needed
-      }
+      bankFields = {
+        bankName: requestBody.bankName || null,
+        bankAddress: requestBody.bankAddress || null,
+        ifscCode: requestBody.ifscCode || null,
+        accountHolderName: requestBody.accountHolderName || null,
+        accountNumber: requestBody.accountNumber || null,
+        accountType: requestBody.accountType || null,
+      };
+    } else if (onsiteStatus === 'Yes') {
+      bankFields = {
+        routingNumber: requestBody.routingNumber || null,
+        accountHolderResidentialAddress: requestBody.accountHolderResidentialAddress || null,
+      };
+    }
 
     const highestSerialNumber1 = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber1);
@@ -115,16 +118,7 @@ const createBankDetails = async (event) => {
       Item: marshall({
         bankId: nextSerialNumber1,
         employeeId: requestBody.employeeId,
-        bankName: requestBody.bankName || null,
-        bankAddress:requestBody.bankAddress || null,
-        ifscCode: requestBody.ifscCode,
-        accountHolderName: requestBody.accountHolderName || null,
-        accountNumber: requestBody.accountNumber || null,
-        accountType: requestBody.accountType || null,
-        //onsite: onsite,
-        //branchAddress: requestBody.branchAddress || null,
-        routingNumber: requestBody.routingNumber || null,
-        accountHolderResidentialAddress : requestBody.accountHolderResidentialAddress || null,
+        ...bankFields,
         createdDateTime: formattedDate,
         updatedDateTime: requestBody.updatedDateTime || null
       }),
