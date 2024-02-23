@@ -15,7 +15,7 @@ const createBankDetails = async (event) => {
 
     // Retrieve onsite value based on employeeId
     //let onsiteStatus = null;
-    const onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
+    const onsiteStatus = await getOnsiteStatus(requestBody.assignmentId);
     console.log("Onsite Status:", onsiteStatus);
 
     // const getOnsiteStatus = async (employeeId) => {
@@ -170,7 +170,7 @@ const createBankDetails = async (event) => {
   return response;
 };
 
-const getOnsiteStatus = async (employeeId) => {
+const getOnsiteStatus = async (assignmentId) => {
   const params = {
     TableName: process.env.ASSIGNMENTS_TABLE,
     ProjectionExpression: "assignmentId",
