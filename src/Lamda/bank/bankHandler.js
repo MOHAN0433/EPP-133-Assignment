@@ -14,31 +14,31 @@ const createBankDetails = async (event) => {
     console.log("Request Body:", requestBody);
 
     // Retrieve onsite value based on employeeId
-    let onsiteStatus = null;
-     onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
+    //let onsiteStatus = null;
+    const onsiteStatus = await getOnsiteStatus(requestBody.employeeId);
     console.log("Onsite Status:", onsiteStatus);
 
-    const getOnsiteStatus = async (employeeId) => {
-        const params = {
-            TableName: process.env.ASSIGNMENTS_TABLE,
-          Key: marshall({
-            assignmentId : requestBody.assignmentId,
-            employeeId: employeeId,
-          }),
-        };
+    // const getOnsiteStatus = async (employeeId) => {
+    //     const params = {
+    //         TableName: process.env.ASSIGNMENTS_TABLE,
+    //       Key: marshall({
+    //         assignmentId : requestBody.assignmentId,
+    //         employeeId: employeeId,
+    //       }),
+    //     };
       
-        try {
-          const result = await client.send(new GetItemCommand(params));
-          if (!result.Item) {
-            throw new Error("Employee not found in ASSIGNMENT_TABLE.");
-          }
-          // Assuming onsite status is stored as a String attribute named 'onsite'
-          return result.Item.onsite.S;
-        } catch (error) {
-          console.error("Error retrieving employee onsite status:", error);
-          throw error;
-        }
-      };
+    //     try {
+    //       const result = await client.send(new GetItemCommand(params));
+    //       if (!result.Item) {
+    //         throw new Error("Employee not found in ASSIGNMENT_TABLE.");
+    //       }
+    //       // Assuming onsite status is stored as a String attribute named 'onsite'
+    //       return result.Item.onsite.S;
+    //     } catch (error) {
+    //       console.error("Error retrieving employee onsite status:", error);
+    //       throw error;
+    //     }
+    //   };
     
 
     // If onsite status is true, perform validation for required fields
@@ -170,27 +170,24 @@ const createBankDetails = async (event) => {
   return response;
 };
 
-// const getOnsiteStatus = async (employeeId) => {
-//     const params = {
-//         TableName: process.env.ASSIGNMENTS_TABLE,
-//       Key: marshall({
-//         assignmentId : requestBody.assignmentId,
-//         employeeId: employeeId,
-//       }),
-//     };
+const getOnsiteStatus = async (employeeId) => {
+  const params = {
+    TableName: process.env.ASSIGNMENTS_TABLE,
+    ProjectionExpression: "assignmentId",
+  };
   
-//     try {
-//       const result = await client.send(new GetItemCommand(params));
-//       if (!result.Item) {
-//         throw new Error("Employee not found in ASSIGNMENT_TABLE.");
-//       }
-//       // Assuming onsite status is stored as a String attribute named 'onsite'
-//       return result.Item.onsite.S;
-//     } catch (error) {
-//       console.error("Error retrieving employee onsite status:", error);
-//       throw error;
-//     }
-//   };
+    try {
+      const result = await client.send(new GetItemCommand(params));
+      if (!result.Item) {
+        throw new Error("Employee not found in ASSIGNMENT_TABLE.");
+      }
+      // Assuming onsite status is stored as a String attribute named 'onsite'
+      return result.Item.onsite.S;
+    } catch (error) {
+      console.error("Error retrieving employee onsite status:", error);
+      throw error;
+    }
+  };
 
 module.exports = {
     createBankDetails,
