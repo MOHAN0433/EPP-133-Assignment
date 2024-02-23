@@ -14,13 +14,12 @@ const createBankDetails = async (event) => {
     console.log("Request Body:", requestBody);
 
     // Retrieve onsite value based on employeeId
-    //let onsiteStatus = requestBody.onsite;
     const onsiteStatus = await getOnsiteStatus(parseInt(requestBody.assignmentId), requestBody.employeeId);
-    console.log("Onsite Status:", onsiteStatus); 
-    
+    console.log("Onsite Status:", onsiteStatus);
+
     let bankFields = {};
 
-    if (onsiteStatus === 'No') {
+    if (onsiteStatus === "No") {
       bankFields = {
         bankName: requestBody.bankName || null,
         bankAddress: requestBody.bankAddress || null,
@@ -28,11 +27,10 @@ const createBankDetails = async (event) => {
         accountHolderName: requestBody.accountHolderName || null,
         accountNumber: requestBody.accountNumber || null,
         accountType: requestBody.accountType || null,
-        routingNumber : null,
-        accountHolderResidentialAddress : null
-
+        routingNumber: null,
+        accountHolderResidentialAddress: null,
       };
-    } else if (onsiteStatus === 'Yes') {
+    } else if (onsiteStatus === "Yes") {
       bankFields = {
         bankName: requestBody.bankName || null,
         bankAddress: requestBody.bankAddress || null,
@@ -129,15 +127,15 @@ const createBankDetails = async (event) => {
         employeeId: requestBody.employeeId,
         ...bankFields,
         createdDateTime: formattedDate,
-        updatedDateTime: requestBody.updatedDateTime || null
+        updatedDateTime: requestBody.updatedDateTime || null,
       }),
     };
 
     const createResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_BANK_DETAILS,
-      bankId : nextSerialNumber1,
-      employeeId : requestBody.employeeId
+      bankId: nextSerialNumber1,
+      employeeId: requestBody.employeeId,
     });
   } catch (e) {
     console.error(e);
@@ -153,26 +151,26 @@ const createBankDetails = async (event) => {
 
 const getOnsiteStatus = async (assignmentId, employeeId) => {
   const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: marshall({
-          assignmentId: assignmentId,
-          employeeId: employeeId,
-      }),
+    TableName: process.env.ASSIGNMENTS_TABLE,
+    Key: marshall({
+      assignmentId: assignmentId,
+      employeeId: employeeId,
+    }),
   };
 
   try {
-      const result = await client.send(new GetItemCommand(params));
-      if (!result.Item) {
-          throw new Error("Employee not found in ASSIGNMENT_TABLE.");
-      }
-      // Assuming onsite status is stored as a String attribute named 'onsite'
-      return result.Item.onsite.S;
+    const result = await client.send(new GetItemCommand(params));
+    if (!result.Item) {
+      throw new Error("Employee not found in ASSIGNMENT_TABLE.");
+    }
+    // Assuming onsite status is stored as a String attribute named 'onsite'
+    return result.Item.onsite.S;
   } catch (error) {
-      console.error("Error retrieving employee onsite status:", error);
-      throw error;
+    console.error("Error retrieving employee onsite status:", error);
+    throw error;
   }
 };
 
 module.exports = {
-    createBankDetails,
+  createBankDetails,
 };

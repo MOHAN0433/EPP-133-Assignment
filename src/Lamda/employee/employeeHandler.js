@@ -84,6 +84,7 @@ const createEmployee = async (event) => {
         updatedDateTime: requestBody.updatedDateTime || null,
         department: requestBody.department || null,
         aadhaarNumber: requestBody.aadhaarNumber || null,
+        assignmentId: null // initialize assignmentId to null
       }),
     };
     const createResult = await client.send(new PutItemCommand(params));
@@ -171,9 +172,14 @@ const createEmployee = async (event) => {
     };
 
     const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
+
+    // Update employee record with assignmentId
+    params.Item.assignmentId = nextSerialNumber1;
+    const updateEmployeeResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
-      createResult,
+      employeeId : employeeId,
+      assignmentId : assignmentId
     });
   } catch (e) {
     console.error(e);
