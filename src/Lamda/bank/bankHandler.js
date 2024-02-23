@@ -137,7 +137,7 @@ const createBankDetails = async (event) => {
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_BANK_DETAILS,
       bankId : nextSerialNumber1,
-      employeeId : employeeId
+      employeeId : requestBody.employeeId
     });
   } catch (e) {
     console.error(e);
