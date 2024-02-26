@@ -348,9 +348,9 @@ const getAllEmployees = async () => {
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       }); // Setting error message
     } else {
-      const sortedItems = Items.sort((a, b) =>
-        a.employeeId.S.localeCompare(b.employeeId.S)
-      );
+      const sortedItems = result.Items.sort((a, b) => {
+        return parseInt(b.employeeId.S) - parseInt(a.employeeId.S);
+      });
 
       // Map and set "password" field to null
       const employeesData = sortedItems.map((item) => {
