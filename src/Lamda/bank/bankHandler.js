@@ -25,7 +25,7 @@ const createBankDetails = async (event) => {
         bankAddress: requestBody.bankAddress || null,
         ifscCode: requestBody.ifscCode || null,
         accountHolderName: requestBody.accountHolderName || null,
-        accountNumber: requestBody.accountNumber || null,
+        accountNumber: requestBody.accountNumber != null ? String(requestBody.accountNumber) : null,
         accountType: requestBody.accountType || null,
         routingNumber: null,
         accountHolderResidentialAddress: null,
@@ -36,9 +36,9 @@ const createBankDetails = async (event) => {
         bankAddress: requestBody.bankAddress || null,
         ifscCode: requestBody.ifscCode || null,
         accountHolderName: requestBody.accountHolderName || null,
-        accountNumber: requestBody.accountNumber || null,
+        accountNumber: requestBody.accountNumber != null ? String(requestBody.accountNumber) : null,
         accountType: requestBody.accountType || null,
-        routingNumber: requestBody.routingNumber || null,
+        routingNumber: requestBody.routingNumber != null ? String(requestBody.routingNumber) : null,
         accountHolderResidentialAddress: requestBody.accountHolderResidentialAddress || null,
       };
     }
