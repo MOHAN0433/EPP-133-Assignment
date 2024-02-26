@@ -32,7 +32,7 @@ const getAllMeatadatas = async () => {
       }); // Setting error message
     } else {
       const sortedItems = Items.sort((a, b) =>
-        a.metadataId.N.localeCompare(b.metadataId.N)
+       parseInt(b.metadataId.N) - parseInt(a.metadataId.N)
       );
 
       // Map and set "password" field to null
