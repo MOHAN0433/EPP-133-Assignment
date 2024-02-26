@@ -349,8 +349,10 @@ const getAllEmployees = async () => {
       }); // Setting error message
     } else {
       const sortedItems = result.Items.sort((a, b) => {
-        return parseInt(b.employeeId.S) - parseInt(a.employeeId.S);
-      });
+        const employeeIdA = parseInt(a.employeeId.S);
+        const employeeIdB = parseInt(b.employeeId.S);
+        return employeeIdB - employeeIdA;
+      });      
 
       // Map and set "password" field to null
       const employeesData = sortedItems.map((item) => {
