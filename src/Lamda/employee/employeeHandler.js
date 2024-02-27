@@ -9,6 +9,7 @@ const {
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
+const { DynamoDBClient, QueryCommand } = require("@aws-sdk/client-dynamodb");
 // const {
 //   validateEmployeeDetails,
 //   validateUpdateEmployeeDetails,
