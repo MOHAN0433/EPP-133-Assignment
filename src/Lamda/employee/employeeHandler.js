@@ -365,7 +365,7 @@ const getAllEmployees = async () => {
 
         // Fetch designation from ASSIGNMENT_TABLE
         const assignmentParams = {
-          TableName: process.env.ASSIGNMENT_TABLE,
+          TableName: process.env.ASSIGNMENTS_TABLE,
           KeyConditionExpression: "employeeId = :empId",
           ExpressionAttributeValues: {
             ":empId": { S: employee.employeeId }
