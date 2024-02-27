@@ -344,7 +344,7 @@ const getAllEmployees = async () => {
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
-    ); // Getting table name from the servetless.yml and setting to the TableName
+    ); // Getting table name from the serverless.yml and setting to the TableName
 
     if (Items.length === 0) {
       // If there are no employee details found
@@ -362,7 +362,7 @@ const getAllEmployees = async () => {
           employee.password = null;
         }
 
-        // Fetch designation from Assignment_Table
+        // Fetch designation from ASSIGNMENT_TABLE
         const assignmentParams = {
           TableName: process.env.ASSIGNMENT_TABLE,
           KeyConditionExpression: "employeeId = :empId",
@@ -399,6 +399,7 @@ const getAllEmployees = async () => {
   }
   return response;
 };
+
 
 // Function to check if employeeId already exists
 const isEmployeeIdExists = async (employeeId) => {
