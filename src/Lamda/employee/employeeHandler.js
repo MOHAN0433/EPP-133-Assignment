@@ -9,13 +9,13 @@ const {
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
-const {
-  validateEmployeeDetails,
-  validateUpdateEmployeeDetails,
-} = require("../validator/validateRequest");
-const {
-  updateEmployeeAllowedFields,
-} = require("../validator/validateFields");
+// const {
+//   validateEmployeeDetails,
+//   validateUpdateEmployeeDetails,
+// } = require("../validator/validateRequest");
+// const {
+//   updateEmployeeAllowedFields,
+// } = require("../validator/validateFields");
 const {
   httpStatusCodes,
   httpStatusMessages,
@@ -335,33 +335,54 @@ const getEmployee = async (event) => {
 };
 
 const getAllEmployees = async () => {
-  const response = { statusCode: httpStatusCodes.SUCCESS };
+  const response = { 
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
+  };
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     ); // Getting table name from the servetless.yml and setting to the TableName
 
     if (Items.length === 0) {
-      // If there is no employee details found
+      // If there are no employee details found
       response.statusCode = httpStatusCodes.NOT_FOUND; // Setting the status code to 404
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       }); // Setting error message
     } else {
-      const sortedItems = result.Items.sort((a, b) => {
-        const employeeIdA = parseInt(a.employeeId.S);
-        const employeeIdB = parseInt(b.employeeId.S);
-        return employeeIdB - employeeIdA;
-      });      
+      const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
 
       // Map and set "password" field to null
-      const employeesData = sortedItems.map((item) => {
+      const employeesData = await Promise.all(sortedItems.map(async (item) => {
         const employee = unmarshall(item);
         if (employee.hasOwnProperty("password")) {
           employee.password = null;
         }
+
+        // Fetch designation from Assignment_Table
+        const assignmentParams = {
+          TableName: process.env.ASSIGNMENT_TABLE,
+          KeyConditionExpression: "employeeId = :empId",
+          ExpressionAttributeValues: {
+            ":empId": { S: employee.employeeId }
+          }
+        };
+
+        try {
+          const assignmentData = await client.send(new QueryCommand(assignmentParams));
+          if (assignmentData.Items.length > 0) {
+            employee.designation = assignmentData.Items[0].designation.S;
+          }
+        } catch (err) {
+          console.error("Error fetching designation:", err);
+          // Handle error fetching designation
+        }
+
         return employee;
-      });
+      }));
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
