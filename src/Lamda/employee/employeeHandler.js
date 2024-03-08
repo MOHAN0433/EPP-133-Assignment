@@ -30,11 +30,6 @@ const createEmployee = async (event) => {
   try {
     const requestBody = JSON.parse(event.body);
 
-    // Check for required fields
-    // if (!validateEmployeeDetails(requestBody)) {
-    //   throw new Error("Required fields are missing.");
-    // }
-
     // Check if the employeeId already exists
     const employeeIdExists = await isEmployeeIdExists(requestBody.employeeId);
     if (employeeIdExists) {
@@ -57,6 +52,9 @@ const createEmployee = async (event) => {
     console.log("Highest Assignment ID:", highestAssignmentId);
     const nextAssignmentId = highestAssignmentId !== null ? parseInt(highestAssignmentId) + 1 : 1;
 
+    // Update the params object with the assignmentId
+    requestBody.assignmentId = nextAssignmentId;
+
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Item: marshall({
@@ -67,7 +65,7 @@ const createEmployee = async (event) => {
         dateOfBirth: requestBody.dateOfBirth,
         officeEmailAddress: requestBody.officeEmailAddress,
         // Add other employee details here...
-        assignmentId: null // initialize assignmentId to null
+        assignmentId: nextAssignmentId // Set the assignmentId here
       }),
     };
     const createResult = await client.send(new PutItemCommand(params));
@@ -111,7 +109,7 @@ const createEmployee = async (event) => {
     const assignmentParams = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
-        assignmentId: nextSerialNumber1,
+        assignmentId: nextAssignmentId,
         employeeId: requestBody.employeeId,
         branchOffice: requestBody.branchOffice,
         designation: requestBody.designation,
@@ -127,13 +125,10 @@ const createEmployee = async (event) => {
 
     const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
 
-    // Update employee record with assignmentId
-    params.Item.assignmentId = nextSerialNumber1;
-    const updateEmployeeResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
       employeeId: requestBody.employeeId,
-      assignmentId: nextSerialNumber1
+      assignmentId: nextAssignmentId
     });
   } catch (e) {
     console.error(e);
@@ -146,6 +141,7 @@ const createEmployee = async (event) => {
   }
   return response;
 };
+
 
 const updateEmployee = async (event) => {
   console.log("Update employee details");
