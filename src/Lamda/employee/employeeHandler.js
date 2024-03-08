@@ -377,7 +377,11 @@ const getAllEmployees = async () => {
           if (assignmentData.Items.length > 0) {
             employee.designation = assignmentData.Items[0].designation.S;
             employee.assignmentId = parseInt(assignmentData.Items[0].assignmentId.N); 
+          } else {
+            // If no assignment found, set assignmentId to null
+            employee.assignmentId = null;
           }
+          
         } catch (err) {
           console.error("Error fetching designation:", err);
           // Handle error fetching designation
