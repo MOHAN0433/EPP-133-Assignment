@@ -376,6 +376,7 @@ const getAllEmployees = async () => {
           const assignmentData = await client.send(new QueryCommand(assignmentParams));
           if (assignmentData.Items.length > 0) {
             employee.designation = assignmentData.Items[0].designation.S;
+            employee.assignmentId = parseInt(assignmentData.Items[0].assignmentId.N); 
           }
         } catch (err) {
           console.error("Error fetching designation:", err);
