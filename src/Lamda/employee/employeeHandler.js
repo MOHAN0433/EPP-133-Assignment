@@ -31,9 +31,9 @@ const createEmployee = async (event) => {
     const requestBody = JSON.parse(event.body);
 
     // Check for required fields
-    if (!validateEmployeeDetails(requestBody)) {
-      throw new Error("Required fields are missing.");
-    }
+    // if (!validateEmployeeDetails(requestBody)) {
+    //   throw new Error("Required fields are missing.");
+    // }
 
     // Check if the employeeId already exists
     const employeeIdExists = await isEmployeeIdExists(requestBody.employeeId);
@@ -66,30 +66,7 @@ const createEmployee = async (event) => {
         lastName: requestBody.lastName,
         dateOfBirth: requestBody.dateOfBirth,
         officeEmailAddress: requestBody.officeEmailAddress,
-        //branchOffice: requestBody.branchOffice,
-        password: requestBody.password || null,
-        gender: requestBody.gender || null,
-        ssnNumber: requestBody.ssnNumber || null,
-        maritalStatus: requestBody.maritalStatus || null,
-        nationality: requestBody.nationality || null,
-        passportNumber: requestBody.passportNumber || null,
-        mobileNumber: requestBody.mobileNumber || null,
-        permanentAddress: requestBody.permanentAddress || null,
-        contactPerson: requestBody.contactPerson || null,
-        personalEmailAddress: requestBody.personalEmailAddress || null,
-        presentAddress: requestBody.presentAddress || null,
-        contactNumber: requestBody.contactNumber || null,
-        joiningDate: requestBody.joiningDate || null,
-        emergencyContactPerson: requestBody.emergencyContactPerson || null,
-        //designation: requestBody.designation || null,
-        emergencyContactNumber: requestBody.emergencyContactNumber || null,
-        resignedDate: requestBody.resignedDate || null,
-        relievedDate: requestBody.relievedDate || null,
-        leaveStructure: requestBody.leaveStructure || null,
-        createdDateTime: formattedDate,
-        updatedDateTime: requestBody.updatedDateTime || null,
-        department: requestBody.department || null,
-        aadhaarNumber: requestBody.aadhaarNumber || null,
+        // Add other employee details here...
         assignmentId: null // initialize assignmentId to null
       }),
     };
@@ -169,7 +146,6 @@ const createEmployee = async (event) => {
   }
   return response;
 };
-
 
 const updateEmployee = async (event) => {
   console.log("Update employee details");
