@@ -52,6 +52,11 @@ const createEmployee = async (event) => {
     console.log("Highest Serial Number:", highestSerialNumber);
     const nextSerialNumber = highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
 
+    // Fetch the highest assignmentId from the DynamoDB table
+    const highestAssignmentId = await getHighestAssignmentId();
+    console.log("Highest Assignment ID:", highestAssignmentId);
+    const nextAssignmentId = highestAssignmentId !== null ? parseInt(highestAssignmentId) + 1 : 1;
+
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Item: marshall({
@@ -124,37 +129,8 @@ const createEmployee = async (event) => {
     const highestSerialNumber1 = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber1);
     const nextSerialNumber1 =
-      highestSerialNumber !== null ? parseInt(highestSerialNumber1) + 1 : 1;
-      async function getHighestSerialNumber() {
-        const params = {
-          TableName: process.env.ASSIGNMENTS_TABLE,
-          ProjectionExpression: "assignmentId",
-          Limit: 100, // Increase the limit to retrieve more items for sorting
-        };
-      
-        try {
-          const result = await client.send(new ScanCommand(params));
-          
-          // Sort the items in descending order based on assignmentId
-          const sortedItems = result.Items.sort((a, b) => {
-            return parseInt(b.assignmentId.N) - parseInt(a.assignmentId.N);
-          });
-      
-          console.log("Sorted Items:", sortedItems); // Log the sorted items
-      
-          if (sortedItems.length === 0) {
-            return 0; // If no records found, return null
-          } else {
-            const highestAssignmentId = parseInt(sortedItems[0].assignmentId.N);
-            console.log("Highest Assignment ID:", highestAssignmentId);
-            return highestAssignmentId;
-          }
-        } catch (error) {
-          console.error("Error retrieving highest serial number:", error);
-          throw error; // Propagate the error up the call stack
-        }
-      }
-      
+      highestSerialNumber1 !== null ? parseInt(highestSerialNumber1) + 1 : 1;
+
     const assignmentParams = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
@@ -179,8 +155,8 @@ const createEmployee = async (event) => {
     const updateEmployeeResult = await client.send(new PutItemCommand(params));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
-      employeeId : employeeId,
-      assignmentId : assignmentId
+      employeeId: requestBody.employeeId,
+      assignmentId: nextSerialNumber1
     });
   } catch (e) {
     console.error(e);
@@ -193,6 +169,7 @@ const createEmployee = async (event) => {
   }
   return response;
 };
+
 
 const updateEmployee = async (event) => {
   console.log("Update employee details");
@@ -377,11 +354,7 @@ const getAllEmployees = async () => {
           if (assignmentData.Items.length > 0) {
             employee.designation = assignmentData.Items[0].designation.S;
             employee.assignmentId = parseInt(assignmentData.Items[0].assignmentId.N); 
-          } else {
-            // If no assignment found, set assignmentId to null
-            employee.assignmentId = null;
           }
-          
         } catch (err) {
           console.error("Error fetching designation:", err);
           // Handle error fetching designation
