@@ -284,7 +284,7 @@ const getEmployee = async (event) => {
   return response;
 };
 
-const getAllEmployees = async () => {
+const getAllEmployeesWithAssignments = async () => {
   const response = { 
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
@@ -305,20 +305,28 @@ const getAllEmployees = async () => {
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
 
-      // Fetch assignment details for each employee or set to null if assignmentId is not present
+      // Map and set "password" field to null
       const employeesData = await Promise.all(sortedItems.map(async (item) => {
         const employee = unmarshall(item);
         if (employee.hasOwnProperty("password")) {
           employee.password = null;
         }
 
-        if (employee.hasOwnProperty("assignmentId")) {
-          const assignmentId = employee.assignmentId;
-          const assignmentDetails = await fetchAssignmentDetails(assignmentId); // Implement fetchAssignmentDetails function
-          console.log("Assignment Object for Employee:", assignmentDetails); // Printing assignment object
-          employee.assignment = assignmentDetails;
+        // Fetch assignments for the current employee
+        const assignmentParams = {
+          TableName: process.env.ASSIGNMENT_TABLE,
+          KeyConditionExpression: "assignmentId = :assignmentId",
+          ExpressionAttributeValues: {
+            ":assignmentId": { S: employee.assignmentId }
+          }
+        };
+        const assignmentResult = await client.send(new QueryCommand(assignmentParams));
+
+        // Attach assignments to the employee object
+        if (assignmentResult.Items && assignmentResult.Items.length > 0) {
+          employee.assignments = assignmentResult.Items.map(unmarshall);
         } else {
-          employee.assignment = null; // Set assignment to null if assignmentId is not present
+          employee.assignments = [];
         }
 
         return employee;
