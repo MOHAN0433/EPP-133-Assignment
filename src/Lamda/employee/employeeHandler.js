@@ -314,14 +314,16 @@ const getAllEmployees = async () => {
 
         // Fetch assignments for the current employee
         try {
-          const assignmentParams = {
+          employeeId1 = employee.employeeId;
+          const params = {
             TableName: process.env.ASSIGNMENTS_TABLE,
-            KeyConditionExpression: "employeeId = :employeeId",
+            FilterExpression: "employeeId = :employeeId",
             ExpressionAttributeValues: {
-              ":employeeId": { S: employee.employeeId }
-            }
+              ":employeeId": { S: employeeId1 }, // Assuming employeeId is a string, adjust accordingly if not
+            },
           };
-          const assignmentResult = await client.send(new QueryCommand(assignmentParams));
+          const command = new ScanCommand(params);
+          const { Items } = await client.send(command);
 
           // Attach assignments to the employee object
           employee.assignments = assignmentResult.Items.map(unmarshall);
