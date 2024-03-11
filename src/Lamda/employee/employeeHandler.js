@@ -305,38 +305,20 @@ const getAllEmployees = async () => {
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
 
-      // Map and set "password" field to null
+      // Fetch assignment details for each employee or set to null if assignmentId is not present
       const employeesData = await Promise.all(sortedItems.map(async (item) => {
         const employee = unmarshall(item);
         if (employee.hasOwnProperty("password")) {
           employee.password = null;
         }
 
-        // Fetch designation from ASSIGNMENT_TABLE
-        const assignmentParams = {
-          TableName: process.env.ASSIGNMENTS_TABLE,
-          KeyConditionExpression: "employeeId = :empId",
-          ExpressionAttributeValues: {
-            ":empId": { S: employee.employeeId }
-          }
-        };
-
-        try {
-          const assignmentData = await client.send(new QueryCommand(assignmentParams));
-          if (assignmentData.Items.length > 0) {
-            employee.designation = assignmentData.Items[0].designation.S;
-            employee.assignmentId = parseInt(assignmentData.Items[0].assignmentId.N); 
-          }
-        } catch (err) {
-          console.error("Error fetching designation:", err);
-          // Handle error fetching designation
-          console.error(err);
-    response.body = JSON.stringify({
-      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS,
-      errorMsg: err.message,
-    });
-          
+        if (employee.hasOwnProperty("assignmentId")) {
+          const assignmentId = employee.assignmentId;
+          const assignmentDetails = await fetchAssignmentDetails(assignmentId); // Implement fetchAssignmentDetails function
+          console.log("Assignment Object for Employee:", assignmentDetails); // Printing assignment object
+          employee.assignment = assignmentDetails;
+        } else {
+          employee.assignment = null; // Set assignment to null if assignmentId is not present
         }
 
         return employee;
