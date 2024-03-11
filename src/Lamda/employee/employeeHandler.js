@@ -268,21 +268,39 @@ const getEmployee = async (event) => {
       });
     } else {
       console.log("Successfully retrieved Employee details.");
+
+      // Fetch assignments for the current employee
+      const employeeId = event.pathParameters.employeeId;
+      const assignmentsParams = {
+        TableName: process.env.ASSIGNMENTS_TABLE,
+        FilterExpression: "employeeId = :employeeId",
+        ExpressionAttributeValues: {
+          ":employeeId": { S: employeeId },
+        },
+      };
+      const assignmentsCommand = new ScanCommand(assignmentsParams);
+      const { Items: assignmentItems } = await client.send(assignmentsCommand);
+
+      const employeeData = unmarshall(Item);
+      // Attach assignments to the employee object
+      employeeData.assignments = assignmentItems.map(unmarshall);
+
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEE_DETAILS,
-        data: unmarshall(Item),
+        data: employeeData,
       });
     }
   } catch (e) {
     console.error(e);
     response.body = JSON.stringify({
-      statusCode: e.statusCode,
+      statusCode: e.statusCode || httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
   return response;
 };
+
 
 const getAllEmployees = async () => {
   const response = { 
