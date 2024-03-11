@@ -314,7 +314,7 @@ const getAllEmployees = async () => {
 
         // Fetch assignments for the current employee
         try {
-          employeeId1 = employee.employeeId;
+          const employeeId1 = employee.employeeId; // Added missing 'const' keyword
           const params = {
             TableName: process.env.ASSIGNMENTS_TABLE,
             FilterExpression: "employeeId = :employeeId",
@@ -323,10 +323,10 @@ const getAllEmployees = async () => {
             },
           };
           const command = new ScanCommand(params);
-          const { Items } = await client.send(command);
+          const { Items } = await client.send(command); // Changed assignmentResult to Items
 
           // Attach assignments to the employee object
-          employee.assignments = assignmentResult.Items.map(unmarshall);
+          employee.assignments = Items.map(unmarshall); // Changed assignmentResult to Items
         } catch (error) {
           console.error("Error fetching assignments:", error);
           throw error; // re-throwing the error to be caught by the outer catch block
@@ -350,6 +350,7 @@ const getAllEmployees = async () => {
   }
   return response;
 };
+
 
 
 // Function to check if employeeId already exists
