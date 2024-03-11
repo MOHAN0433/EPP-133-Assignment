@@ -25,7 +25,8 @@ const httpStatusCodes = {
     SUCCESSFULLY_RETRIEVED_METADATA_DETAILS : "Successfully retrieved metadata.",
     METADATA_DETAILS_NOT_FOUND : "Metadata details not found.",
     SUCCESSFULLY_CREATED_BANK_DETAILS : "Successfully created baank details.",
-    FAILED_TO_CREATE_BANK_DETAILS : "Failed to create bank details."
+    FAILED_TO_CREATE_BANK_DETAILS : "Failed to create bank details.",
+    FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS : "Failed to retrieve Assignment details."
 
   };
   

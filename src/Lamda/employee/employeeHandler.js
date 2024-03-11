@@ -330,6 +330,13 @@ const getAllEmployees = async () => {
         } catch (err) {
           console.error("Error fetching designation:", err);
           // Handle error fetching designation
+          console.error(e);
+    response.body = JSON.stringify({
+      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS,
+      errorMsg: e.message,
+    });
+          
         }
 
         return employee;
