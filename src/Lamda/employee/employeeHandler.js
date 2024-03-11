@@ -284,7 +284,7 @@ const getEmployee = async (event) => {
   return response;
 };
 
-const getAllEmployeesWithAssignments = async () => {
+const getAllEmployees = async () => {
   const response = { 
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
