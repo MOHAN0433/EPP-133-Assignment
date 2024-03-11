@@ -316,20 +316,15 @@ const getAllEmployees = async () => {
         try {
           const assignmentParams = {
             TableName: process.env.ASSIGNMENT_TABLE,
-            KeyConditionExpression: "assignmentId = :assignmentId",
+            KeyConditionExpression: "employeeId = :employeeId",
             ExpressionAttributeValues: {
-              ":assignmentId": { S: employee.assignmentId }
+              ":employeeId": { S: employee.employeeId }
             }
           };
           const assignmentResult = await client.send(new QueryCommand(assignmentParams));
-          console.log("assignmentResult:", assignmentResult); // Log assignmentResult
 
           // Attach assignments to the employee object
-          if (assignmentResult.Items && assignmentResult.Items.length > 0) {
-            employee.assignments = assignmentResult.Items.map(unmarshall);
-          } else {
-            employee.assignments = [];
-          }
+          employee.assignments = assignmentResult.Items.map(unmarshall);
         } catch (error) {
           console.error("Error fetching assignments:", error);
           throw error; // re-throwing the error to be caught by the outer catch block
