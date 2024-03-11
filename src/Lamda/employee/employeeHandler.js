@@ -322,6 +322,7 @@ const getAllEmployees = async () => {
             }
           };
           const assignmentResult = await client.send(new QueryCommand(assignmentParams));
+          console.log("assignmentResult:", assignmentResult); // Log assignmentResult
 
           // Attach assignments to the employee object
           if (assignmentResult.Items && assignmentResult.Items.length > 0) {
