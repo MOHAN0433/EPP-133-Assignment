@@ -334,7 +334,7 @@ const getAllEmployees = async () => {
     response.body = JSON.stringify({
       statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS,
-      errorMsg: e.message,
+      errorMsg: err.message,
     });
           
         }
