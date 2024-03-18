@@ -9,6 +9,7 @@ provider:
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
     METADATA_TABLE: ${self:custom.metadataTableName}
     BANK_TABLE: ${self:custom.bankTableName}
+    PAYROLL_TABLE: ${self:custom.payrollTableName}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -23,11 +24,13 @@ provider:
         - !GetAtt AssignmentTable.Arn
         - !GetAtt MetadataTable.Arn
         - !GetAtt BankTable.Arn
+        - !GetAtt payrollTable.Arn
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
   metadataTableName: metadata
   bankTableName: bank
+  payrollTableName: payroll
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -112,6 +115,15 @@ functions:
       - http:
           path: bank
           method: POST
+  payrollCreate:
+    handler: src/Lamda/payroll/payrollHandler.createPayroll
+    name: payrollCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: payroll
+          method: POST
 
 resources:
   Resources:
@@ -175,3 +187,16 @@ resources:
         ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+    payrollTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.payrollTableName}
+        AttributeDefinitions:
+          - AttributeName: payrollId
+            AttributeType: N
+        KeySchema:
+          - AttributeName: payrollId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

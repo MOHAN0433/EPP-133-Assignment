@@ -26,7 +26,9 @@ const httpStatusCodes = {
     METADATA_DETAILS_NOT_FOUND : "Metadata details not found.",
     SUCCESSFULLY_CREATED_BANK_DETAILS : "Successfully created baank details.",
     FAILED_TO_CREATE_BANK_DETAILS : "Failed to create bank details.",
-    FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS : "Failed to retrieve Assignment details."
+    FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS : "Failed to retrieve Assignment details.",
+    SUCCESSFULLY_CREATED_PAYROLL_DETAILS : "successfully created payroll details.",
+    FAILED_TO_CREATE_PAYROLL_DETAILS : "Failed to create payroll details."
 
   };
   
