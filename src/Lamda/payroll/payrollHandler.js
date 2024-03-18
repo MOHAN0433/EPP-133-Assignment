@@ -29,7 +29,6 @@ const {
         "panNumber",
         "employeeId",
         "basicPay",
-        "Earnings",
         "deductions",
         "netPay",
         "bonus",
@@ -39,15 +38,8 @@ const {
       if (!requiredFields.every((field) => requestBody[field])) {
         throw new Error("Required fields are missing.");
       }
-     
-      // if (
-      //   requestBody.branchOffice === null ||
-      //   !["San Antonio, USA", "Bangalore, INDIA"].includes(
-      //     requestBody.branchOffice
-      //   )
-      // ) {
-      //   throw new Error("Incorrect BranchOffice");
-      // }
+
+      const earnings = requestBody.basicPay + requestBody.bonus + requestBody.variablePay;
   
       const highestSerialNumber = await getHighestSerialNumber();
       console.log("Highest Serial Number:", highestSerialNumber);
@@ -134,13 +126,12 @@ const {
           employeeId: requestBody.employeeId,
           panNumber: requestBody.panNumber,
           basicPay: requestBody.basicPay,
-          Earnings: requestBody.Earnings,
-          deductions: requestBody.deductions,
-          netPay: requestBody.netPay,
           bonus: requestBody.bonus,
-          //onsite: onsite,
           variablePay: requestBody.variablePay,
           enCashment: requestBody.enCashment,
+          earnings: earnings,
+          deductions: requestBody.deductions,
+          netPay: requestBody.netPay,
           createdDateTime: formattedDate,
           updatedDateTime: null,
         }),
