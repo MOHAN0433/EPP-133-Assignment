@@ -46,6 +46,25 @@ const {
     throw new Error("Bonus and basicPay fields must be of type number.");
 }
 
+const numericFields = [
+  "basicPay",
+  "HRA",
+  "medicalAllowances",
+  "conveyances",
+  "otherEarnings",
+  "bonus",
+  "variablePay",
+  "enCashment"
+];
+
+for (const field of numericFields) {
+  if (requestBody[field] !== undefined && requestBody[field] !== null && requestBody[field] !== '') {
+      if (typeof requestBody[field] !== 'number') {
+          throw new Error(`${field} must be of type number.`);
+      }
+  }
+}
+
       const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
       const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
       const totalNetPay = totalEarnings - totalDeductions;
