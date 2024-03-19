@@ -74,19 +74,20 @@ const {
       }
       
       // Check if an assignment already exists for the employee
-      const existingPayroll = await getAssignmentByPanNumber(
-        requestBody.panNumber
+      const existingPayroll = await getPayrollByPanNumber(
+        requestBody.panNumber, requestBody.employeeId
       );
       if (existingPayroll) {
         throw new Error("An Payroll already exists for this Pan Number.");
       }
   
-      async function getAssignmentByPanNumber(panNumber) {
+      async function getPayrollByPanNumber(panNumber) {
         const params = {
           TableName: process.env.PAYROLL_TABLE,
-          FilterExpression: "panNumber = :panNumber",
+          FilterExpression: "panNumber = :panNumber OR employeeId = :employeeId",
           ExpressionAttributeValues: {
             ":panNumber": { S: panNumber }, // panNumber is a string
+            ":employeeId": { S: employeeId },
           },
         };
   
