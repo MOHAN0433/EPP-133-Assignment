@@ -78,8 +78,12 @@ const {
         requestBody.panNumber, requestBody.employeeId
       );
       if (existingPayroll) {
-        throw new Error("An Payroll already exists for this Pan Number.");
-      }
+        if (existingPayroll.panNumber === requestBody.panNumber) {
+            throw new Error("A payroll already exists for this Pan Number.");
+        } else if (existingPayroll.employeeId === requestBody.employeeId) {
+            throw new Error("A payroll already exists for this Employee ID.");
+        }
+    }
   
       async function getPayrollByPanNumber(panNumber, employeeId) {
         const params = {
