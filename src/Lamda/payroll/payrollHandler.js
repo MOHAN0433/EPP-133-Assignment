@@ -42,9 +42,9 @@ const {
       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
   }
 
-  if (typeof requestBody.bonus !== 'number' || typeof requestBody.basicPay !== 'number') {
-    throw new Error("Bonus and basicPay fields must be of type number.");
-}
+//   if (typeof requestBody.bonus !== 'number' || typeof requestBody.basicPay !== 'number') {
+//     throw new Error("Bonus and basicPay fields must be of type number.");
+// }
 
 const numericFields = [
   "basicPay",
