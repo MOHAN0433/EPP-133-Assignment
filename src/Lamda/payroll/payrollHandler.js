@@ -28,10 +28,6 @@ const {
       const requiredFields = [
         "panNumber",
         "employeeId",
-        "basicPay",
-        "bonus",
-        "variablePay",
-        "enCashment",
       ];
       if (!requiredFields.every((field) => requestBody[field])) {
         throw new Error("Required fields are missing.");
@@ -78,11 +74,7 @@ const {
         requestBody.panNumber, requestBody.employeeId
       );
       if (existingPayroll) {
-        if (existingPayroll.panNumber === requestBody.panNumber) {
-            throw new Error("A payroll already exists for this Pan Number.");
-        } else if (existingPayroll.employeeId === requestBody.employeeId) {
-            throw new Error("A payroll already exists for this Employee ID.");
-        }
+        throw new Error("A payroll already exists for this Pan Number or Employee ID.");
     }
   
       async function getPayrollByPanNumber(panNumber, employeeId) {
@@ -130,18 +122,18 @@ const {
           payrollId: nextSerialNumber,
           employeeId: requestBody.employeeId,
           panNumber: requestBody.panNumber,
-          basicPay: requestBody.basicPay,
-          HRA : requestBody.HRA,
-          medicalAllowances : requestBody.medicalAllowances,
-          conveyances : requestBody.conveyances,
-          otherEarnings : requestBody.otherEarnings,
-          bonus: requestBody.bonus,
-          variablePay: requestBody.variablePay,
-          enCashment: requestBody.enCashment,
+          basicPay: requestBody.basicPay || null,
+          HRA : requestBody.HRA || null,
+          medicalAllowances : requestBody.medicalAllowances || null,
+          conveyances : requestBody.conveyances || null,
+          otherEarnings : requestBody.otherEarnings || null,
+          bonus: requestBody.bonus || null,
+          variablePay: requestBody.variablePay || null,
+          enCashment: requestBody.enCashment || null,
           earnings: totalEarnings,
-          incomeTax : requestBody.incomeTax,
-          professionalTax : requestBody.professionalTax,
-          providentFund : requestBody.providentFund,
+          incomeTax : requestBody.incomeTax || null,
+          professionalTax : requestBody.professionalTax || null,
+          providentFund : requestBody.providentFund || null,
           deductions: totalDeductions,
           netPay: totalNetPay,
           createdDateTime: formattedDate,
