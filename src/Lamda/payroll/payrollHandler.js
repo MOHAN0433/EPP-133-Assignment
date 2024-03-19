@@ -42,31 +42,8 @@ const {
       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
   }
 
-  const validateNumericFields = (requestBody) => {
-    const numericFields = [
-        "basicPay",
-        "HRA",
-        "medicalAllowances",
-        "conveyances",
-        "otherEarnings",
-        "bonus",
-        "variablePay",
-        "enCashment"
-    ];
-
-    for (const field of numericFields) {
-        const fieldValue = requestBody[field];
-        if (typeof fieldValue === 'string' && isNaN(parseFloat(fieldValue))) {
-            throw new Error(`${field} should be a numeric value.`);
-        } else if (typeof fieldValue !== 'string' && isNaN(fieldValue)) {
-            throw new Error(`${field} should be a numeric value.`);
-        }
-    }
-};
-try {
-  validateNumericFields(requestBody);
-} catch (error) {
-  throw error;
+  if (typeof requestBody.bonus !== 'number' || typeof requestBody.basicPay !== 'number') {
+    throw new Error("Bonus and basicPay fields must be of type number.");
 }
 
       const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
