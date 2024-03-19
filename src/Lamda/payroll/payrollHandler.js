@@ -61,7 +61,7 @@ const numericFields = [
 ];
 
 for (const field of numericFields) {
-  if (requestBody[field] !== undefined || requestBody[field] === null ) {
+  if (requestBody[field] !== undefined || requestBody[field] !== null ) {
       if (requestBody[field] === '' || typeof requestBody[field] == 'string') {
           throw new Error(`${field} must be a non-null non-empty number if provided.`);
       }
