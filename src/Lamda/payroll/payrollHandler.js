@@ -42,6 +42,30 @@ const {
       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
   }
 
+  const validateNumericFields = (requestBody) => {
+    const numericFields = [
+        "basicPay",
+        "HRA",
+        "medicalAllowances",
+        "conveyances",
+        "otherEarnings",
+        "bonus",
+        "variablePay",
+        "leaveEnCashment"
+    ];
+
+    for (const field of numericFields) {
+        if (typeof requestBody[field] === 'string' && isNaN(parseFloat(requestBody[field]))) {
+            throw new Error(`${field} should be a numeric value.`);
+        }
+    }
+};
+try {
+  validateNumericFields(requestBody);
+} catch (error) {
+  throw error;
+}
+
       const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
       const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
       const totalNetPay = totalEarnings - totalDeductions;
