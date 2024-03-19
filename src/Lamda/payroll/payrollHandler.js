@@ -39,7 +39,7 @@ const {
 
       const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
       const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
-      const totalNetPay = earnings - deductions;
+      const totalNetPay = totalEarnings - totalDeductions;
   
       const highestSerialNumber = await getHighestSerialNumber();
       console.log("Highest Serial Number:", highestSerialNumber);
