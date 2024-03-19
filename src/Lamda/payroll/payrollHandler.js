@@ -81,7 +81,7 @@ const {
         throw new Error("An Payroll already exists for this Pan Number.");
       }
   
-      async function getPayrollByPanNumber(panNumber) {
+      async function getPayrollByPanNumber(panNumber, employeeId) {
         const params = {
           TableName: process.env.PAYROLL_TABLE,
           FilterExpression: "panNumber = :panNumber OR employeeId = :employeeId",
