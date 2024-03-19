@@ -29,8 +29,6 @@ const {
         "panNumber",
         "employeeId",
         "basicPay",
-        "deductions",
-        "netPay",
         "bonus",
         "variablePay",
         "enCashment",
