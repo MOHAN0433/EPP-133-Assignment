@@ -33,6 +33,15 @@ const {
         throw new Error("Required fields are missing.");
       }
 
+      const validatePanNumber = (panNumber) => {
+        const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
+        return panRegex.test(panNumber);
+    };
+
+    if (!validatePanNumber(requestBody.panNumber)) {
+      throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
+  }
+
       const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
       const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
       const totalNetPay = totalEarnings - totalDeductions;
