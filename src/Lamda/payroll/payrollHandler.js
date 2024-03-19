@@ -39,7 +39,9 @@ const {
         throw new Error("Required fields are missing.");
       }
 
-      const earnings = requestBody.basicPay + requestBody.bonus + requestBody.variablePay;
+      const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
+      const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
+      const totalNetPay = earnings - deductions;
   
       const highestSerialNumber = await getHighestSerialNumber();
       console.log("Highest Serial Number:", highestSerialNumber);
@@ -126,12 +128,19 @@ const {
           employeeId: requestBody.employeeId,
           panNumber: requestBody.panNumber,
           basicPay: requestBody.basicPay,
+          HRA : requestBody.HRA,
+          medicalAllowances : requestBody.medicalAllowances,
+          conveyances : requestBody.conveyances,
+          otherEarnings : requestBody.otherEarnings,
           bonus: requestBody.bonus,
           variablePay: requestBody.variablePay,
           enCashment: requestBody.enCashment,
-          earnings: earnings,
-          deductions: requestBody.deductions,
-          netPay: requestBody.netPay,
+          earnings: totalEarnings,
+          incomeTax : requestBody.incomeTax,
+          professionalTax : requestBody.professionalTax,
+          providentFund : requestBody.providentFund,
+          deductions: totalDeductions,
+          netPay: totalNetPay,
           createdDateTime: formattedDate,
           updatedDateTime: null,
         }),
