@@ -42,10 +42,6 @@ const {
       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
   }
 
-//   if (typeof requestBody.bonus !== 'number' || typeof requestBody.basicPay !== 'number') {
-//     throw new Error("Bonus and basicPay fields must be of type number.");
-// }
-
 const numericFields = [
   "basicPay",
   "HRA",
@@ -93,9 +89,9 @@ for (const field of numericFields) {
           } else {
             // Parse and return the highest serial number without incrementing
             const payrollIdObj = result.Items[0].payrollId;
-            console.log("Payroll ID from DynamoDB:", payrollIdObj); // Add this line to see the retrieved payroll object
-            const payrollId = parseInt(payrollIdObj.N); // Access the N property and parse as a number
-            console.log("Parsed Payroll ID:", payrollId); // Log the parsed payrollId
+            console.log("Payroll ID from DynamoDB:", payrollIdObj); 
+            const payrollId = parseInt(payrollIdObj.N); 
+            console.log("Parsed Payroll ID:", payrollId);
             return payrollId;
           }
         } catch (error) {
@@ -180,6 +176,7 @@ for (const field of numericFields) {
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_CREATED_PAYROLL_DETAILS,
         bankId: nextSerialNumber,
+        employeeId:employeeId,
       });
     } catch (e) {
       console.error(e);
