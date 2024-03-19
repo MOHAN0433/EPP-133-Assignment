@@ -51,11 +51,14 @@ const {
         "otherEarnings",
         "bonus",
         "variablePay",
-        "leaveEnCashment"
+        "enCashment"
     ];
 
     for (const field of numericFields) {
-        if (typeof requestBody[field] === 'string' && isNaN(parseFloat(requestBody[field]))) {
+        const fieldValue = requestBody[field];
+        if (typeof fieldValue === 'string' && isNaN(parseFloat(fieldValue))) {
+            throw new Error(`${field} should be a numeric value.`);
+        } else if (typeof fieldValue !== 'string' && isNaN(fieldValue)) {
             throw new Error(`${field} should be a numeric value.`);
         }
     }
