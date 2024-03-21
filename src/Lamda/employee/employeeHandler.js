@@ -323,9 +323,11 @@ const getAllEmployees = async (event) => {
       let employeesData = Items.map(item => unmarshall(item));
 
       // Check if query parameters for filtering by designation are provided
-      const queryParams = event.queryStringParameters;
-      if (queryParams && queryParams.designations) {
-        const filteredDesignations = queryParams.designations.split(',');
+      const queryParams = event.queryStringParameters || {};
+      const designations = queryParams.designations;
+
+      if (designations) {
+        const filteredDesignations = designations.split(',');
         // Filter employees by provided designations
         employeesData = employeesData.filter(employee => {
           const assignments = employee.assignments || [];
@@ -349,7 +351,6 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
-
 
 
 // Function to check if employeeId already exists
