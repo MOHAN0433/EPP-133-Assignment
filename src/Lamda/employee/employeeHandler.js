@@ -312,50 +312,63 @@ const getAllEmployees = async () => {
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
-    ); // Getting table name from the serverless.yml and setting to the TableName
+    );
 
     if (Items.length === 0) {
-      // If there are no employee details found
-      response.statusCode = httpStatusCodes.NOT_FOUND; // Setting the status code to 404
+      response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
-      }); // Setting error message
+      });
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
 
-      // Map and set "password" field to null
       const employeesData = await Promise.all(sortedItems.map(async (item) => {
         const employee = unmarshall(item);
         if (employee.hasOwnProperty("password")) {
           employee.password = null;
         }
 
-        // Fetch assignments for the current employee
         try {
-          const employeeId1 = employee.employeeId; // Added missing 'const' keyword
+          const employeeId = employee.employeeId;
           const params = {
             TableName: process.env.ASSIGNMENTS_TABLE,
             FilterExpression: "employeeId = :employeeId",
             ExpressionAttributeValues: {
-              ":employeeId": { S: employeeId1 }, // Assuming employeeId is a string, adjust accordingly if not
+              ":employeeId": { S: employeeId },
             },
           };
-          const command = new ScanCommand(params);
-          const { Items } = await client.send(command); // Changed assignmentResult to Items
+          const { Items } = await client.send(new ScanCommand(params));
 
-          // Attach assignments to the employee object
-          employee.assignments = Items.map(unmarshall); // Changed assignmentResult to Items
+          // Fetching designation for the employee
+          const designationPromises = Items.map(async (assignment) => {
+            const assignmentData = unmarshall(assignment);
+            return assignmentData.designation;
+          });
+
+          const designations = await Promise.all(designationPromises);
+
+          // Checking if any of the designations match the desired values
+          const desiredDesignations = ['Manager', 'Supervisor']; // Example values, replace with your desired designations
+          if (designations.some(designation => desiredDesignations.includes(designation))) {
+            // If at least one designation matches, include this employee
+            employee.assignments = Items.map(unmarshall);
+            return employee;
+          } else {
+            // If no designation matches, exclude this employee
+            return null;
+          }
         } catch (error) {
           console.error("Error fetching assignments:", error);
-          throw error; // re-throwing the error to be caught by the outer catch block
+          throw error;
         }
-
-        return employee;
       }));
+
+      // Filtering out null values (employees with no matching designations)
+      const filteredEmployeesData = employeesData.filter(employee => employee !== null);
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: employeesData,
+        data: filteredEmployeesData,
       });
     }
   } catch (e) {
