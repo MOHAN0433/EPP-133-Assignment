@@ -310,37 +310,54 @@ const getAllEmployees = async (event) => {
     }
   };
   try {
-    const { Items } = await client.send(
+    const { Items: employeeItems } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     );
 
-    if (Items.length === 0) {
+    if (employeeItems.length === 0) {
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       });
-    } else {
-      let employeesData = Items.map(item => unmarshall(item));
-
-      // Check if query parameters for filtering by designation are provided
-      const queryParams = event.queryStringParameters || {};
-      const designations = queryParams.designations;
-
-      if (designations) {
-        const filteredDesignations = designations.split(',');
-        // Filter employees by provided designations
-        employeesData = employeesData.filter(employee => {
-          const assignments = employee.assignments || [];
-          const employeeDesignations = assignments.map(assignment => assignment.designation);
-          return filteredDesignations.some(designation => employeeDesignations.includes(designation));
-        });
-      }
-
-      response.body = JSON.stringify({
-        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: employeesData,
-      });
+      return response;
     }
+
+    const queryParams = event.queryStringParameters || {};
+    const designations = queryParams.designations ? queryParams.designations.split(',') : [];
+
+    const employeesData = [];
+
+    for (const employeeItem of employeeItems) {
+      const employee = unmarshall(employeeItem);
+
+      // Fetch assignments for the current employee
+      try {
+        const params = {
+          TableName: process.env.ASSIGNMENTS_TABLE,
+          FilterExpression: "employeeId = :employeeId",
+          ExpressionAttributeValues: {
+            ":employeeId": employee.employeeId,
+          },
+        };
+        const { Items: assignmentItems } = await client.send(new ScanCommand(params));
+
+        const assignments = assignmentItems.map(item => unmarshall(item));
+
+        // Filtering based on provided designations
+        if (designations.length === 0 || assignments.some(assignment => designations.includes(assignment.designation))) {
+          employee.assignments = assignments;
+          employeesData.push(employee);
+        }
+      } catch (error) {
+        console.error("Error fetching assignments:", error);
+        throw error; // re-throwing the error to be caught by the outer catch block
+      }
+    }
+
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+      data: employeesData,
+    });
   } catch (e) {
     console.error(e);
     response.body = JSON.stringify({
@@ -351,6 +368,7 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
+
 
 
 // Function to check if employeeId already exists
