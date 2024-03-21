@@ -314,7 +314,7 @@ const getAllEmployees = async (event) => {
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     );
 
-    if (employeeItems.length === 0) {
+    if (!employeeItems || employeeItems.length === 0) {
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
@@ -341,7 +341,8 @@ const getAllEmployees = async (event) => {
         };
         const { Items: assignmentItems } = await client.send(new ScanCommand(params));
 
-        const assignments = assignmentItems.map(item => unmarshall(item));
+        // Check if assignmentItems is defined and not empty
+        const assignments = assignmentItems ? assignmentItems.map(item => unmarshall(item)) : [];
 
         // Filtering based on provided designations
         if (designations.length === 0 || assignments.some(assignment => designations.includes(assignment.designation))) {
@@ -360,15 +361,14 @@ const getAllEmployees = async (event) => {
     });
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
   return response;
 };
-
 
 
 // Function to check if employeeId already exists
