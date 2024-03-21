@@ -302,7 +302,7 @@ const getEmployee = async (event) => {
 };
 
 
-const getAllEmployees = async () => {
+const getAllEmployees = async (event) => {
   const response = { 
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
@@ -320,55 +320,23 @@ const getAllEmployees = async () => {
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       });
     } else {
-      const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
+      let employeesData = Items.map(item => unmarshall(item));
 
-      const employeesData = await Promise.all(sortedItems.map(async (item) => {
-        const employee = unmarshall(item);
-        if (employee.hasOwnProperty("password")) {
-          employee.password = null;
-        }
-
-        try {
-          const employeeId = employee.employeeId;
-          const params = {
-            TableName: process.env.ASSIGNMENTS_TABLE,
-            FilterExpression: "employeeId = :employeeId",
-            ExpressionAttributeValues: {
-              ":employeeId": { S: employeeId },
-            },
-          };
-          const { Items } = await client.send(new ScanCommand(params));
-
-          // Fetching designation for the employee
-          const designationPromises = Items.map(async (assignment) => {
-            const assignmentData = unmarshall(assignment);
-            return assignmentData.designation;
-          });
-
-          const designations = await Promise.all(designationPromises);
-
-          // Checking if any of the designations match the desired values
-          const desiredDesignations = ['Manager', 'Supervisor']; // Example values, replace with your desired designations
-          if (designations.some(designation => desiredDesignations.includes(designation))) {
-            // If at least one designation matches, include this employee
-            employee.assignments = Items.map(unmarshall);
-            return employee;
-          } else {
-            // If no designation matches, exclude this employee
-            return null;
-          }
-        } catch (error) {
-          console.error("Error fetching assignments:", error);
-          throw error;
-        }
-      }));
-
-      // Filtering out null values (employees with no matching designations)
-      const filteredEmployeesData = employeesData.filter(employee => employee !== null);
+      // Check if query parameters for filtering by designation are provided
+      const queryParams = event.queryStringParameters;
+      if (queryParams && queryParams.designations) {
+        const filteredDesignations = queryParams.designations.split(',');
+        // Filter employees by provided designations
+        employeesData = employeesData.filter(employee => {
+          const assignments = employee.assignments || [];
+          const employeeDesignations = assignments.map(assignment => assignment.designation);
+          return filteredDesignations.some(designation => employeeDesignations.includes(designation));
+        });
+      }
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: filteredEmployeesData,
+        data: employeesData,
       });
     }
   } catch (e) {
