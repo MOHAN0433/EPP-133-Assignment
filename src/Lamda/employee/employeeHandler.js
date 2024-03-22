@@ -311,7 +311,13 @@ const getAllEmployees = async (event) => {
   };
 
   try {
-    const designations = event.queryStringParameters && event.queryStringParameters.designation;
+    const queryParams = event.queryStringParameters;
+    let designations = [];
+
+    // Extracting designation values from query parameters
+    if (queryParams && queryParams.designation) {
+      designations = Array.isArray(queryParams.designation) ? queryParams.designation : [queryParams.designation];
+    }
 
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
@@ -326,19 +332,16 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
 
-      if (designations && designations.length > 0) {
-        const selectedDesignations = designations.split(',').map(designation => designation.trim());
-        const filteredEmployeesData = employeesData.filter(employee => selectedDesignations.includes(employee.designation));
-        response.body = JSON.stringify({
-          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-          data: filteredEmployeesData,
-        });
-      } else {
-        response.body = JSON.stringify({
-          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-          data: employeesData,
-        });
+      // Filtering employees based on the selected designations
+      let filteredEmployeesData = employeesData;
+      if (designations.length > 0) {
+        filteredEmployeesData = employeesData.filter(employee => designations.includes(employee.designation));
       }
+
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+        data: filteredEmployeesData,
+      });
     }
   } catch (e) {
     console.error(e);
@@ -351,6 +354,7 @@ const getAllEmployees = async (event) => {
 
   return response;
 };
+
 
 
 // Function to check if employeeId already exists
