@@ -342,16 +342,18 @@ const getAllEmployees = async (event) => {
         const { Items: assignmentItems } = await client.send(new ScanCommand(params));
 
         // Check if assignmentItems is defined and not empty
-        const assignments = assignmentItems ? assignmentItems.map(item => unmarshall(item)) : [];
+        if (assignmentItems && assignmentItems.length > 0) {
+          const assignments = assignmentItems.map(item => unmarshall(item));
 
-        // Filtering based on provided designations
-        if (designations.length === 0 || assignments.some(assignment => designations.includes(assignment.designation))) {
-          employee.assignments = assignments;
-          employeesData.push(employee);
+          // Filtering based on provided designations
+          if (designations.length === 0 || assignments.some(assignment => designations.includes(assignment.designation))) {
+            employee.assignments = assignments;
+            employeesData.push(employee);
+          }
         }
       } catch (error) {
         console.error("Error fetching assignments:", error);
-        throw error; // re-throwing the error to be caught by the outer catch block
+        // Log the error and continue with the next employee
       }
     }
 
