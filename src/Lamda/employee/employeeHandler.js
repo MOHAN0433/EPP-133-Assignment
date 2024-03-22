@@ -310,61 +310,41 @@ const getAllEmployees = async (event) => {
     }
   };
   try {
-    const { Items: employeeItems } = await client.send(
+    const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     );
 
-    if (!employeeItems || employeeItems.length === 0) {
+    if (Items.length === 0) {
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       });
-      return response;
-    }
+    } else {
+      let employeesData = Items.map(item => unmarshall(item));
 
-    const queryParams = event.queryStringParameters || {};
-    const designations = queryParams.designations ? queryParams.designations.split(',') : [];
+      // Check if query parameters for filtering by designation are provided
+      const queryParams = event.queryStringParameters || {};
+      const designations = queryParams.designations;
 
-    const employeesData = [];
-
-    for (const employeeItem of employeeItems) {
-      const employee = unmarshall(employeeItem);
-
-      // Fetch assignments for the current employee
-      try {
-        const params = {
-          TableName: process.env.ASSIGNMENTS_TABLE,
-          FilterExpression: "employeeId = :employeeId",
-          ExpressionAttributeValues: {
-            ":employeeId": employee.employeeId,
-          },
-        };
-        const { Items: assignmentItems } = await client.send(new ScanCommand(params));
-
-        // Check if assignmentItems is defined and not empty
-        if (assignmentItems && assignmentItems.length > 0) {
-          const assignments = assignmentItems.map(item => unmarshall(item));
-
-          // Include all assignments if no designations are provided
-          if (designations.length === 0 || designations.some(d => assignments.find(a => a.designation === d))) {
-            employee.assignments = assignments;
-            employeesData.push(employee);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching assignments:", error);
-        // Log the error and continue with the next employee
+      if (designations) {
+        const filteredDesignations = designations.split(',');
+        // Filter employees by provided designations
+        employeesData = employeesData.filter(employee => {
+          const assignments = employee.assignments || [];
+          const employeeDesignations = assignments.map(assignment => assignment.designation);
+          return filteredDesignations.some(designation => employeeDesignations.includes(designation));
+        });
       }
-    }
 
-    response.body = JSON.stringify({
-      message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-      data: employeesData,
-    });
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+        data: employeesData,
+      });
+    }
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
+      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
