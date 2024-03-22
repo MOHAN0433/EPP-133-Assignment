@@ -353,7 +353,6 @@ const getAllEmployees = async (event) => {
 };
 
 
-
 // Function to check if employeeId already exists
 const isEmployeeIdExists = async (employeeId) => {
   const params = {
