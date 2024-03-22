@@ -345,8 +345,8 @@ const getAllEmployees = async (event) => {
         if (assignmentItems && assignmentItems.length > 0) {
           const assignments = assignmentItems.map(item => unmarshall(item));
 
-          // Filtering based on provided designations
-          if (designations.length === 0 || assignments.some(assignment => designations.includes(assignment.designation))) {
+          // Include all assignments if no designations are provided
+          if (designations.length === 0 || designations.some(d => assignments.find(a => a.designation === d))) {
             employee.assignments = assignments;
             employeesData.push(employee);
           }
