@@ -311,7 +311,7 @@ const getAllEmployees = async (event) => {
   };
 
   try {
-    const designation = event.queryStringParameters && event.queryStringParameters.designation;
+    const designations = event.queryStringParameters && event.queryStringParameters.designation;
 
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
@@ -326,8 +326,9 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
 
-      if (designation) {
-        const filteredEmployeesData = employeesData.filter(employee => employee.designation === designation);
+      if (designations && designations.length > 0) {
+        const selectedDesignations = designations.split(',').map(designation => designation.trim());
+        const filteredEmployeesData = employeesData.filter(employee => selectedDesignations.includes(employee.designation));
         response.body = JSON.stringify({
           message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
           data: filteredEmployeesData,
