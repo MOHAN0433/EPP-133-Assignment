@@ -332,6 +332,10 @@ const getAllEmployees = async (event) => {
         employeesData = employeesData.filter(employee => {
           const assignments = employee.assignments || [];
           const employeeDesignations = assignments.map(assignment => assignment.designation);
+          const designationNotFound = filteredDesignations.some(designation => !employeeDesignations.includes(designation));
+          if (designationNotFound) {
+            throw new Error('One or more provided designations not found.');
+          }
           return filteredDesignations.some(designation => employeeDesignations.includes(designation));
         });
       }
@@ -343,8 +347,8 @@ const getAllEmployees = async (event) => {
     }
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
