@@ -302,45 +302,37 @@ const getEmployee = async (event) => {
 };
 
 
-const getAllEmployees = async (designations) => {
+const getAllEmployees = async (event) => {
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
       'Access-Control-Allow-Origin': '*',
     }
   };
+
   try {
+    const designation = event.queryStringParameters && event.queryStringParameters.designation;
+
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
-    ); // Getting table name from the serverless.yml and setting to the TableName
+    );
 
     if (Items.length === 0) {
-      // If there are no employee details found
-      response.statusCode = httpStatusCodes.NOT_FOUND; // Setting the status code to 404
+      response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
-      }); // Setting error message
+      });
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
+      const employeesData = sortedItems.map(item => unmarshall(item));
 
-      // Map and set "password" field to null
-      const employeesData = sortedItems.map((item) => {
-        const employee = unmarshall(item);
-        if (employee.hasOwnProperty("password")) {
-          employee.password = null;
-        }
-        return employee;
-      });
-
-      // Filter employees based on the selected designations if provided
-      if (designations && designations.length > 0) {
-        const filteredEmployeesData = employeesData.filter(employee => designations.includes(employee.designation));
+      if (designation) {
+        const filteredEmployeesData = employeesData.filter(employee => employee.designation === designation);
         response.body = JSON.stringify({
           message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
           data: filteredEmployeesData,
         });
       } else {
-        // Return all employees if no filter is applied
         response.body = JSON.stringify({
           message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
           data: employeesData,
@@ -349,14 +341,16 @@ const getAllEmployees = async (designations) => {
     }
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
+
   return response;
 };
+
 
 
 // Function to check if employeeId already exists
