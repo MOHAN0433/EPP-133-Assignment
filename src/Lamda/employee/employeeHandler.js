@@ -302,14 +302,13 @@ const getEmployee = async (event) => {
 };
 
 
-const getAllEmployees = async (event) => {
+const getAllEmployees = async (designationFilter = []) => {
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
       'Access-Control-Allow-Origin': '*',
     }
   };
-
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
