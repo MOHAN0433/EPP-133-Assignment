@@ -304,8 +304,8 @@ const getEmployee = async (event) => {
 
 const getAllEmployees = async (event) => {
   console.log('Event:', event); // Log the entire event object
-  const designationFilter = event.queryStringParameters && event.queryStringParameters.designation ? 
-    event.queryStringParameters.designation.split(',') : [];
+  const designationFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation ? 
+    event.multiValueQueryStringParameters.designation : [];
   
   console.log('Designation Filter:', designationFilter);
 
