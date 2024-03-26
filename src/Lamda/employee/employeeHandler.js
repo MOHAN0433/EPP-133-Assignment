@@ -306,6 +306,8 @@ const getAllEmployees = async (event) => {
   const designationFilter = event.queryStringParameters && event.queryStringParameters.designation ? 
     event.queryStringParameters.designation.split(',') : [];
   
+  console.log('Designation Filter:', designationFilter); // Add this line to log the designation filter
+
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
