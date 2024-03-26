@@ -329,14 +329,12 @@ const getAllEmployees = async (event) => {
 
       const designationEmployeeData = {};
 
-      // Initialize data for each designation
-      designationFilter.forEach(designation => {
-        designationEmployeeData[designation] = [];
-      });
-
       // Group employees by designation
       employeesData.forEach(employee => {
         if (designationFilter.includes(employee.designation)) {
+          if (!designationEmployeeData[employee.designation]) {
+            designationEmployeeData[employee.designation] = [];
+          }
           designationEmployeeData[employee.designation].push(employee);
         }
       });
