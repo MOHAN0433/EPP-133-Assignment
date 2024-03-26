@@ -307,7 +307,11 @@ const getAllEmployees = async (event) => {
   const designationFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation ? 
     event.multiValueQueryStringParameters.designation : [];
   
+  const branchFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch ? 
+    event.multiValueQueryStringParameters.branch : [];
+
   console.log('Designation Filter:', designationFilter);
+  console.log('Branch Filter:', branchFilter);
 
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
@@ -330,12 +334,12 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
 
-      // Apply designation filter
-      const designationEmployeeData = applyDesignationFilter(employeesData, designationFilter);
+      // Apply filters
+      const filteredData = applyFilters(employeesData, designationFilter, branchFilter);
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: designationEmployeeData,
+        data: filteredData,
       });
     }
   } catch (e) {
@@ -350,27 +354,20 @@ const getAllEmployees = async (event) => {
   return response;
 };
 
-const applyDesignationFilter = (employeesData, designationFilter) => {
-  let designationEmployeeData = {};
+const applyFilters = (employeesData, designationFilter, branchFilter) => {
+  let filteredData = {};
 
-  // Check if designation filter is empty
-  if (designationFilter.length === 0) {
-    designationEmployeeData = employeesData;
-  } else {
-    // Initialize data for each designation
-    designationFilter.forEach(designation => {
-      designationEmployeeData[designation] = [];
-    });
-
-    // Group employees by designation
-    employeesData.forEach(employee => {
-      if (designationFilter.includes(employee.designation)) {
-        designationEmployeeData[employee.designation].push(employee);
+  employeesData.forEach(employee => {
+    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
+        (branchFilter.length === 0 || branchFilter.includes(employee.branch))) {
+      if (!filteredData[employee.designation]) {
+        filteredData[employee.designation] = [];
       }
-    });
-  }
+      filteredData[employee.designation].push(employee);
+    }
+  });
 
-  return designationEmployeeData;
+  return filteredData;
 };
 
 
