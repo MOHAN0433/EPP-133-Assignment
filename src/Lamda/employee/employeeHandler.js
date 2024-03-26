@@ -321,13 +321,14 @@ const getAllEmployees = async (designationFilter = []) => {
       });
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
-
+console.log("sorted Items" + sortedItems);
       // Map and set "password" field to null
       const employeesData = sortedItems.map((item) => {
         const employee = unmarshall(item);
         if (employee.hasOwnProperty("password")) {
           employee.password = null;
         }
+        console.log("employee1" + employee);
         return employee;
       });
 
@@ -336,6 +337,7 @@ const getAllEmployees = async (designationFilter = []) => {
       // Apply filter if designationFilter is provided
       if (designationFilter.length > 0) {
         filteredEmployeesData = employeesData.filter(employee => designationFilter.includes(employee.designation));
+        console.log("filtered employees" + filteredEmployeesData);
       }
 
       response.body = JSON.stringify({
