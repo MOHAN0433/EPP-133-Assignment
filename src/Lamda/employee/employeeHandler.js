@@ -333,6 +333,7 @@ console.log("sorted Items" + sortedItems);
       });
 
       let filteredEmployeesData = employeesData;
+      console.log("filtered employee1" + filteredEmployeesData);
       
       // Apply filter if designationFilter is provided
       if (designationFilter.length > 0) {
