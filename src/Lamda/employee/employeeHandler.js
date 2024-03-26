@@ -303,6 +303,7 @@ const getEmployee = async (event) => {
 
 
 const getAllEmployees = async (designationFilter = []) => {
+  console.log("designation filter" + designationFilter);
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
