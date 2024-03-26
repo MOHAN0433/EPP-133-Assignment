@@ -302,8 +302,10 @@ const getEmployee = async (event) => {
 };
 
 
-const getAllEmployees = async (designationFilter = []) => {
-  console.log("designation filter" + designationFilter.getItemParams);
+const getAllEmployees = async (event) => {
+  //console.log("designation filter" + designationFilter.getItemParams);
+  const designationFilter = event.queryStringParameters && event.queryStringParameters.designation ? 
+    event.queryStringParameters.designation.split(',') : [];
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
