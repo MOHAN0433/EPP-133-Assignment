@@ -303,10 +303,11 @@ const getEmployee = async (event) => {
 
 
 const getAllEmployees = async (event) => {
+  console.log('Query Parameters:', event.queryStringParameters); // Log the entire queryStringParameters object
   const designationFilter = event.queryStringParameters && event.queryStringParameters.designation ? 
     event.queryStringParameters.designation.split(',') : [];
   
-  console.log('Designation Filter:', designationFilter); // Add this line to log the designation filter
+  console.log('Designation Filter:', designationFilter); // Log the designation filter after splitting
 
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
