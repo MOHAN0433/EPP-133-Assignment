@@ -305,12 +305,14 @@ const getEmployee = async (event) => {
 const getAllEmployees = async (event) => {
   const designationFilter = event.queryStringParameters && event.queryStringParameters.designation ? 
     event.queryStringParameters.designation.split(',') : [];
+  
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
       'Access-Control-Allow-Origin': '*',
     }
   };
+
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
@@ -323,40 +325,36 @@ const getAllEmployees = async (event) => {
       });
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
-console.log("sorted Items" + sortedItems);
-      // Map and set "password" field to null
-      const employeesData = sortedItems.map((item) => {
-        const employee = unmarshall(item);
-        if (employee.hasOwnProperty("password")) {
-          employee.password = null;
-        }
-        console.log("employee1" + employee);
-        return employee;
-      });
+      const employeesData = sortedItems.map(item => unmarshall(item));
 
       let filteredEmployeesData = employeesData;
-      console.log("filtered employee1" + filteredEmployeesData);
-      
-      // Apply filter if designationFilter is provided
+
       if (designationFilter.length > 0) {
         filteredEmployeesData = employeesData.filter(employee =>
-          designationFilter.every(filter => employee.designation === filter)
+          designationFilter.includes(employee.designation)
         );
       }
 
+      const designationEmployeeData = designationFilter.reduce((acc, designation) => {
+        const employees = filteredEmployeesData.filter(employee => employee.designation === designation);
+        acc[designation] = employees;
+        return acc;
+      }, {});
+
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: filteredEmployeesData,
+        data: designationEmployeeData,
       });
     }
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
+
   return response;
 };
 
