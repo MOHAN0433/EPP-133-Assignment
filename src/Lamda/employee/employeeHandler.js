@@ -329,22 +329,17 @@ const getAllEmployees = async (event) => {
 
       const designationEmployeeData = {};
 
-      // Group employees by designation
-      employeesData.forEach(employee => {
-        if (!designationEmployeeData[employee.designation]) {
-          designationEmployeeData[employee.designation] = [];
-        }
-        designationEmployeeData[employee.designation].push(employee);
+      // Initialize data for each designation
+      designationFilter.forEach(designation => {
+        designationEmployeeData[designation] = [];
       });
 
-      // If designation filter is provided, filter employee data accordingly
-      if (designationFilter.length > 0) {
-        Object.keys(designationEmployeeData).forEach(designation => {
-          if (!designationFilter.includes(designation)) {
-            delete designationEmployeeData[designation];
-          }
-        });
-      }
+      // Group employees by designation
+      employeesData.forEach(employee => {
+        if (designationFilter.includes(employee.designation)) {
+          designationEmployeeData[employee.designation].push(employee);
+        }
+      });
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
