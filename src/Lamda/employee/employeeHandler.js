@@ -327,19 +327,24 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
 
-      let filteredEmployeesData = employeesData;
+      const designationEmployeeData = {};
 
+      // Group employees by designation
+      employeesData.forEach(employee => {
+        if (!designationEmployeeData[employee.designation]) {
+          designationEmployeeData[employee.designation] = [];
+        }
+        designationEmployeeData[employee.designation].push(employee);
+      });
+
+      // If designation filter is provided, filter employee data accordingly
       if (designationFilter.length > 0) {
-        filteredEmployeesData = employeesData.filter(employee =>
-          designationFilter.includes(employee.designation)
-        );
+        Object.keys(designationEmployeeData).forEach(designation => {
+          if (!designationFilter.includes(designation)) {
+            delete designationEmployeeData[designation];
+          }
+        });
       }
-
-      const designationEmployeeData = designationFilter.reduce((acc, designation) => {
-        const employees = filteredEmployeesData.filter(employee => employee.designation === designation);
-        acc[designation] = employees;
-        return acc;
-      }, {});
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
@@ -357,6 +362,7 @@ const getAllEmployees = async (event) => {
 
   return response;
 };
+
 
 
 
