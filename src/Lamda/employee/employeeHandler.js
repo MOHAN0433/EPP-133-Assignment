@@ -311,14 +311,6 @@ const getAllEmployees = async (event) => {
   };
 
   try {
-    const queryParams = event.queryStringParameters;
-    let designations = [];
-
-    // Extracting designation values from query parameters
-    if (queryParams && queryParams.designation) {
-      designations = Array.isArray(queryParams.designation) ? queryParams.designation : [queryParams.designation];
-    }
-
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     );
@@ -330,12 +322,21 @@ const getAllEmployees = async (event) => {
       });
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
-      const employeesData = sortedItems.map(item => unmarshall(item));
 
-      // Filtering employees based on the selected designations
+      // Map and set "password" field to null
+      const employeesData = sortedItems.map((item) => {
+        const employee = unmarshall(item);
+        if (employee.hasOwnProperty("password")) {
+          employee.password = null;
+        }
+        return employee;
+      });
+
       let filteredEmployeesData = employeesData;
-      if (designations.length > 0) {
-        filteredEmployeesData = employeesData.filter(employee => designations.includes(employee.designation));
+      
+      // Apply filter if designationFilter is provided
+      if (designationFilter.length > 0) {
+        filteredEmployeesData = employeesData.filter(employee => designationFilter.includes(employee.designation));
       }
 
       response.body = JSON.stringify({
@@ -345,13 +346,12 @@ const getAllEmployees = async (event) => {
     }
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
+      statusCode: httpStatusCodes.INTERNAL_SERVER_ERROR,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
-
   return response;
 };
 
