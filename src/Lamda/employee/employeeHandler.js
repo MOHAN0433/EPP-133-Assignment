@@ -344,6 +344,8 @@ const getAllEmployees = async (event) => {
  
       // Apply filters
       const filteredData = applyFilters(employeesData, designationFilter, branchFilter);
+
+      console.log('Filtered Data:', filteredData);
  
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
