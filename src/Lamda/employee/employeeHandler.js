@@ -307,11 +307,10 @@ const getAllEmployees = async (event) => {
   const designationFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation ? 
     event.multiValueQueryStringParameters.designation : [];
   
-  console.log('Designation Filter:', designationFilter);
-
   const branchFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch ? 
-    event.multiValueQueryStringParameters.branch : null;
-  
+    event.multiValueQueryStringParameters.branch : [];
+
+  console.log('Designation Filter:', designationFilter);
   console.log('Branch Filter:', branchFilter);
 
   const response = {
@@ -335,12 +334,12 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
 
-      // Apply designation and branch filters
-      const filteredEmployees = applyFilters(employeesData, designationFilter, branchFilter);
+      // Apply filters
+      const filteredData = applyFilters(employeesData, designationFilter, branchFilter);
 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: filteredEmployees,
+        data: filteredData,
       });
     }
   } catch (e) {
@@ -356,19 +355,19 @@ const getAllEmployees = async (event) => {
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
-  let filteredEmployees = employeesData;
+  let filteredData = {};
 
-  // Apply designation filter if present
-  if (designationFilter.length > 0) {
-    filteredEmployees = filteredEmployees.filter(employee => designationFilter.includes(employee.designation));
-  }
+  employeesData.forEach(employee => {
+    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
+        (branchFilter.length === 0 || branchFilter.includes(employee.branch))) {
+      if (!filteredData[employee.designation]) {
+        filteredData[employee.designation] = [];
+      }
+      filteredData[employee.designation].push(employee);
+    }
+  });
 
-  // Apply branch filter if present
-  if (branchFilter) {
-    filteredEmployees = filteredEmployees.filter(employee => employee.branch === branchFilter);
-  }
-
-  return filteredEmployees;
+  return filteredData;
 };
 
 
