@@ -368,15 +368,18 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   let filteredData = {};
 
   employeesData.forEach(employee => {
-    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
-        (branchFilter.length === 0 || branchFilter.includes(employee.branch))) {
-      if (!filteredData[employee.designation]) {
-        filteredData[employee.designation] = {};
+    const employeeBranch = employee.branch.trim();
+    const employeeDesignation = employee.designation.trim();
+
+    if ((designationFilter.length === 0 || designationFilter.includes(employeeDesignation)) &&
+        (branchFilter.length === 0 || branchFilter.includes(employeeBranch))) {
+      if (!filteredData[employeeDesignation]) {
+        filteredData[employeeDesignation] = {};
       }
-      if (!filteredData[employee.designation][employee.branch]) {
-        filteredData[employee.designation][employee.branch] = [];
+      if (!filteredData[employeeDesignation][employeeBranch]) {
+        filteredData[employeeDesignation][employeeBranch] = [];
       }
-      filteredData[employee.designation][employee.branch].push(employee);
+      filteredData[employeeDesignation][employeeBranch].push(employee);
     }
   });
 
