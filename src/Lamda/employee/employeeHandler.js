@@ -366,41 +366,42 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   let filteredData = {};
 
   employeesData.forEach(employee => {
-    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation))) {
-      const employeeBranches = splitByCommaWithSpace(employee.branch.trim());
+    const employeeBranches = splitByCommaWithSpace(employee.branch.trim());
 
-      // Check if any of the employee's branches matches the branch filter
-      if (branchFilter.length === 0 || employeeBranches.some(branch => branchFilter.includes(branch))) {
-        if (!filteredData[employee.designation]) {
-          filteredData[employee.designation] = {};
-        }
-        employeeBranches.forEach(branch => {
-          if (!filteredData[employee.designation][branch]) {
-            filteredData[employee.designation][branch] = [];
-          }
-          filteredData[employee.designation][branch].push(employee);
-        });
+    // Check if any of the employee's branches matches the branch filter
+    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
+        (branchFilter.length === 0 || employeeBranches.some(branch => branchFilter.includes(branch)))) {
+      if (!filteredData[employee.designation]) {
+        filteredData[employee.designation] = {};
       }
+      employeeBranches.forEach(branch => {
+        if (!filteredData[employee.designation][branch]) {
+          filteredData[employee.designation][branch] = [];
+        }
+        filteredData[employee.designation][branch].push(employee);
+      });
     }
   });
 
   return filteredData;
 };
 
-// Helper function to split by comma followed by space
+// Helper function to split by comma, but consider "San Antonio, USA" as one word
 const splitByCommaWithSpace = (str) => {
-  const parts = [];
+  let parts = [];
   let currentPart = '';
+  let insideQuotes = false;
 
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
-    if (char === ',' && i < str.length - 1 && str[i + 1] === ' ') {
+    if (char === ',' && !insideQuotes) {
       parts.push(currentPart.trim());
       currentPart = '';
-      // Skip the space
-      i++;
     } else {
       currentPart += char;
+      if (char === '"') {
+        insideQuotes = !insideQuotes;
+      }
     }
   }
 
