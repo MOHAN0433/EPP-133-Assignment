@@ -366,20 +366,20 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   let filteredData = {};
 
   employeesData.forEach(employee => {
-    // Check if branch and designation properties are defined
-    if (employee.branch && employee.designation) {
-      const employeeBranch = employee.branch.trim();
-      const employeeDesignation = employee.designation.trim();
+    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation))) {
+      const employeeBranches = splitByCommaWithSpace(employee.branch.trim());
 
-      if ((designationFilter.length === 0 || designationFilter.includes(employeeDesignation)) &&
-          (branchFilter.length === 0 || branchFilter.includes(employeeBranch))) {
-        if (!filteredData[employeeDesignation]) {
-          filteredData[employeeDesignation] = {};
+      // Check if any of the employee's branches matches the branch filter
+      if (branchFilter.length === 0 || employeeBranches.some(branch => branchFilter.includes(branch))) {
+        if (!filteredData[employee.designation]) {
+          filteredData[employee.designation] = {};
         }
-        if (!filteredData[employeeDesignation][employeeBranch]) {
-          filteredData[employeeDesignation][employeeBranch] = [];
-        }
-        filteredData[employeeDesignation][employeeBranch].push(employee);
+        employeeBranches.forEach(branch => {
+          if (!filteredData[employee.designation][branch]) {
+            filteredData[employee.designation][branch] = [];
+          }
+          filteredData[employee.designation][branch].push(employee);
+        });
       }
     }
   });
@@ -387,6 +387,26 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   return filteredData;
 };
 
+// Helper function to split by comma followed by space
+const splitByCommaWithSpace = (str) => {
+  const parts = [];
+  let currentPart = '';
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === ',' && i < str.length - 1 && str[i + 1] === ' ') {
+      parts.push(currentPart.trim());
+      currentPart = '';
+      // Skip the space
+      i++;
+    } else {
+      currentPart += char;
+    }
+  }
+
+  parts.push(currentPart.trim());
+  return parts;
+};
 
 
 // Function to check if employeeId already exists
