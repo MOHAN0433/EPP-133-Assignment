@@ -304,23 +304,17 @@ const getEmployee = async (event) => {
 
 const getAllEmployees = async (event) => {
   console.log('Event:', event); // Log the entire event object
-  let designationFilter = [];
-  let branchFilter = [];
-
-  if (event.multiValueQueryStringParameters) {
-    if (event.multiValueQueryStringParameters.designation) {
-      designationFilter = event.multiValueQueryStringParameters.designation
-        .flatMap(designation => designation.split(',')); // Split by commas if exists
-    }
-    if (event.multiValueQueryStringParameters.branch) {
-      branchFilter = event.multiValueQueryStringParameters.branch
-        .flatMap(branch => branch.split(',')); // Split by commas if exists
-    }
-  }
+  
+  const designationFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation ?
+    event.multiValueQueryStringParameters.designation : [];
  
   console.log('Designation Filter:', designationFilter);
-  console.log('Branch Filter:', branchFilter);
  
+  const branchFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch ? 
+    event.multiValueQueryStringParameters.branch : [];
+ 
+  console.log('Branch Filter:', branchFilter);
+
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
@@ -342,10 +336,14 @@ const getAllEmployees = async (event) => {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
  
-      // Apply filters
-      const filteredData = applyFilters(employeesData, designationFilter, branchFilter);
-
-      console.log('Filtered Data:', filteredData);
+      // Apply filters only if filter conditions are present
+      let filteredData = {};
+      if (designationFilter.length > 0 || branchFilter.length > 0) {
+        filteredData = applyFilters(employeesData, designationFilter, branchFilter);
+      } else {
+        // No filter conditions, return all employee data
+        filteredData = employeesData;
+      }
  
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
@@ -363,7 +361,7 @@ const getAllEmployees = async (event) => {
  
   return response;
 };
- 
+
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
   let filteredData = {};
 
@@ -372,9 +370,6 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     if (employee.branch && employee.designation) {
       const employeeBranch = employee.branch.trim();
       const employeeDesignation = employee.designation.trim();
-      
-      console.log('Employee Branch:', employeeBranch);
-      console.log('Employee Designation:', employeeDesignation);
 
       if ((designationFilter.length === 0 || designationFilter.includes(employeeDesignation)) &&
           (branchFilter.length === 0 || branchFilter.includes(employeeBranch))) {
@@ -389,9 +384,9 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     }
   });
 
-  console.log('Filtered Data:', filteredData);
   return filteredData;
 };
+
 
 
 // Function to check if employeeId already exists
