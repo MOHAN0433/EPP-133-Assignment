@@ -304,27 +304,27 @@ const getEmployee = async (event) => {
 
 const getAllEmployees = async (event) => {
   console.log('Event:', event); // Log the entire event object
-  const designationFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation ? 
-    event.multiValueQueryStringParameters.designation : [];
-  
-  const branchFilter = event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch ? 
-    event.multiValueQueryStringParameters.branch : [];
+  let designationFilter = [];
 
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
+    designationFilter = event.multiValueQueryStringParameters.designation
+      .flatMap(designation => designation.split(',')); // Split by commas if exists
+  }
+ 
   console.log('Designation Filter:', designationFilter);
-  console.log('Branch Filter:', branchFilter);
-
+ 
   const response = {
     statusCode: httpStatusCodes.SUCCESS,
     headers: {
       'Access-Control-Allow-Origin': '*',
     }
   };
-
+ 
   try {
     const { Items } = await client.send(
       new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
     );
-
+ 
     if (Items.length === 0) {
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
@@ -333,13 +333,13 @@ const getAllEmployees = async (event) => {
     } else {
       const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
       const employeesData = sortedItems.map(item => unmarshall(item));
-
-      // Apply filters
-      const filteredData = applyFilters(employeesData, designationFilter, branchFilter);
-
+ 
+      // Apply designation filter
+      const designationEmployeeData = applyDesignationFilter(employeesData, designationFilter);
+ 
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: filteredData,
+        data: designationEmployeeData,
       });
     }
   } catch (e) {
@@ -350,24 +350,31 @@ const getAllEmployees = async (event) => {
       errorMsg: e.message,
     });
   }
-
+ 
   return response;
 };
-
-const applyFilters = (employeesData, designationFilter, branchFilter) => {
-  let filteredData = {};
-
-  employeesData.forEach(employee => {
-    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
-        (branchFilter.length === 0 || branchFilter.includes(employee.branch))) {
-      if (!filteredData[employee.designation]) {
-        filteredData[employee.designation] = [];
+ 
+const applyDesignationFilter = (employeesData, designationFilter) => {
+  let designationEmployeeData = {};
+ 
+  // Check if designation filter is empty
+  if (designationFilter.length === 0) {
+    designationEmployeeData = employeesData;
+  } else {
+    // Initialize data for each designation
+    designationFilter.forEach(designation => {
+      designationEmployeeData[designation] = [];
+    });
+ 
+    // Group employees by designation
+    employeesData.forEach(employee => {
+      if (designationFilter.includes(employee.designation)) {
+        designationEmployeeData[employee.designation].push(employee);
       }
-      filteredData[employee.designation].push(employee);
-    }
-  });
-
-  return filteredData;
+    });
+  }
+ 
+  return designationEmployeeData;
 };
 
 
