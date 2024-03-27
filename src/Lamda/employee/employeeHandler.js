@@ -372,6 +372,9 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     if (employee.branch && employee.designation) {
       const employeeBranch = employee.branch.trim();
       const employeeDesignation = employee.designation.trim();
+      
+      console.log('Employee Branch:', employeeBranch);
+      console.log('Employee Designation:', employeeDesignation);
 
       if ((designationFilter.length === 0 || designationFilter.includes(employeeDesignation)) &&
           (branchFilter.length === 0 || branchFilter.includes(employeeBranch))) {
@@ -386,6 +389,7 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     }
   });
 
+  console.log('Filtered Data:', filteredData);
   return filteredData;
 };
 
