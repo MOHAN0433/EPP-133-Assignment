@@ -366,20 +366,23 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   let filteredData = {};
 
   employeesData.forEach(employee => {
-    const employeeBranches = splitByCommaWithSpace(employee.branch.trim());
+    // Check if employee.branch exists before proceeding
+    if (employee.branch) {
+      const employeeBranches = splitByCommaWithSpace(employee.branch.trim());
 
-    // Check if any of the employee's branches matches the branch filter
-    if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
-        (branchFilter.length === 0 || employeeBranches.some(branch => branchFilter.includes(branch)))) {
-      if (!filteredData[employee.designation]) {
-        filteredData[employee.designation] = {};
-      }
-      employeeBranches.forEach(branch => {
-        if (!filteredData[employee.designation][branch]) {
-          filteredData[employee.designation][branch] = [];
+      // Check if any of the employee's branches matches the branch filter
+      if ((designationFilter.length === 0 || designationFilter.includes(employee.designation)) &&
+          (branchFilter.length === 0 || employeeBranches.some(branch => branchFilter.includes(branch)))) {
+        if (!filteredData[employee.designation]) {
+          filteredData[employee.designation] = {};
         }
-        filteredData[employee.designation][branch].push(employee);
-      });
+        employeeBranches.forEach(branch => {
+          if (!filteredData[employee.designation][branch]) {
+            filteredData[employee.designation][branch] = [];
+          }
+          filteredData[employee.designation][branch].push(employee);
+        });
+      }
     }
   });
 
