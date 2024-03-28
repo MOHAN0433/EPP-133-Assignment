@@ -303,7 +303,13 @@ const getEmployee = async (event) => {
 
 
 const getAllEmployees = async (event) => {
-  console.log('Event:', event); // Log the entire event object
+  console.log("Get all employees");
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
   let designationFilter = [];
   let branchFilter = [];
 
@@ -311,53 +317,47 @@ const getAllEmployees = async (event) => {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
   }
-
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
-    branchFilter = event.multiValueQueryStringParameters.branch
-      .flatMap(branch => branch.split(',')); // Split by commas if exists
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
+    branchFilter = event.multiValueQueryStringParameters.branchOffice
+      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
   }
 
-  console.log('Designation Filter:', designationFilter);
-  console.log('Branch Filter:', branchFilter);
-
-  const response = {
-    statusCode: httpStatusCodes.SUCCESS,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    }
-  };
-
+  const { pageNo, pageSize } = event.queryStringParameters;
   try {
-    const { Items } = await client.send(
-      new ScanCommand({ TableName: process.env.EMPLOYEE_TABLE })
-    );
-
-    if (Items.length === 0) {
+    const params = {
+      TableName: process.env.EMPLOYEE_TABLE,
+    };
+    const { Items } = await client.send(new ScanCommand(params));
+    Items.sort((a, b) => parseInt(a.employeeId.N) - parseInt(b.employeeId.N));
+    console.log({ Items });
+    if (!Items || Items.length === 0) {
+      console.log("No employees found.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
+        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
-      const sortedItems = Items.sort((a, b) => parseInt(a.employeeId.S) - parseInt(b.employeeId.S));
-      const employeesData = sortedItems.map(item => unmarshall(item));
-
+      console.log("Successfully retrieved all employees.");
+      const sanitizedItems = Items.map((item) => {
+        const sanitizedItem = { ...item };
+        delete sanitizedItem.password; // Assuming password field is called 'password'
+        return sanitizedItem;
+      });
       // Apply filters
       const filteredEmployeeData = applyFilters(employeesData, designationFilter, branchFilter);
-
-      response.body = JSON.stringify({
+      const paginatedFilteredData = pagination(filteredEmployeeData, pageNo, pageSize);      response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: filteredEmployeeData,
+        data: paginatedFilteredData,
       });
     }
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
+      statusCode: e.statusCode,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
       errorMsg: e.message,
     });
   }
-
   return response;
 };
 
