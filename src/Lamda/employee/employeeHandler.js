@@ -383,8 +383,8 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
 
 const matchesBranch = (employeeBranch, branchFilter) => {
   for (const branch of branchFilter) {
-    const branchWords = branch.split(' ').filter(word => word.trim() !== '');
-    if (branchWords.every(word => employeeBranch.includes(word))) {
+    const branchPhrases = branch.split(',').map(phrase => phrase.trim());
+    if (branchPhrases.every(phrase => employeeBranch.includes(phrase))) {
       return true;
     }
   }
