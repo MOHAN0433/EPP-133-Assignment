@@ -317,9 +317,9 @@ const getAllEmployees = async (event) => {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
   }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
-    branchFilter = event.multiValueQueryStringParameters.branchOffice
-      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
+    branchFilter = event.multiValueQueryStringParameters.branch
+      .flatMap(branch => branch.split(',')); // Split by commas if exists
   }
 
   const { pageNo, pageSize } = event.queryStringParameters;
@@ -344,10 +344,12 @@ const getAllEmployees = async (event) => {
         return sanitizedItem;
       });
       // Apply filters
-      const filteredEmployeeData = applyFilters(Items, designationFilter, branchFilter);
-      const paginatedFilteredData = pagination(filteredEmployeeData, pageNo, pageSize);      response.body = JSON.stringify({
+      const filteredEmployeeData = applyFilters(Items, designationFilter, branchFilter); // Use Items instead of employeesData
+      // Paginate filtered data
+      const paginatedData = pagination(filteredEmployeeData, pageNo, pageSize); // Make sure pagination function is defined
+      response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: paginatedFilteredData,
+        data: paginatedData,
       });
     }
   } catch (e) {
