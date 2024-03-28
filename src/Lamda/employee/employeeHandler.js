@@ -330,7 +330,9 @@ const getAllEmployees = async (event) => {
     const { Items } = await client.send(new ScanCommand(params));
 
     // Apply filters
+    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
     const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+    console.log("Filtered items:", filteredItems);
 
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
@@ -360,6 +362,7 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
+
 const pagination = (allItems, pageNo, pageSize) => {
   console.log("inside the pagination function");
   console.log("items length", allItems.length);
