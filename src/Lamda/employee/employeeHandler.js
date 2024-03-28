@@ -360,6 +360,24 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
+const pagination = (allItems, pageNo, pageSize) => {
+  console.log("inside the pagination function");
+  console.log("items length", allItems.length);
+
+  const startIndex = (pageNo - 1) * pageSize;
+  console.log("start index", startIndex);
+  const endIndex = pageNo * pageSize;
+  console.log("endIndex index", endIndex);
+
+  const items = allItems.slice(startIndex, endIndex);
+  console.log("items", items);
+  return {
+      items,
+      totalItems: allItems.length,
+      currentPage: pageNo,
+      totalPages: Math.ceil(allItems.length / pageSize)
+  };
+};
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
   // If both filters are provided, filter employees based on both filters
