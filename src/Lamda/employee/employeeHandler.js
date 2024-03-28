@@ -310,6 +310,7 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
+  const { pageNo, pageSize } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
 
@@ -322,31 +323,28 @@ const getAllEmployees = async (event) => {
       .flatMap(branch => branch.split(',')); // Split by commas if exists
   }
 
-  const { pageNo, pageSize } = event.queryStringParameters;
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
     };
     const { Items } = await client.send(new ScanCommand(params));
-    Items.sort((a, b) => parseInt(a.employeeId.N) - parseInt(b.employeeId.N));
-    console.log({ Items });
-    if (!Items || Items.length === 0) {
-      console.log("No employees found.");
+
+    // Apply filters
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+
+    // Apply pagination
+    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+
+    console.log("Filtered and paginated data:", paginatedData);
+
+    if (!paginatedData.items || paginatedData.items.length === 0) {
+      console.log("No employees found after filtering.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
-      console.log("Successfully retrieved all employees.");
-      const sanitizedItems = Items.map((item) => {
-        const sanitizedItem = { ...item };
-        delete sanitizedItem.password; // Assuming password field is called 'password'
-        return sanitizedItem;
-      });
-      // Apply filters
-      const filteredEmployeeData = applyFilters(Items, designationFilter, branchFilter); // Use Items instead of employeesData
-      // Paginate filtered data
-      const paginatedData = pagination(filteredEmployeeData, pageNo, pageSize); // Make sure pagination function is defined
+      console.log("Successfully retrieved filtered and paginated employees.");
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
         data: paginatedData,
@@ -361,25 +359,6 @@ const getAllEmployees = async (event) => {
     });
   }
   return response;
-};
-
-const pagination = (allItems, pageNo, pageSize) => {
-  console.log("inside the pagination function");
-  console.log("items length", allItems.length);
-
-  const startIndex = (pageNo - 1) * pageSize;
-  console.log("start index", startIndex);
-  const endIndex = pageNo * pageSize;
-  console.log("endIndex index", endIndex);
-
-  const items = allItems.slice(startIndex, endIndex);
-  console.log("items", items);
-  return {
-      items,
-      totalItems: allItems.length,
-      currentPage: pageNo,
-      totalPages: Math.ceil(allItems.length / pageSize)
-  };
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
