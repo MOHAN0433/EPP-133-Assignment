@@ -371,10 +371,8 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
       const employeeBranch = employee.branch.trim();
       const employeeDesignation = employee.designation.trim();
 
-      const branches = branchFilter.map(branch => branch.trim());
-      
       if ((designationFilter.length === 0 || designationFilter.includes(employeeDesignation)) &&
-          (branchFilter.length === 0 || branches.includes(employeeBranch))) {
+          (branchFilter.length === 0 || branchFilter.includes(employeeBranch))) {
         if (!filteredData[employeeDesignation]) {
           filteredData[employeeDesignation] = {};
         }
@@ -389,29 +387,6 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   return filteredData;
 };
 
-
-// Helper function to split by comma, but consider "San Antonio, USA" as one word
-// const splitByCommaWithSpace = (str) => {
-//   let parts = [];
-//   let currentPart = '';
-//   let insideQuotes = false;
-
-//   for (let i = 0; i < str.length; i++) {
-//     const char = str[i];
-//     if (char === ',' && !insideQuotes) {
-//       parts.push(currentPart.trim());
-//       currentPart = '';
-//     } else {
-//       currentPart += char;
-//       if (char === '"') {
-//         insideQuotes = !insideQuotes;
-//       }
-//     }
-//   }
-
-//   parts.push(currentPart.trim());
-//   return parts;
-// };
 
 
 // Function to check if employeeId already exists
