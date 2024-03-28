@@ -362,29 +362,23 @@ const getAllEmployees = async (event) => {
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
-  let filteredEmployeeData = {};
-
-  // Check if both filters are passed
-  const shouldMatchBothFilters = designationFilter.length > 0 && branchFilter.length > 0;
-
-  // If neither filter is passed, return all data
-  if (designationFilter.length === 0 && branchFilter.length === 0) {
-    filteredEmployeeData = employeesData;
-  } else {
-    // Filter employees by designation and/or branch
-    filteredEmployeeData = employeesData.filter(employee => {
-      const matchDesignation = designationFilter.length === 0 || designationFilter.includes(employee.designation);
-      const matchBranch = branchFilter.length === 0 || branchFilter.includes(employee.branch);
-
-      if (shouldMatchBothFilters) {
-        return matchDesignation && matchBranch;
-      } else {
-        return matchDesignation || matchBranch;
-      }
-    });
+  // If both filters are provided, filter employees based on both filters
+  if (designationFilter.length > 0 && branchFilter.length > 0) {
+    return employeesData.filter(employee => designationFilter.includes(employee.designation) && branchFilter.includes(employee.branch));
+  }
+  
+  // If only designation filter is provided, filter by designation
+  if (designationFilter.length > 0) {
+    return employeesData.filter(employee => designationFilter.includes(employee.designation));
+  }
+  
+  // If only branch filter is provided, filter by branch
+  if (branchFilter.length > 0) {
+    return employeesData.filter(employee => branchFilter.includes(employee.branch));
   }
 
-  return filteredEmployeeData;
+  // If no filters provided, return all employees
+  return employeesData;
 };
 
 
