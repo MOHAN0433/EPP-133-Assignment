@@ -344,7 +344,7 @@ const getAllEmployees = async (event) => {
         return sanitizedItem;
       });
       // Apply filters
-      const filteredEmployeeData = applyFilters(employeesData, designationFilter, branchFilter);
+      const filteredEmployeeData = applyFilters(Items, designationFilter, branchFilter);
       const paginatedFilteredData = pagination(filteredEmployeeData, pageNo, pageSize);      response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
         data: paginatedFilteredData,
