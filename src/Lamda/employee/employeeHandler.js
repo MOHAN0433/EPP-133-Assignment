@@ -364,7 +364,7 @@ const getAllEmployees = async (event) => {
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
   // If both filters are provided, filter employees based on both filters
   if (designationFilter.length > 0 && branchFilter.length > 0) {
-    return employeesData.filter(employee => designationFilter.includes(employee.designation) && branchFilter.includes(employee.branch));
+    return employeesData.filter(employee => designationFilter.includes(employee.designation) && matchesBranch(employee.branch, branchFilter));
   }
   
   // If only designation filter is provided, filter by designation
@@ -374,13 +374,22 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   
   // If only branch filter is provided, filter by branch
   if (branchFilter.length > 0) {
-    return employeesData.filter(employee => branchFilter.includes(employee.branch));
+    return employeesData.filter(employee => matchesBranch(employee.branch, branchFilter));
   }
 
   // If no filters provided, return all employees
   return employeesData;
 };
 
+const matchesBranch = (employeeBranch, branchFilter) => {
+  for (const branch of branchFilter) {
+    const branchWords = branch.split(' ').filter(word => word.trim() !== '');
+    if (branchWords.every(word => employeeBranch.includes(word))) {
+      return true;
+    }
+  }
+  return false;
+};
 
 
 // Function to check if employeeId already exists
