@@ -383,23 +383,23 @@ const pagination = (allItems, pageNo, pageSize) => {
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
-  // If both filters are provided, filter employees based on both filters
-  if (designationFilter.length > 0 && branchFilter.length > 0) {
-    return employeesData.filter(employee => designationFilter.includes(employee.designation) && matchesBranch(employee.branch, branchFilter));
-  }
+  console.log("Applying filters...");
+  console.log("Designation filter:", designationFilter);
+  console.log("Branch filter:", branchFilter);
   
-  // If only designation filter is provided, filter by designation
-  if (designationFilter.length > 0) {
-    return employeesData.filter(employee => designationFilter.includes(employee.designation));
-  }
-  
-  // If only branch filter is provided, filter by branch
-  if (branchFilter.length > 0) {
-    return employeesData.filter(employee => matchesBranch(employee.branch, branchFilter));
-  }
+  const filteredEmployees = employeesData.filter(employee => {
+    // Your filter logic here
+    // Log each employee and whether they pass the filters
+    console.log("Employee:", employee);
+    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch, branchFilter);
+    const passesFilters = passesDesignationFilter && passesBranchFilter;
+    console.log("Passes filters:", passesFilters);
+    return passesFilters;
+  });
 
-  // If no filters provided, return all employees
-  return employeesData;
+  console.log("Filtered employees:", filteredEmployees);
+  return filteredEmployees;
 };
 
 const matchesBranch = (employeeBranch, branchFilter) => {
