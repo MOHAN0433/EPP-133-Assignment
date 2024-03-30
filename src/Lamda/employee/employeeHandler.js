@@ -388,6 +388,11 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Branch filter:", branchFilter);
   
   const filteredEmployees = employeesData.filter(employee => {
+    // Check if employee.branch exists before accessing its properties
+    if (!employee.branch || !employee.branch.S) {
+      return false;
+    }
+
     // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
