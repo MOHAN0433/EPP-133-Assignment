@@ -311,45 +311,32 @@ const getAllEmployees = async (event) => {
     },
   };
   const { pageNo, pageSize } = event.queryStringParameters;
-  let designationFilter = [];
-  let branchFilter = [];
-
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
-    designationFilter = event.multiValueQueryStringParameters.designation
-      .flatMap(designation => designation.split(',')); // Split by commas if exists
-  }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
-    branchFilter = event.multiValueQueryStringParameters.branch
-      .flatMap(branch => branch.split(',')); // Split by commas if exists
-  }
-
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
     };
     const { Items } = await client.send(new ScanCommand(params));
-
-    // Apply filters
-    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
-    console.log("Filtered items:", filteredItems);
-
-    // Apply pagination
-    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
-
-    console.log("Filtered and paginated data:", paginatedData);
-
-    if (!paginatedData.items || paginatedData.items.length === 0) {
-      console.log("No employees found after filtering.");
+    Items.sort((a, b) => parseInt(a.employeeId.N) - parseInt(b.employeeId.N));
+    console.log({ Items });
+    if (!Items || Items.length === 0) {
+      console.log("No employees found.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
-      console.log("Successfully retrieved filtered and paginated employees.");
+      console.log("Successfully retrieved all employees.");
+      const designationFilter = event.multiValueQueryStringParameters.designation ? event.multiValueQueryStringParameters.designation.flatMap(designation => designation.split(',')) : [];
+      const branchFilter = event.multiValueQueryStringParameters.branch ? event.multiValueQueryStringParameters.branch.flatMap(branch => branch.split(',')) : [];
+      const filteredEmployeeData = applyFilters(Items, designationFilter, branchFilter);
+      console.log("Filtered and paginated data:", filteredEmployeeData);
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: paginatedData,
+        data: pagination(
+          filteredEmployeeData.map(item => unmarshall(item)),
+          pageNo,
+          pageSize
+        ),
       });
     }
   } catch (e) {
@@ -383,27 +370,28 @@ const pagination = (allItems, pageNo, pageSize) => {
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
-  console.log("Applying filters...");
-  console.log("Designation filter:", designationFilter);
-  console.log("Branch filter:", branchFilter);
-  
-  const filteredEmployees = employeesData.filter(employee => {
-    // Your filter logic here
-    // Log each employee and whether they pass the filters
-    console.log("Employee:", employee);
-    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
-    // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
-    const passesFilters = passesDesignationFilter && passesBranchFilter;
-    console.log("Passes filters:", passesFilters);
-    return passesFilters;
-  });
+  if (designationFilter.length === 0 && branchFilter.length === 0) {
+    return employeesData;
+  }
 
-  console.log("Filtered employees:", filteredEmployees);
+  let filteredEmployees = employeesData;
+
+  if (designationFilter.length > 0) {
+    filteredEmployees = filteredEmployees.filter(employee => designationFilter.includes(employee.designation));
+  }
+
+  if (branchFilter.length > 0) {
+    filteredEmployees = filteredEmployees.filter(employee => matchesBranch(employee.branch, branchFilter));
+  }
+
   return filteredEmployees;
 };
 
 const matchesBranch = (employeeBranch, branchFilter) => {
+  if (!employeeBranch) {
+    return false;
+  }
+  
   for (const filter of branchFilter) {
     const phrases = filter.split(',').map(phrase => phrase.trim());
     if (phrases.some(phrase => employeeBranch.includes(phrase))) {
