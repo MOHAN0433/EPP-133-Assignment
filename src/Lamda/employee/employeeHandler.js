@@ -393,6 +393,11 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
       return false;
     }
 
+    // Check if there are no filters applied
+    if (designationFilter.length === 0 && branchFilter.length === 0) {
+      return true; // Return true for all employees if no filters are applied
+    }
+
     // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
