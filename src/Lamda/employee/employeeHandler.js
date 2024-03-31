@@ -329,36 +329,34 @@ const getAllEmployees = async (event) => {
     };
     const { Items } = await client.send(new ScanCommand(params));
 
+    // Logging the number of items fetched from the database
+    console.log("Number of items fetched from the database:", Items.length);
+
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
     const filteredItems = applyFilters(Items, designationFilter, branchFilter);
     console.log("Filtered items:", filteredItems);
 
-    // If no filters are provided, return all employees
-    if (designationFilter.length === 0 && branchFilter.length === 0) {
-      console.log("No filters provided, returning all employees.");
+    // Logging the number of items after filtering
+    console.log("Number of items after filtering:", filteredItems.length);
+
+    // Apply pagination
+    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+
+    console.log("Filtered and paginated data:", paginatedData);
+
+    if (!paginatedData.items || paginatedData.items.length === 0) {
+      console.log("No employees found after filtering.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
-        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize),
+        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
-      // Apply pagination
-      const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
-      console.log("Filtered and paginated data:", paginatedData);
-
-      if (!paginatedData.items || paginatedData.items.length === 0) {
-        console.log("No employees found after filtering.");
-        response.statusCode = httpStatusCodes.NOT_FOUND;
-        response.body = JSON.stringify({
-          message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
-        });
-      } else {
-        console.log("Successfully retrieved filtered and paginated employees.");
-        response.body = JSON.stringify({
-          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-          data: paginatedData,
-        });
-      }
+      console.log("Successfully retrieved filtered and paginated employees.");
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+        data: paginatedData,
+      });
     }
   } catch (e) {
     console.error(e);
