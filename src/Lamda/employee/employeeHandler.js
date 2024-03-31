@@ -368,13 +368,20 @@ const pagination = (allItems, pageNo, pageSize) => {
   console.log("items length", allItems.length);
 
   const totalItems = allItems.length;
+  console.log("totalItems", totalItems);
+
   const totalPages = Math.ceil(totalItems / pageSize);
+  console.log("totalPages", totalPages);
+
   const startIndex = (pageNo - 1) * pageSize;
+  console.log("startIndex", startIndex);
+
   const endIndex = Math.min(startIndex + pageSize, totalItems);
+  console.log("endIndex", endIndex);
 
   const items = allItems.slice(startIndex, endIndex);
-
   console.log("items", items);
+
   return {
     items,
     totalItems,
