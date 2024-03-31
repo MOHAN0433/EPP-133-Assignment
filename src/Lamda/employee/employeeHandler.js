@@ -416,7 +416,10 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
-    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
+    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.some(designation => {
+      const employeeDesignation = employee.designation.S;
+      return designation.split(',').some(d => employeeDesignation.includes(d.trim()));
+    });
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
