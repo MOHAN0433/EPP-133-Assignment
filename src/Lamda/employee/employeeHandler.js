@@ -334,23 +334,31 @@ const getAllEmployees = async (event) => {
     const filteredItems = applyFilters(Items, designationFilter, branchFilter);
     console.log("Filtered items:", filteredItems);
 
-    // Apply pagination
-    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
-
-    console.log("Filtered and paginated data:", paginatedData);
-
-    if (!paginatedData.items || paginatedData.items.length === 0) {
-      console.log("No employees found after filtering.");
-      response.statusCode = httpStatusCodes.NOT_FOUND;
-      response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
-      });
-    } else {
-      console.log("Successfully retrieved filtered and paginated employees.");
+    // If no filters are provided, return all employees
+    if (designationFilter.length === 0 && branchFilter.length === 0) {
+      console.log("No filters provided, returning all employees.");
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: paginatedData,
+        data: pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize),
       });
+    } else {
+      // Apply pagination
+      const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+      console.log("Filtered and paginated data:", paginatedData);
+
+      if (!paginatedData.items || paginatedData.items.length === 0) {
+        console.log("No employees found after filtering.");
+        response.statusCode = httpStatusCodes.NOT_FOUND;
+        response.body = JSON.stringify({
+          message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+        });
+      } else {
+        console.log("Successfully retrieved filtered and paginated employees.");
+        response.body = JSON.stringify({
+          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+          data: paginatedData,
+        });
+      }
     }
   } catch (e) {
     console.error(e);
