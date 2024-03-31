@@ -404,7 +404,8 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
     if (!employee.branch || !employee.branch.S) {
-      return false;
+      // If branch is missing, consider it as a match if no branch filter is applied
+      return branchFilter.length === 0;
     }
 
     // Check if there are no filters applied
