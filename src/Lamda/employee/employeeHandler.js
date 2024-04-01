@@ -318,9 +318,9 @@ const getAllEmployees = async (event) => {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
   }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
-    branchFilter = event.multiValueQueryStringParameters.branchOffice
-      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
+    branchFilter = event.multiValueQueryStringParameters.branch
+      .flatMap(branch => branch.split(',')); // Split by commas if exists
   }
 
   try {
@@ -329,13 +329,21 @@ const getAllEmployees = async (event) => {
     };
     const { Items } = await client.send(new ScanCommand(params));
 
+    // Logging the number of items fetched from the database
+    console.log("Number of items fetched from the database:", Items.length);
+
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
     const filteredItems = applyFilters(Items, designationFilter, branchFilter);
     console.log("Filtered items:", filteredItems);
 
+    // Logging the number of items after filtering
+    console.log("Number of items after filtering:", filteredItems.length);
+
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+
+    console.log("Filtered and paginated data:", paginatedData);
 
     if (!paginatedData.items || paginatedData.items.length === 0) {
       console.log("No employees found after filtering.");
@@ -366,11 +374,20 @@ const pagination = (allItems, pageNo, pageSize) => {
   console.log("items length", allItems.length);
 
   const totalItems = allItems.length;
+  console.log("totalItems", totalItems);
+
   const totalPages = Math.ceil(totalItems / pageSize);
+  console.log("totalPages", totalPages);
+
   const startIndex = (pageNo - 1) * pageSize;
+  console.log("startIndex", startIndex);
+
   const endIndex = Math.min(startIndex + pageSize, totalItems);
+  console.log("endIndex", endIndex);
 
   const items = allItems.slice(startIndex, endIndex);
+  console.log("items", items);
+
   return {
     items,
     totalItems,
@@ -381,25 +398,35 @@ const pagination = (allItems, pageNo, pageSize) => {
 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
+  console.log("Designation filter:", designationFilter);
+  console.log("Branch filter:", branchFilter);
+ 
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branchOffice || !employee.branchOffice.S) {
+    if (!employee.branch || !employee.branch.S) {
       return false;
     }
+ 
+    // Your filter logic here
+    // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
+    console.log("Passes filters:", passesFilters);
     return passesFilters;
   });
-
+ 
+  console.log("Filtered employees:", filteredEmployees);
+  
   // If no filters are specified or if no employees pass the filters, return all employees
   if (designationFilter.length === 0 && branchFilter.length === 0) {
     return employeesData;
   } else if (filteredEmployees.length === 0) {
     return employeesData;
   }
+  
   return filteredEmployees;
 };
 
