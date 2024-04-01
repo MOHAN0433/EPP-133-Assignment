@@ -331,20 +331,11 @@ const getAllEmployees = async (event) => {
 
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter, employeeId, name);
     console.log("Filtered items:", filteredItems);
 
-    // Apply search
-    let searchedItems = filteredItems;
-    if (employeeId && employeeId.length >= 3) {
-      searchedItems = searchEmployeesById(searchedItems, employeeId);
-    }
-    if (name && name.length >= 3) {
-      searchedItems = searchEmployeesByName(searchedItems, name);
-    }
-
     // Apply pagination
-    const paginatedData = pagination(searchedItems.map((item) => unmarshall(item)), pageNo, pageSize);
+    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
 
     if (!paginatedData.items || paginatedData.items.length === 0) {
       console.log("No employees found after filtering.");
@@ -353,7 +344,7 @@ const getAllEmployees = async (event) => {
         message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
-      console.log("Successfully retrieved filtered, searched, and paginated employees.");
+      console.log("Successfully retrieved filtered and paginated employees.");
       response.body = JSON.stringify({
         message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
         data: paginatedData,
@@ -369,17 +360,6 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
-
-const searchEmployeesById = (employeesData, employeeId) => {
-  console.log("Searching employees by ID...");
-  return employeesData.filter(employee => employee.employeeId.S.includes(employeeId));
-};
-
-const searchEmployeesByName = (employeesData, name) => {
-  console.log("Searching employees by name...");
-  return employeesData.filter(employee => employee.name.S.toLowerCase().includes(name.toLowerCase()));
-};
-
 
 const pagination = (allItems, pageNo, pageSize) => {
   console.log("inside the pagination function");
@@ -399,7 +379,7 @@ const pagination = (allItems, pageNo, pageSize) => {
   };
 };
 
-const applyFilters = (employeesData, designationFilter, branchFilter) => {
+const applyFilters = (employeesData, designationFilter, branchFilter, employeeId, name) => {
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
@@ -408,18 +388,14 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
     }
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
-    // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
-    const passesFilters = passesDesignationFilter && passesBranchFilter;
+    const passesEmployeeIdSearch = !employeeId || employee.employeeId.S.includes(employeeId);
+    const passesNameSearch = !name || employee.name.S.toLowerCase().includes(name.toLowerCase());
+    
+    const passesFilters = passesDesignationFilter && passesBranchFilter && passesEmployeeIdSearch && passesNameSearch;
     return passesFilters;
   });
 
-  // If no filters are specified or if no employees pass the filters, return all employees
-  if (designationFilter.length === 0 && branchFilter.length === 0) {
-    return employeesData;
-  } else if (filteredEmployees.length === 0) {
-    return employeesData;
-  }
   return filteredEmployees;
 };
 
