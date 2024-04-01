@@ -310,9 +310,15 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize, searchQuery } = event.queryStringParameters;
+  const { pageNo, pageSize, employeeId } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
+  let searchQuery = null; // Initialize searchQuery to null
+
+  // Extracting searchQuery from queryStringParameters
+  if (event.queryStringParameters && event.queryStringParameters.searchQuery) {
+    searchQuery = event.queryStringParameters.searchQuery;
+  }
 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
@@ -332,7 +338,7 @@ const getAllEmployees = async (event) => {
     // Logging the number of items fetched from the database
     console.log("Number of items fetched from the database:", Items.length);
 
-    // Apply filters
+    // Apply filters including the searchQuery
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
     const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchQuery);
     console.log("Filtered items:", filteredItems);
@@ -414,10 +420,11 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchQuer
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
-    const passesSearchQuery = !searchQuery || 
-      (employee.employeeId.S && employee.employeeId.S.includes(searchQuery)) ||
-      (employee.name.S && employee.name.S.toLowerCase().includes(searchQuery.toLowerCase()));
-    const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchQuery;
+    const passesEmployeeId = !searchQuery ||
+      (employee.employeeId.S && employee.employeeId.S.includes(searchQuery));
+    const passesName = !searchQuery ||
+      (employee.name.S && employee.name.S.toLowerCase().includes(searchQuery.toLowerCase())); // Case-insensitive search
+    const passesFilters = passesDesignationFilter && passesBranchFilter && (passesEmployeeId || passesName);
     console.log("Passes filters:", passesFilters);
     return passesFilters;
   });
