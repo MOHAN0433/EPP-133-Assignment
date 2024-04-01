@@ -310,65 +310,171 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize, searchName, searchEmployeeId } = event.queryStringParameters;
-  console.log("Search name:", searchName);
-  console.log("Search employeeId:", searchEmployeeId);
+  const { pageNo, pageSize, employeeId, name } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
 
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
-    designationFilter = event.multiValueQueryStringParameters.designation
-      .flatMap(designation => designation.split(',')); // Split by commas if exists
-  }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
-    branchFilter = event.multiValueQueryStringParameters.branch
-      .flatMap(branch => branch.split(',')); // Split by commas if exists
-  }
+  // Check if employeeId or name is provided
+  if (!employeeId && !name) {
+    // If not provided, proceed to fetch all employees
+    try {
+      const params = {
+        TableName: process.env.EMPLOYEE_TABLE,
+      };
+      const { Items } = await client.send(new ScanCommand(params));
 
-  try {
-    const params = {
-      TableName: process.env.EMPLOYEE_TABLE,
-    };
-    const { Items } = await client.send(new ScanCommand(params));
+      // Logging the number of items fetched from the database
+      console.log("Number of items fetched from the database:", Items.length);
 
-    // Logging the number of items fetched from the database
-    console.log("Number of items fetched from the database:", Items.length);
+      // Apply filters
+      console.log("Filtering started...");
+      const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+      console.log("Filtered items:", filteredItems);
 
-    // Apply filters
-    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchName, searchEmployeeId);
-    console.log("Filtered items:", filteredItems);
+      // Logging the number of items after filtering
+      console.log("Number of items after filtering:", filteredItems.length);
 
-    // Logging the number of items after filtering
-    console.log("Number of items after filtering:", filteredItems.length);
+      // Apply pagination
+      const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
 
-    // Apply pagination
-    const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+      console.log("Filtered and paginated data:", paginatedData);
 
-    console.log("Filtered and paginated data:", paginatedData);
-
-    if (!paginatedData.items || paginatedData.items.length === 0) {
-      console.log("No employees found after filtering.");
-      response.statusCode = httpStatusCodes.NOT_FOUND;
+      if (!paginatedData.items || paginatedData.items.length === 0) {
+        console.log("No employees found.");
+        response.statusCode = httpStatusCodes.NOT_FOUND;
+        response.body = JSON.stringify({
+          message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+        });
+      } else {
+        console.log("Successfully retrieved filtered and paginated employees.");
+        response.body = JSON.stringify({
+          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+          data: paginatedData,
+        });
+      }
+    } catch (e) {
+      console.error(e);
       response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
-      });
-    } else {
-      console.log("Successfully retrieved filtered and paginated employees.");
-      response.body = JSON.stringify({
-        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: paginatedData,
+        statusCode: e.statusCode,
+        message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
+        errorMsg: e.message,
       });
     }
-  } catch (e) {
-    console.error(e);
-    response.body = JSON.stringify({
-      statusCode: e.statusCode,
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
-      errorMsg: e.message,
-    });
+  } else {
+    try {
+      const params = {
+        TableName: process.env.EMPLOYEE_TABLE,
+      };
+      const { Items } = await client.send(new ScanCommand(params));
+
+      // Logging the number of items fetched from the database
+      console.log("Number of items fetched from the database:", Items.length);
+
+      // Apply filters based on employeeId and/or name
+      const filteredItems = applySearchFilters(Items, employeeId, name);
+      console.log("Filtered items:", filteredItems);
+
+      // Logging the number of items after filtering
+      console.log("Number of items after filtering:", filteredItems.length);
+
+      // Apply pagination
+      const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
+
+      console.log("Filtered and paginated data:", paginatedData);
+
+      if (!paginatedData.items || paginatedData.items.length === 0) {
+        console.log("No employees found after filtering.");
+        response.statusCode = httpStatusCodes.NOT_FOUND;
+        response.body = JSON.stringify({
+          message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+        });
+      } else {
+        console.log("Successfully retrieved filtered and paginated employees.");
+        response.body = JSON.stringify({
+          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+          data: paginatedData,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      response.body = JSON.stringify({
+        statusCode: e.statusCode,
+        message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
+        errorMsg: e.message,
+      });
+    }
   }
   return response;
+};
+
+const applyFilters = (employeesData, designationFilter, branchFilter) => {
+  console.log("Applying filters...");
+  console.log("Designation filter:", designationFilter);
+  console.log("Branch filter:", branchFilter);
+
+  const filteredEmployees = employeesData.filter(employee => {
+    // Check if employee.branch exists before accessing its properties
+    if (!employee.branch || !employee.branch.S) {
+      return false;
+    }
+
+    // Your filter logic here
+    // Log each employee and whether they pass the filters
+    console.log("Employee:", employee);
+    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
+    // Note: Use `.S` to access the string value of DynamoDB attributes
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
+    const passesFilters = passesDesignationFilter && passesBranchFilter;
+    console.log("Passes filters:", passesFilters);
+    return passesFilters;
+  });
+
+  console.log("Filtered employees:", filteredEmployees);
+
+  // If no filters are specified or if no employees pass the filters, return all employees
+  if (designationFilter.length === 0 && branchFilter.length === 0) {
+    return employeesData;
+  } else if (filteredEmployees.length === 0) {
+    return employeesData;
+  }
+
+  return filteredEmployees;
+};
+
+const applySearchFilters = (employeesData, employeeId, name) => {
+  console.log("Applying search filters...");
+  console.log("Employee ID filter:", employeeId);
+  console.log("Name filter:", name);
+
+  const filteredEmployees = employeesData.filter(employee => {
+    let passesFilters = true;
+
+    // Check if employeeId is provided and matches
+    if (employeeId && employee.employeeId.S !== employeeId) {
+      passesFilters = false;
+    }
+
+    // Check if name is provided and matches (case-insensitive)
+    if (name && !employee.name.S.toLowerCase().includes(name.toLowerCase())) {
+      passesFilters = false;
+    }
+
+    return passesFilters;
+  });
+
+  console.log("Filtered employees:", filteredEmployees);
+
+  return filteredEmployees;
+};
+
+const matchesBranch = (employeeBranch, branchFilter) => {
+  for (const filter of branchFilter) {
+    const phrases = filter.split(',').map(phrase => phrase.trim());
+    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const pagination = (allItems, pageNo, pageSize) => {
@@ -396,60 +502,6 @@ const pagination = (allItems, pageNo, pageSize) => {
     currentPage: pageNo,
     totalPages
   };
-};
-
-const applyFilters = (employeesData, designationFilter, branchFilter, searchName, searchEmployeeId) => {
-  console.log("Applying filters...");
-  console.log("Designation filter:", designationFilter);
-  console.log("Branch filter:", branchFilter);
-  console.log("Search name:", searchName);
-  console.log("Search employeeId:", searchEmployeeId);
-
-  const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch exists before accessing its properties
-    if (!employee.branch || !employee.branch.S) {
-      return false;
-    }
-
-    // Check if searchEmployeeId is provided and employeeId matches
-    if (searchEmployeeId && employee.employeeId && employee.employeeId.S !== searchEmployeeId) {
-      return false;
-    }
-
-    // Check if searchName is provided and firstName or lastName matches
-    if (searchName && (
-      (employee.firstName && employee.firstName.S.toLowerCase().includes(searchName.toLowerCase())) ||
-      (employee.lastName && employee.lastName.S.toLowerCase().includes(searchName.toLowerCase()))
-    )) {
-      return true;
-    }
-
-    // Check if designationFilter is provided and employee's designation is in the filter
-    if (designationFilter.length > 0 && !designationFilter.includes(employee.designation.S)) {
-      return false;
-    }
-
-    // Check if branchFilter is provided and employee's branch is in the filter
-    if (branchFilter.length > 0 && !matchesBranch(employee.branch.S, branchFilter)) {
-      return false;
-    }
-
-    return true;
-  });
-
-  console.log("Filtered employees:", filteredEmployees);
-
-  return filteredEmployees;
-};
-
-const matchesBranch = (employeeBranch, branchFilter) => {
-  for (const filter of branchFilter) {
-    const phrases = filter.split(',').map(phrase => phrase.trim());
-    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
-      return true;
-    }
-  }
-  return false;
 };
 
 
