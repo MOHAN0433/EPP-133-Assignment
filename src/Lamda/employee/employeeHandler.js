@@ -310,15 +310,9 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize, employeeId } = event.queryStringParameters;
+  const { pageNo, pageSize, name, employeeId } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
-  let searchQuery = null; // Initialize searchQuery to null
-
-  // Extracting searchQuery from queryStringParameters
-  if (event.queryStringParameters && event.queryStringParameters.searchQuery) {
-    searchQuery = event.queryStringParameters.searchQuery;
-  }
 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
@@ -338,9 +332,9 @@ const getAllEmployees = async (event) => {
     // Logging the number of items fetched from the database
     console.log("Number of items fetched from the database:", Items.length);
 
-    // Apply filters including the searchQuery
+    // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchQuery);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter, name, employeeId);
     console.log("Filtered items:", filteredItems);
 
     // Logging the number of items after filtering
@@ -402,42 +396,46 @@ const pagination = (allItems, pageNo, pageSize) => {
   };
 };
 
-const applyFilters = (employeesData, designationFilter, branchFilter, searchQuery) => {
+const applyFilters = (employeesData, designationFilter, branchFilter, searchName, searchEmployeeId) => {
   console.log("Applying filters...");
   console.log("Designation filter:", designationFilter);
   console.log("Branch filter:", branchFilter);
-  console.log("Search query:", searchQuery);
- 
+  console.log("Search name:", searchName);
+  console.log("Search employeeId:", searchEmployeeId);
+
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch exists before accessing its properties
-    if (!employee.branch || !employee.branch.S) {
+    // Check if employee.branch and employee.name exists before accessing their properties
+    if (!employee.branch || !employee.branch.S || !employee.name || !employee.name.S) {
       return false;
     }
- 
+
     // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
-    const passesEmployeeId = !searchQuery ||
-      (employee.employeeId.S && employee.employeeId.S.includes(searchQuery));
-    const passesName = !searchQuery ||
-      (employee.name.S && employee.name.S.toLowerCase().includes(searchQuery.toLowerCase())); // Case-insensitive search
-    const passesFilters = passesDesignationFilter && passesBranchFilter && (passesEmployeeId || passesName);
+    const passesNameSearch = !searchName || employee.name.S.toLowerCase().includes(searchName.toLowerCase());
+    const passesEmployeeIdSearch = !searchEmployeeId || employee.employeeId.S === searchEmployeeId;
+    const passesFilters = passesDesignationFilter && passesBranchFilter && passesNameSearch && passesEmployeeIdSearch;
     console.log("Passes filters:", passesFilters);
     return passesFilters;
   });
- 
+
   console.log("Filtered employees:", filteredEmployees);
-  
+
   // If no filters are specified or if no employees pass the filters, return all employees
-  if (designationFilter.length === 0 && branchFilter.length === 0 && !searchQuery) {
+  if (
+    designationFilter.length === 0 &&
+    branchFilter.length === 0 &&
+    !searchName &&
+    !searchEmployeeId
+  ) {
     return employeesData;
   } else if (filteredEmployees.length === 0) {
     return employeesData;
   }
-  
+
   return filteredEmployees;
 };
 
