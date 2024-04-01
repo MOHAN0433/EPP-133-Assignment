@@ -310,7 +310,9 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize, name, employeeId } = event.queryStringParameters;
+  const { pageNo, pageSize, searchName, searchEmployeeId } = event.queryStringParameters;
+  console.log("Search name:", searchName);
+  console.log("Search employeeId:", searchEmployeeId);
   let designationFilter = [];
   let branchFilter = [];
 
@@ -334,7 +336,7 @@ const getAllEmployees = async (event) => {
 
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter, name, employeeId);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchName, searchEmployeeId);
     console.log("Filtered items:", filteredItems);
 
     // Logging the number of items after filtering
