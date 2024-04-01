@@ -400,37 +400,28 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
   console.log("Designation filter:", designationFilter);
   console.log("Branch filter:", branchFilter);
-  
+ 
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
     if (!employee.branch || !employee.branch.S) {
-      // If branch is missing, consider it as a match if no branch filter is applied
-      return branchFilter.length === 0;
+      return false;
     }
-
-    // Check if there are no filters applied
-    if (designationFilter.length === 0 && branchFilter.length === 0) {
-      return true; // Return true for all employees if no filters are applied
-    }
-
+ 
     // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
-    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.some(designation => {
-      const employeeDesignation = employee.designation.S;
-      return designation.split(',').some(d => employeeDesignation.includes(d.trim()));
-    });
+    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     console.log("Passes filters:", passesFilters);
     return passesFilters;
   });
-
+ 
   console.log("Filtered employees:", filteredEmployees);
   return filteredEmployees;
 };
-
+ 
 const matchesBranch = (employeeBranch, branchFilter) => {
   for (const filter of branchFilter) {
     const phrases = filter.split(',').map(phrase => phrase.trim());
