@@ -419,6 +419,14 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   });
  
   console.log("Filtered employees:", filteredEmployees);
+  
+  // If no filters are specified or if no employees pass the filters, return all employees
+  if (designationFilter.length === 0 && branchFilter.length === 0) {
+    return employeesData;
+  } else if (filteredEmployees.length === 0) {
+    return employeesData;
+  }
+  
   return filteredEmployees;
 };
  
