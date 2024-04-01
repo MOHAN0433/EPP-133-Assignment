@@ -411,35 +411,33 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchName
       return false;
     }
 
-    // Check if employeeId matches searchEmployeeId
+    // Check if searchEmployeeId is provided and employeeId matches
     if (searchEmployeeId && employee.employeeId && employee.employeeId.S !== searchEmployeeId) {
       return false;
     }
 
-    // Check if firstName or lastName matches searchName
-    if (searchName && employee.firstName && employee.firstName.S.toLowerCase().includes(searchName.toLowerCase())) {
-      return true;
-    }
-    if (searchName && employee.lastName && employee.lastName.S.toLowerCase().includes(searchName.toLowerCase())) {
+    // Check if searchName is provided and firstName or lastName matches
+    if (searchName && (
+      (employee.firstName && employee.firstName.S.toLowerCase().includes(searchName.toLowerCase())) ||
+      (employee.lastName && employee.lastName.S.toLowerCase().includes(searchName.toLowerCase()))
+    )) {
       return true;
     }
 
-    // Your filter logic here for designation and branch filters
-    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
-    const passesFilters = passesDesignationFilter && passesBranchFilter;
-    return passesFilters;
+    // Check if designationFilter is provided and employee's designation is in the filter
+    if (designationFilter.length > 0 && !designationFilter.includes(employee.designation.S)) {
+      return false;
+    }
+
+    // Check if branchFilter is provided and employee's branch is in the filter
+    if (branchFilter.length > 0 && !matchesBranch(employee.branch.S, branchFilter)) {
+      return false;
+    }
+
+    return true;
   });
 
   console.log("Filtered employees:", filteredEmployees);
-
-  // If no filters are specified or if no employees pass the filters, return all employees
-  if (
-    (designationFilter.length === 0 && branchFilter.length === 0 && !searchName && !searchEmployeeId) ||
-    filteredEmployees.length === 0
-  ) {
-    return employeesData;
-  }
 
   return filteredEmployees;
 };
