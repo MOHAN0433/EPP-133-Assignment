@@ -406,21 +406,28 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchName
   console.log("Search employeeId:", searchEmployeeId);
 
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch and employee.name exists before accessing their properties
-    if (!employee.branch || !employee.branch.S || !employee.name || !employee.name.S) {
+    // Check if employee.branch exists before accessing its properties
+    if (!employee.branch || !employee.branch.S) {
       return false;
     }
 
-    // Your filter logic here
-    // Log each employee and whether they pass the filters
-    console.log("Employee:", employee);
+    // Check if employeeId matches searchEmployeeId
+    if (searchEmployeeId && employee.employeeId && employee.employeeId.S !== searchEmployeeId) {
+      return false;
+    }
+
+    // Check if firstName or lastName matches searchName
+    if (searchName && employee.firstName && employee.firstName.S.toLowerCase().includes(searchName.toLowerCase())) {
+      return true;
+    }
+    if (searchName && employee.lastName && employee.lastName.S.toLowerCase().includes(searchName.toLowerCase())) {
+      return true;
+    }
+
+    // Your filter logic here for designation and branch filters
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
-    // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
-    const passesNameSearch = !searchName || employee.name.S.toLowerCase().includes(searchName.toLowerCase());
-    const passesEmployeeIdSearch = !searchEmployeeId || employee.employeeId.S === searchEmployeeId;
-    const passesFilters = passesDesignationFilter && passesBranchFilter && passesNameSearch && passesEmployeeIdSearch;
-    console.log("Passes filters:", passesFilters);
+    const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
 
@@ -428,13 +435,9 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchName
 
   // If no filters are specified or if no employees pass the filters, return all employees
   if (
-    designationFilter.length === 0 &&
-    branchFilter.length === 0 &&
-    !searchName &&
-    !searchEmployeeId
+    (designationFilter.length === 0 && branchFilter.length === 0 && !searchName && !searchEmployeeId) ||
+    filteredEmployees.length === 0
   ) {
-    return employeesData;
-  } else if (filteredEmployees.length === 0) {
     return employeesData;
   }
 
