@@ -329,39 +329,33 @@ const getAllEmployees = async (event) => {
     };
     const { Items } = await client.send(new ScanCommand(params));
 
-    let filteredItems = Items;
-
-    // Apply filters only if either designation or branch filter is provided
-    if (designationFilter.length > 0 || branchFilter.length > 0) {
-      console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-      filteredItems = applyFilters(Items, designationFilter, branchFilter);
-      console.log("Filtered items:", filteredItems);
-    }
-
-    // Check if any data exists after applying filters
-    if (filteredItems.length === 0) {
-      console.log("No employees found after filtering.");
-      response.statusCode = httpStatusCodes.NOT_FOUND;
-      response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
-      });
-      return response;
-    }
+    // Apply filters
+    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+    console.log("Filtered items:", filteredItems);
 
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
 
-    console.log("Successfully retrieved filtered and paginated employees.");
-    response.body = JSON.stringify({
-      message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-      data: paginatedData,
-    });
+    if (!paginatedData.items || paginatedData.items.length === 0) {
+      console.log("No employees found after filtering.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+      });
+    } else {
+      console.log("Successfully retrieved filtered and paginated employees.");
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+        data: paginatedData,
+      });
+    }
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      message: httpStatusMessages.INTERNAL_SERVER_ERROR,
-      error: e.message,
+      statusCode: e.statusCode,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
+      errorMsg: e.message,
     });
   }
   return response;
@@ -371,24 +365,22 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branchOffice || !employee.branchOffice.S) {
-      return false;
+    if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
+      throw new Error("Employee data is incomplete. Please ensure all employees have designation and branchOffice.");
     }
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 ||
-  (employee.designation && designationFilter.includes(employee.designation.S));
+      (employee.designation && designationFilter.includes(employee.designation.S));
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
 
-  // If no filters are specified or if no employees pass the filters, return all employees
-  if (designationFilter.length === 0 && branchFilter.length === 0) {
-    return employeesData;
-  } else if (filteredEmployees.length === 0) {
-    return employeesData;
+  if (filteredEmployees.length === 0) {
+    throw new Error("No employees match the specified filters.");
   }
+
   return filteredEmployees;
 };
 
