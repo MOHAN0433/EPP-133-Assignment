@@ -314,10 +314,6 @@ const getAllEmployees = async (event) => {
   let designationFilter = [];
   let branchFilter = [];
 
-  if (!event.multiValueQueryStringParameters.designation && !event.multiValueQueryStringParameters.branchOffice) {
-    throw new Error('Either designation or branch filter must be provided.');
-  }
-
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
@@ -333,15 +329,23 @@ const getAllEmployees = async (event) => {
     };
     const { Items } = await client.send(new ScanCommand(params));
 
-    // Apply filters
-    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
-    console.log("Filtered items:", filteredItems);
+    let filteredItems = Items;
+
+    // Apply filters only if either designation or branch filter is provided
+    if (designationFilter.length > 0 || branchFilter.length > 0) {
+      console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
+      filteredItems = applyFilters(Items, designationFilter, branchFilter);
+      console.log("Filtered items:", filteredItems);
+    }
 
     // Check if any data exists after applying filters
     if (filteredItems.length === 0) {
       console.log("No employees found after filtering.");
-      throw new Error('Employees not found matching the provided filters.');
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
+      });
+      return response;
     }
 
     // Apply pagination
@@ -354,9 +358,10 @@ const getAllEmployees = async (event) => {
     });
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.NOT_FOUND;
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
     response.body = JSON.stringify({
-      message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+      message: httpStatusMessages.INTERNAL_SERVER_ERROR,
+      error: e.message,
     });
   }
   return response;
