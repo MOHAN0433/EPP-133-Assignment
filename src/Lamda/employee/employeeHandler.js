@@ -409,6 +409,16 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   return true; // Employee matches search criteria
 };
 
+const matchesBranch = (employeeBranch, branchFilter) => {
+  for (const filter of branchFilter) {
+    const phrases = filter.split(',').map(phrase => phrase.trim());
+    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const pagination = (allItems, pageNo, pageSize) => {
   console.log("inside the pagination function");
   console.log("items length", allItems.length);
