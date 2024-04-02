@@ -310,18 +310,12 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-
   const { pageNo, pageSize } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
 
-  // Extract search condition from query parameters
-  const searchCondition = {};
-  if (event.queryStringParameters.name) {
-    searchCondition.firstName = event.queryStringParameters.name;
-  }
-  if (event.queryStringParameters.employeeId) {
-    searchCondition.employeeId = event.queryStringParameters.employeeId;
+  if (!event.multiValueQueryStringParameters.designation && !event.multiValueQueryStringParameters.branchOffice) {
+    throw new Error('Either designation or branch filter must be provided.');
   }
 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
@@ -341,69 +335,55 @@ const getAllEmployees = async (event) => {
 
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCondition);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
     console.log("Filtered items:", filteredItems);
+
+    // Check if any data exists after applying filters
+    if (filteredItems.length === 0) {
+      console.log("No employees found after filtering.");
+      throw new Error('Employees not found matching the provided filters.');
+    }
 
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
 
-    if (!paginatedData.items || paginatedData.items.length === 0) {
-      console.log("No employees found after filtering.");
-      response.statusCode = httpStatusCodes.NOT_FOUND;
-      response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
-      });
-    } else {
-      console.log("Successfully retrieved filtered and paginated employees.");
-      response.body = JSON.stringify({
-        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
-        data: paginatedData,
-      });
-    }
+    console.log("Successfully retrieved filtered and paginated employees.");
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EMPLOYEES_DETAILS,
+      data: paginatedData,
+    });
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.NOT_FOUND;
     response.body = JSON.stringify({
-      statusCode: e.statusCode,
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
-      errorMsg: e.message,
+      message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
     });
   }
   return response;
 };
 
-const applyFilters = (employeesData, designationFilter, branchFilter, searchCondition) => {
+const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branch || !employee.designation) {
+    if (!employee.branchOffice || !employee.branchOffice.S) {
       return false;
     }
-    
     console.log("Employee:", employee);
-
-    // Check search condition for firstName
-    if (searchCondition && searchCondition.firstName) {
-      if (employee.firstName && employee.firstName.S !== searchCondition.firstName) {
-        return false;
-      }
-    }
-
-    // Check search condition for employeeId
-    if (searchCondition && searchCondition.employeeId) {
-      if (employee.employeeId && employee.employeeId.S !== searchCondition.employeeId) {
-        return false;
-      }
-    }
-
     const passesDesignationFilter = designationFilter.length === 0 ||
-      (employee.designation && designationFilter.includes(employee.designation.S));
-
+  (employee.designation && designationFilter.includes(employee.designation.S));
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
 
+  // If no filters are specified or if no employees pass the filters, return all employees
+  if (designationFilter.length === 0 && branchFilter.length === 0) {
+    return employeesData;
+  } else if (filteredEmployees.length === 0) {
+    return employeesData;
+  }
   return filteredEmployees;
 };
 
