@@ -383,23 +383,23 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCond
 
     // Check search condition for firstName
     if (searchCondition && searchCondition.firstName) {
-      if (employee.firstName !== searchCondition.firstName) {
+      if (employee.firstName && employee.firstName.S !== searchCondition.firstName) {
         return false;
       }
     }
 
     // Check search condition for employeeId
     if (searchCondition && searchCondition.employeeId) {
-      if (employee.employeeId !== searchCondition.employeeId) {
+      if (employee.employeeId && employee.employeeId.S !== searchCondition.employeeId) {
         return false;
       }
     }
 
     const passesDesignationFilter = designationFilter.length === 0 ||
-      (employee.designation && designationFilter.includes(employee.designation));
+      (employee.designation && designationFilter.includes(employee.designation.S));
 
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
