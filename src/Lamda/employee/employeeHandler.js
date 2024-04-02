@@ -313,6 +313,7 @@ const getAllEmployees = async (event) => {
   const { pageNo, pageSize } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
+  let searchCriteria = {};
 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
@@ -321,6 +322,14 @@ const getAllEmployees = async (event) => {
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
     branchFilter = event.multiValueQueryStringParameters.branchOffice
       .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
+  }
+  
+  // Extract search criteria from event
+  if (event.queryStringParameters && (event.queryStringParameters.employeeId || event.queryStringParameters.firstName)) {
+    searchCriteria = {
+      employeeId: event.queryStringParameters.employeeId,
+      firstName: event.queryStringParameters.firstName,
+    };
   }
 
   try {
@@ -331,7 +340,7 @@ const getAllEmployees = async (event) => {
 
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
     console.log("Filtered items:", filteredItems);
 
     // Apply pagination
@@ -361,7 +370,7 @@ const getAllEmployees = async (event) => {
   return response;
 };
 
-const applyFilters = (employeesData, designationFilter, branchFilter) => {
+const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
@@ -374,7 +383,8 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
       (employee.designation && designationFilter.includes(employee.designation.S));
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
-    const passesFilters = passesDesignationFilter && passesBranchFilter;
+    const passesSearchCriteria = checkSearchCriteria(employee, searchCriteria);
+    const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
     return passesFilters;
   });
 
@@ -385,14 +395,18 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   return filteredEmployees;
 };
 
-const matchesBranch = (employeeBranch, branchFilter) => {
-  for (const filter of branchFilter) {
-    const phrases = filter.split(',').map(phrase => phrase.trim());
-    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
-      return true;
-    }
+const checkSearchCriteria = (employee, searchCriteria) => {
+  if (!searchCriteria) return true; // No search criteria provided, so return true
+
+  const { employeeId, firstName } = searchCriteria;
+  if (employeeId && employeeId !== employee.employeeId.S) {
+    return false; // employeeId provided but doesn't match
   }
-  return false;
+  if (firstName && !employee.firstName.S.toLowerCase().includes(firstName.toLowerCase())) {
+    return false; // firstName provided but doesn't match
+  }
+
+  return true; // Employee matches search criteria
 };
 
 const pagination = (allItems, pageNo, pageSize) => {
