@@ -375,37 +375,35 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCond
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branchOffice || !employee.branchOffice.S) {
+    if (!employee.branch || !employee.designation) {
       return false;
     }
     
     console.log("Employee:", employee);
 
-    // Check search condition
-    if (searchCondition) {
-      if (searchCondition.employeeId && employee.employeeId.N !== searchCondition.employeeId) {
+    // Check search condition for firstName
+    if (searchCondition && searchCondition.firstName) {
+      if (employee.firstName !== searchCondition.firstName) {
         return false;
       }
-      if (searchCondition.firstName && employee.firstName.S !== searchCondition.firstName) {
+    }
+
+    // Check search condition for employeeId
+    if (searchCondition && searchCondition.employeeId) {
+      if (employee.employeeId !== searchCondition.employeeId) {
         return false;
       }
     }
 
     const passesDesignationFilter = designationFilter.length === 0 ||
-      (employee.designation && designationFilter.includes(employee.designation.S));
-    
+      (employee.designation && designationFilter.includes(employee.designation));
+
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
 
-  // If no filters are specified or if no employees pass the filters, return all employees
-  if (designationFilter.length === 0 && branchFilter.length === 0 && !searchCondition) {
-    return employeesData;
-  } else if (filteredEmployees.length === 0) {
-    return employeesData;
-  }
   return filteredEmployees;
 };
 
