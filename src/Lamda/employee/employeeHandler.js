@@ -366,7 +366,8 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
-      throw new Error("Employee data is incomplete. Please ensure all employees have designation and branchOffice.");
+      // If employee data is incomplete, skip filtering for this employee
+      return false;
     }
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 ||
