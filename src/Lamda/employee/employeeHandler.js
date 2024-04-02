@@ -318,9 +318,9 @@ const getAllEmployees = async (event) => {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
   }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
-    branchFilter = event.multiValueQueryStringParameters.branchOffice
-      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
+    branchFilter = event.multiValueQueryStringParameters.branch
+      .flatMap(branch => branch.split(',')); // Split by commas if exists
   }
  
   try {
@@ -369,6 +369,33 @@ const getAllEmployees = async (event) => {
   return response;
 };
  
+const pagination = (allItems, pageNo, pageSize) => {
+  console.log("inside the pagination function");
+  console.log("items length", allItems.length);
+ 
+  const totalItems = allItems.length;
+  console.log("totalItems", totalItems);
+ 
+  const totalPages = Math.ceil(totalItems / pageSize);
+  console.log("totalPages", totalPages);
+ 
+  const startIndex = (pageNo - 1) * pageSize;
+  console.log("startIndex", startIndex);
+ 
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  console.log("endIndex", endIndex);
+ 
+  const items = allItems.slice(startIndex, endIndex);
+  console.log("items", items);
+ 
+  return {
+    items,
+    totalItems,
+    currentPage: pageNo,
+    totalPages
+  };
+};
+ 
 const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
   console.log("Designation filter:", designationFilter);
@@ -376,15 +403,16 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
  
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branchOffice || !employee.branchOffice.S) {
+    if (!employee.branch || !employee.branch.S) {
       return false;
     }
  
+    // Your filter logic here
     // Log each employee and whether they pass the filters
     console.log("Employee:", employee);
     const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
     console.log("Passes filters:", passesFilters);
     return passesFilters;
@@ -410,33 +438,6 @@ const matchesBranch = (employeeBranch, branchFilter) => {
     }
   }
   return false;
-};
-
-const pagination = (allItems, pageNo, pageSize) => {
-  console.log("inside the pagination function");
-  console.log("items length", allItems.length);
-
-  const totalItems = allItems.length;
-  console.log("totalItems", totalItems);
-
-  const totalPages = Math.ceil(totalItems / pageSize);
-  console.log("totalPages", totalPages);
-
-  const startIndex = (pageNo - 1) * pageSize;
-  console.log("startIndex", startIndex);
-
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-  console.log("endIndex", endIndex);
-
-  const items = allItems.slice(startIndex, endIndex);
-  console.log("items", items);
-
-  return {
-    items,
-    totalItems,
-    currentPage: pageNo,
-    totalPages
-  };
 };
 
 
