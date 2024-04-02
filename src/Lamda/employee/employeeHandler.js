@@ -310,41 +310,43 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
+
   const { pageNo, pageSize } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
- 
+
+  // Extract search condition from query parameters
+  const searchCondition = {};
+  if (event.queryStringParameters.name) {
+    searchCondition.firstName = event.queryStringParameters.name;
+  }
+  if (event.queryStringParameters.employeeId) {
+    searchCondition.employeeId = event.queryStringParameters.employeeId;
+  }
+
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
   }
-  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branch) {
-    branchFilter = event.multiValueQueryStringParameters.branch
-      .flatMap(branch => branch.split(',')); // Split by commas if exists
+  if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
+    branchFilter = event.multiValueQueryStringParameters.branchOffice
+      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
   }
- 
+
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
     };
     const { Items } = await client.send(new ScanCommand(params));
- 
-    // Logging the number of items fetched from the database
-    console.log("Number of items fetched from the database:", Items.length);
- 
+
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter);
+    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCondition);
     console.log("Filtered items:", filteredItems);
- 
-    // Logging the number of items after filtering
-    console.log("Number of items after filtering:", filteredItems.length);
- 
+
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
- 
-    console.log("Filtered and paginated data:", paginatedData);
- 
+
     if (!paginatedData.items || paginatedData.items.length === 0) {
       console.log("No employees found after filtering.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
@@ -368,68 +370,45 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
- 
-const pagination = (allItems, pageNo, pageSize) => {
-  console.log("inside the pagination function");
-  console.log("items length", allItems.length);
- 
-  const totalItems = allItems.length;
-  console.log("totalItems", totalItems);
- 
-  const totalPages = Math.ceil(totalItems / pageSize);
-  console.log("totalPages", totalPages);
- 
-  const startIndex = (pageNo - 1) * pageSize;
-  console.log("startIndex", startIndex);
- 
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-  console.log("endIndex", endIndex);
- 
-  const items = allItems.slice(startIndex, endIndex);
-  console.log("items", items);
- 
-  return {
-    items,
-    totalItems,
-    currentPage: pageNo,
-    totalPages
-  };
-};
- 
-const applyFilters = (employeesData, designationFilter, branchFilter) => {
+
+const applyFilters = (employeesData, designationFilter, branchFilter, searchCondition) => {
   console.log("Applying filters...");
-  console.log("Designation filter:", designationFilter);
-  console.log("Branch filter:", branchFilter);
- 
   const filteredEmployees = employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
-    if (!employee.branch || !employee.branch.S) {
+    if (!employee.branchOffice || !employee.branchOffice.S) {
       return false;
     }
- 
-    // Your filter logic here
-    // Log each employee and whether they pass the filters
+    
     console.log("Employee:", employee);
-    const passesDesignationFilter = designationFilter.length === 0 || designationFilter.includes(employee.designation.S);
+
+    // Check search condition
+    if (searchCondition) {
+      if (searchCondition.employeeId && employee.employeeId.N !== searchCondition.employeeId) {
+        return false;
+      }
+      if (searchCondition.firstName && employee.firstName.S !== searchCondition.firstName) {
+        return false;
+      }
+    }
+
+    const passesDesignationFilter = designationFilter.length === 0 ||
+      (employee.designation && designationFilter.includes(employee.designation.S));
+    
     // Note: Use `.S` to access the string value of DynamoDB attributes
-    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branch.S, branchFilter);
+    const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
     const passesFilters = passesDesignationFilter && passesBranchFilter;
-    console.log("Passes filters:", passesFilters);
     return passesFilters;
   });
- 
-  console.log("Filtered employees:", filteredEmployees);
- 
+
   // If no filters are specified or if no employees pass the filters, return all employees
-  if (designationFilter.length === 0 && branchFilter.length === 0) {
+  if (designationFilter.length === 0 && branchFilter.length === 0 && !searchCondition) {
     return employeesData;
   } else if (filteredEmployees.length === 0) {
     return employeesData;
   }
- 
   return filteredEmployees;
 };
- 
+
 const matchesBranch = (employeeBranch, branchFilter) => {
   for (const filter of branchFilter) {
     const phrases = filter.split(',').map(phrase => phrase.trim());
@@ -440,6 +419,23 @@ const matchesBranch = (employeeBranch, branchFilter) => {
   return false;
 };
 
+const pagination = (allItems, pageNo, pageSize) => {
+  console.log("inside the pagination function");
+  console.log("items length", allItems.length);
+
+  const totalItems = allItems.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (pageNo - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  const items = allItems.slice(startIndex, endIndex);
+  return {
+    items,
+    totalItems,
+    currentPage: pageNo,
+    totalPages
+  };
+};
 
 // Function to check if employeeId already exists
 const isEmployeeIdExists = async (employeeId) => {
