@@ -396,18 +396,20 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
     const passesDesignationFilter = designationFilter.length === 0 ||
       (employee.designation && designationFilter.includes(employee.designation.S));
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
+    
+    // If either designation filter or branch filter passes, return true without checking search criteria
+    if (passesDesignationFilter || passesBranchFilter) {
+      return true;
+    }
+
+    // Check search criteria only if neither designation filter nor branch filter passes
     const passesSearchCriteria = checkSearchCriteria(employee, searchCriteria);
 
-    // Log the results of individual filter conditions
-    console.log("Passes Designation Filter:", passesDesignationFilter);
-    console.log("Passes Branch Filter:", passesBranchFilter);
+    // Log the result of the search criteria check
     console.log("Passes Search Criteria:", passesSearchCriteria);
 
-    // Check if the employee passes all filter conditions
-    const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
-    console.log("Passes Filters:", passesFilters);
-
-    return passesFilters;
+    // Return true if the employee passes all filter conditions
+    return passesSearchCriteria;
   });
 
   if (filteredEmployees.length === 0) {
