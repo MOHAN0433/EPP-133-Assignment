@@ -408,6 +408,10 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   if (!searchCriteria || !searchCriteria.searchText) return true; // No search criteria provided, so return true
 
   const { searchText } = searchCriteria;
+  console.log("searchText:", searchText);
+  console.log("employee.name:", employee.name.S);
+  console.log("employee.employeeId:", employee.employeeId.S);
+
   if (
     (employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase())) ||
     (employee.employeeId && employee.employeeId.S.toLowerCase() === searchText.toLowerCase())
