@@ -410,7 +410,7 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   const { searchText } = searchCriteria;
   if (
     (employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase())) ||
-    (employee.employeeId && employee.employeeId.S.toLowerCase().includes(searchText.toLowerCase()))
+    (employee.employeeId && employee.employeeId.S.toLowerCase() === searchText.toLowerCase())
   ) {
     return true; // Employee matches search criteria
   }
