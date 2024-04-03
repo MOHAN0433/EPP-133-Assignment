@@ -366,6 +366,7 @@ const getAllEmployees = async (event) => {
       errorMsg: e.message,
     });
   }
+  console.log("Response:", response);
   return response;
 };
 
