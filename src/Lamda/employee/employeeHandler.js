@@ -310,7 +310,7 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize } = event.queryStringParameters;
+  const { pageNo, pageSize, searchText } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
   let searchCriteria = {};
@@ -323,12 +323,11 @@ const getAllEmployees = async (event) => {
     branchFilter = event.multiValueQueryStringParameters.branchOffice
       .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
   }
-  
+
   // Extract search criteria from event
-  if (event.queryStringParameters && (event.queryStringParameters.employeeId || event.queryStringParameters.firstName)) {
+  if (searchText) {
     searchCriteria = {
-      employeeId: event.queryStringParameters.employeeId,
-      firstName: event.queryStringParameters.firstName,
+      searchText: searchText,
     };
   }
 
@@ -363,8 +362,6 @@ const getAllEmployees = async (event) => {
     console.error(e);
     response.statusCode = httpStatusCodes.NOT_FOUND;
     response.body = JSON.stringify({
-      //statusCode: e.statusCode,
-      //message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
@@ -393,22 +390,24 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
   if (filteredEmployees.length === 0) {
     throw new Error("No employees match the specified filters.");
   }
-
   return filteredEmployees;
 };
 
 const checkSearchCriteria = (employee, searchCriteria) => {
   if (!searchCriteria) return true; // No search criteria provided, so return true
 
-  const { employeeId, firstName } = searchCriteria;
-  if (employeeId && employeeId !== employee.employeeId.S) {
-    return false; // employeeId provided but doesn't match
+  const { searchText } = searchCriteria;
+  if (searchText && !matchesSearchText(employee, searchText)) {
+    return false; // searchText provided but doesn't match
   }
-  if (firstName && !employee.firstName.S.toLowerCase().includes(firstName.toLowerCase())) {
-    return false; // firstName provided but doesn't match
-  }
-
   return true; // Employee matches search criteria
+};
+
+const matchesSearchText = (employee, searchText) => {
+  return (
+    employee.name.S.toLowerCase().includes(searchText.toLowerCase()) ||
+    employee.employeeId.S === searchText
+  );
 };
 
 const matchesBranch = (employeeBranch, branchFilter) => {
