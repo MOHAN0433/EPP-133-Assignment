@@ -410,10 +410,15 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   const { searchText } = searchCriteria;
   console.log("searchText:", searchText);
   console.log("employee.name:", employee.name.S);
-  console.log("employee.employeeId:", employee.employeeId.S);
+  console.log("employee.employeeId:", employee.employeeId.N); // Assuming employeeId is a number
 
-  const matchesName = employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase());
-  const matchesEmployeeId = employee.employeeId && employee.employeeId.S.toLowerCase() === searchText.toLowerCase();
+  // Convert searchText to lowercase for case-insensitive comparison
+  const lowerCaseSearchText = searchText.toLowerCase();
+
+  // Check if searchText matches the employee's name or employee ID
+  const matchesName = employee.name && employee.name.S.toLowerCase().includes(lowerCaseSearchText);
+  const matchesEmployeeId = employee.employeeId && employee.employeeId.N === searchText; // Comparing as string
+
   console.log("matchesName:", matchesName);
   console.log("matchesEmployeeId:", matchesEmployeeId);
 
