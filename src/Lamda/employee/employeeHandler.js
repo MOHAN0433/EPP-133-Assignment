@@ -310,11 +310,11 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize, searchText } = event.queryStringParameters;
+  const { pageNo, pageSize } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
   let searchCriteria = {};
-
+ 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
       .flatMap(designation => designation.split(',')); // Split by commas if exists
@@ -323,33 +323,34 @@ const getAllEmployees = async (event) => {
     branchFilter = event.multiValueQueryStringParameters.branchOffice
       .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
   }
-
+ 
   // Extract search criteria from event
-  if (searchText) {
+  if (event.queryStringParameters && (event.queryStringParameters.employeeId || event.queryStringParameters.firstName)) {
     searchCriteria = {
-      searchText: searchText,
+      employeeId: event.queryStringParameters.employeeId,
+      firstName: event.queryStringParameters.firstName,
     };
   }
-
+ 
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
     };
     const { Items } = await client.send(new ScanCommand(params));
-
+ 
     // Apply filters
     console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
     const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
     console.log("Filtered items:", filteredItems);
-
+ 
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
-
+ 
     if (!paginatedData.items || paginatedData.items.length === 0) {
       console.log("No employees found after filtering.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
+        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
       });
     } else {
       console.log("Successfully retrieved filtered and paginated employees.");
@@ -360,15 +361,15 @@ const getAllEmployees = async (event) => {
     }
   } catch (e) {
     console.error(e);
-    response.statusCode = httpStatusCodes.NOT_FOUND;
     response.body = JSON.stringify({
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
+      statusCode: e.statusCode,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
       errorMsg: e.message,
     });
   }
   return response;
 };
-
+ 
 const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
   const filteredEmployees = employeesData.filter(employee => {
@@ -386,32 +387,28 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
     const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
     return passesFilters;
   });
-
+ 
   if (filteredEmployees.length === 0) {
     throw new Error("No employees match the specified filters.");
   }
+ 
   return filteredEmployees;
 };
-
+ 
 const checkSearchCriteria = (employee, searchCriteria) => {
   if (!searchCriteria) return true; // No search criteria provided, so return true
-
-  const { searchText } = searchCriteria;
-  if (searchText && matchesSearchText(employee, searchText)) {
-    return true; // Employee matches search criteria
+ 
+  const { employeeId, firstName } = searchCriteria;
+  if (employeeId && employeeId !== employee.employeeId.S) {
+    return false; // employeeId provided but doesn't match
   }
-  return false; // Employee doesn't match search criteria
+  if (firstName && !employee.firstName.S.toLowerCase().includes(firstName.toLowerCase())) {
+    return false; // firstName provided but doesn't match
+  }
+ 
+  return true; // Employee matches search criteria
 };
-
-const matchesSearchText = (employee, searchText) => {
-  const name = employee.name ? employee.name.S.toLowerCase() : "";
-  const employeeId = employee.employeeId ? employee.employeeId.S : "";
-  return (
-    name.includes(searchText.toLowerCase()) ||
-    employeeId === searchText
-  );
-};
-
+ 
 const matchesBranch = (employeeBranch, branchFilter) => {
   for (const filter of branchFilter) {
     const phrases = filter.split(',').map(phrase => phrase.trim());
