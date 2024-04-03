@@ -313,7 +313,6 @@ const getAllEmployees = async (event) => {
   const { pageNo, pageSize, searchText } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
-  let searchCriteria = {};
 
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
@@ -324,13 +323,6 @@ const getAllEmployees = async (event) => {
       .flatMap((branchOffice) => branchOffice.split(",")); // Split by commas if exists
   }
 
-  // Extract search criteria from event
-  if (searchText) {
-    searchCriteria = {
-      searchText: searchText, // Set searchText as searchText
-    };
-  }
-
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
@@ -339,16 +331,21 @@ const getAllEmployees = async (event) => {
 
     let filteredItems = Items;
 
-    // Apply filters if any
-    if (designationFilter.length > 0 || branchFilter.length > 0 || searchText) {
-      // Apply filters
+    // Apply search criteria if provided
+    if (searchText) {
+      console.log("Applying search criteria:", searchText);
+      filteredItems = applySearchCriteria(Items, searchText);
+    }
+    
+    // Apply filters if provided
+    if (designationFilter.length > 0 || branchFilter.length > 0) {
       console.log(
         "Filtering started with designationFilter:",
         designationFilter,
         "and branchFilter:",
         branchFilter
       );
-      filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
+      filteredItems = applyFilters(filteredItems, designationFilter, branchFilter);
       console.log("Filtered items:", filteredItems);
     }
 
@@ -378,10 +375,15 @@ const getAllEmployees = async (event) => {
   }
   return response;
 };
- 
-const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
+
+const applySearchCriteria = (employeesData, searchText) => {
+  console.log("Applying search criteria:", searchText);
+  return employeesData.filter(employee => matchesSearchText(employee, searchText));
+};
+
+const applyFilters = (employeesData, designationFilter, branchFilter) => {
   console.log("Applying filters...");
-  const filteredEmployees = employeesData.filter(employee => {
+  return employeesData.filter(employee => {
     // Check if employee.branch exists before accessing its properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
       // If employee data is incomplete, skip filtering for this employee
@@ -392,26 +394,9 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
       (employee.designation && designationFilter.includes(employee.designation.S));
     // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
-    const passesSearchCriteria = checkSearchCriteria(employee, searchCriteria);
-    const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
+    const passesFilters = passesDesignationFilter && passesBranchFilter;
     return passesFilters;
   });
- 
-  if (filteredEmployees.length === 0) {
-    throw new Error("No employees match the specified filters.");
-  }
- 
-  return filteredEmployees;
-};
- 
-const checkSearchCriteria = (employee, searchCriteria) => {
-  if (!searchCriteria) return true; // No search criteria provided, so return true
-
-  const { searchText } = searchCriteria;
-  if (searchText && matchesSearchText(employee, searchText)) {
-    return true; // Employee matches search criteria
-  }
-  return false; // Employee doesn't match search criteria
 };
 
 const matchesSearchText = (employee, searchText) => {
@@ -422,7 +407,7 @@ const matchesSearchText = (employee, searchText) => {
     employeeId === searchText
   );
 };
- 
+
 const matchesBranch = (employeeBranch, branchFilter) => {
   for (const filter of branchFilter) {
     const phrases = filter.split(',').map(phrase => phrase.trim());
