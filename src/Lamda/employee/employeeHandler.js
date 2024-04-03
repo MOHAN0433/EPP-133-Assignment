@@ -405,28 +405,22 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
 };
  
 const checkSearchCriteria = (employee, searchCriteria) => {
-  if (!searchCriteria || !searchCriteria.searchText) return true; // No search criteria provided, so return true
+  if (!searchCriteria) return true; // No search criteria provided, so return true
 
   const { searchText } = searchCriteria;
-  console.log("searchText:", searchText);
-  console.log("employee.name:", employee.name.S);
-  console.log("employee.employeeId:", employee.employeeId.N); // Assuming employeeId is a number
-
-  // Convert searchText to lowercase for case-insensitive comparison
-  const lowerCaseSearchText = searchText.toLowerCase();
-
-  // Check if searchText matches the employee's name or employee ID
-  const matchesName = employee.name && employee.name.S.toLowerCase().includes(lowerCaseSearchText);
-  const matchesEmployeeId = employee.employeeId && employee.employeeId.N === searchText; // Comparing as string
-
-  console.log("matchesName:", matchesName);
-  console.log("matchesEmployeeId:", matchesEmployeeId);
-
-  if (matchesName || matchesEmployeeId) {
+  if (searchText && matchesSearchText(employee, searchText)) {
     return true; // Employee matches search criteria
   }
+  return false; // Employee doesn't match search criteria
+};
 
-  throw new Error("No employees match the specified search criteria.");
+const matchesSearchText = (employee, searchText) => {
+  const name = employee.name ? employee.name.S.toLowerCase() : "";
+  const employeeId = employee.employeeId ? employee.employeeId.S : "";
+  return (
+    name.includes(searchText.toLowerCase()) ||
+    employeeId === searchText
+  );
 };
  
 const matchesBranch = (employeeBranch, branchFilter) => {
