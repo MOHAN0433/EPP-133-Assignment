@@ -335,6 +335,9 @@ const getAllEmployees = async (event) => {
     if (searchText) {
       console.log("Applying search criteria:", searchText);
       filteredItems = applySearchCriteria(Items, searchText);
+      if (filteredItems.length === 0) {
+        throw new Error("No employees found matching the search criteria.");
+      }
     }
     
     // Apply filters if provided
@@ -346,6 +349,9 @@ const getAllEmployees = async (event) => {
         branchFilter
       );
       filteredItems = applyFilters(filteredItems, designationFilter, branchFilter);
+      if (filteredItems.length === 0) {
+        throw new Error("No employees found matching the filter criteria.");
+      }
       console.log("Filtered items:", filteredItems);
     }
 
@@ -369,7 +375,7 @@ const getAllEmployees = async (event) => {
     console.error(e);
     response.body = JSON.stringify({
       statusCode: e.statusCode,
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
