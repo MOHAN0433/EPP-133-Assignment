@@ -310,42 +310,46 @@ const getAllEmployees = async (event) => {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  const { pageNo, pageSize } = event.queryStringParameters;
+  const { pageNo, pageSize, searchText } = event.queryStringParameters;
   let designationFilter = [];
   let branchFilter = [];
   let searchCriteria = {};
- 
+
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.designation) {
     designationFilter = event.multiValueQueryStringParameters.designation
-      .flatMap(designation => designation.split(',')); // Split by commas if exists
+      .flatMap((designation) => designation.split(",")); // Split by commas if exists
   }
   if (event.multiValueQueryStringParameters && event.multiValueQueryStringParameters.branchOffice) {
     branchFilter = event.multiValueQueryStringParameters.branchOffice
-      .flatMap(branchOffice => branchOffice.split(',')); // Split by commas if exists
+      .flatMap((branchOffice) => branchOffice.split(",")); // Split by commas if exists
   }
- 
+
   // Extract search criteria from event
-  if (event.queryStringParameters && (event.queryStringParameters.employeeId || event.queryStringParameters.firstName)) {
+  if (searchText) {
     searchCriteria = {
-      employeeId: event.queryStringParameters.employeeId,
-      firstName: event.queryStringParameters.firstName,
+      firstName: searchText, // Set searchText as firstName
     };
   }
- 
+
   try {
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
     };
     const { Items } = await client.send(new ScanCommand(params));
- 
+
     // Apply filters
-    console.log("Filtering started with designationFilter:", designationFilter, "and branchFilter:", branchFilter);
+    console.log(
+      "Filtering started with designationFilter:",
+      designationFilter,
+      "and branchFilter:",
+      branchFilter
+    );
     const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
     console.log("Filtered items:", filteredItems);
- 
+
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
- 
+
     if (!paginatedData.items || paginatedData.items.length === 0) {
       console.log("No employees found after filtering.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
@@ -397,15 +401,12 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
  
 const checkSearchCriteria = (employee, searchCriteria) => {
   if (!searchCriteria) return true; // No search criteria provided, so return true
- 
-  const { employeeId, firstName } = searchCriteria;
-  if (employeeId && employeeId !== employee.employeeId.S) {
-    return false; // employeeId provided but doesn't match
+
+  const { name } = searchCriteria;
+  if (!employee.name || !employee.name.S.toLowerCase().includes(name.toLowerCase())) {
+    throw new Error("No employees match the specified search criteria.");
   }
-  if (firstName && !employee.firstName.S.toLowerCase().includes(firstName.toLowerCase())) {
-    return false; // firstName provided but doesn't match
-  }
- 
+
   return true; // Employee matches search criteria
 };
  
