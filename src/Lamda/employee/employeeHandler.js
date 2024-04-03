@@ -327,7 +327,7 @@ const getAllEmployees = async (event) => {
   // Extract search criteria from event
   if (searchText) {
     searchCriteria = {
-      firstName: searchText, // Set searchText as firstName
+      name: searchText, // Set searchText as name
     };
   }
 
@@ -337,15 +337,20 @@ const getAllEmployees = async (event) => {
     };
     const { Items } = await client.send(new ScanCommand(params));
 
-    // Apply filters
-    console.log(
-      "Filtering started with designationFilter:",
-      designationFilter,
-      "and branchFilter:",
-      branchFilter
-    );
-    const filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
-    console.log("Filtered items:", filteredItems);
+    let filteredItems = Items;
+
+    // Apply filters if any
+    if (designationFilter.length > 0 || branchFilter.length > 0 || searchText) {
+      // Apply filters
+      console.log(
+        "Filtering started with designationFilter:",
+        designationFilter,
+        "and branchFilter:",
+        branchFilter
+      );
+      filteredItems = applyFilters(Items, designationFilter, branchFilter, searchCriteria);
+      console.log("Filtered items:", filteredItems);
+    }
 
     // Apply pagination
     const paginatedData = pagination(filteredItems.map((item) => unmarshall(item)), pageNo, pageSize);
