@@ -412,10 +412,12 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   console.log("employee.name:", employee.name.S);
   console.log("employee.employeeId:", employee.employeeId.S);
 
-  if (
-    (employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase())) ||
-    (employee.employeeId && employee.employeeId.S.toLowerCase() === searchText.toLowerCase())
-  ) {
+  const matchesName = employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase());
+  const matchesEmployeeId = employee.employeeId && employee.employeeId.S.toLowerCase() === searchText.toLowerCase();
+  console.log("matchesName:", matchesName);
+  console.log("matchesEmployeeId:", matchesEmployeeId);
+
+  if (matchesName || matchesEmployeeId) {
     return true; // Employee matches search criteria
   }
 
