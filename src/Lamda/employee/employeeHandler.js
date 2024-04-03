@@ -327,7 +327,7 @@ const getAllEmployees = async (event) => {
   // Extract search criteria from event
   if (searchText) {
     searchCriteria = {
-      name: searchText, // Set searchText as name
+      searchText: searchText, // Set searchText as searchText
     };
   }
 
@@ -405,14 +405,17 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
 };
  
 const checkSearchCriteria = (employee, searchCriteria) => {
-  if (!searchCriteria) return true; // No search criteria provided, so return true
+  if (!searchCriteria || !searchCriteria.searchText) return true; // No search criteria provided, so return true
 
-  const { name } = searchCriteria;
-  if (!employee.name || !employee.name.S.toLowerCase().includes(name.toLowerCase())) {
-    throw new Error("No employees match the specified search criteria.");
+  const { searchText } = searchCriteria;
+  if (
+    (employee.name && employee.name.S.toLowerCase().includes(searchText.toLowerCase())) ||
+    (employee.employeeId && employee.employeeId.S.toLowerCase().includes(searchText.toLowerCase()))
+  ) {
+    return true; // Employee matches search criteria
   }
 
-  return true; // Employee matches search criteria
+  throw new Error("No employees match the specified search criteria.");
 };
  
 const matchesBranch = (employeeBranch, branchFilter) => {
