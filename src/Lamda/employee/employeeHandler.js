@@ -397,16 +397,20 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   if (!searchCriteria) return true; // No search criteria provided, so return true
 
   const { searchText } = searchCriteria;
-  if (searchText && !matchesSearchText(employee, searchText)) {
-    return false; // searchText provided but doesn't match
+  if (searchText && matchesSearchText(employee, searchText)) {
+    return true; // Employee matches search criteria
   }
-  return true; // Employee matches search criteria
+  
+  return false; // Employee doesn't match search criteria
 };
 
 const matchesSearchText = (employee, searchText) => {
+  const name = employee.name ? employee.name.S.toLowerCase() : "";
+  const employeeId = employee.employeeId ? employee.employeeId.S : "";
+  
   return (
-    employee.name.S.toLowerCase().includes(searchText.toLowerCase()) ||
-    employee.employeeId.S === searchText
+    name.includes(searchText.toLowerCase()) ||
+    employeeId === searchText
   );
 };
 
