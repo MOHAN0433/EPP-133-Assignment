@@ -402,6 +402,35 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
   return filteredEmployees;
 };
 
+const checkSearchCriteria = (employee, searchCriteria) => {
+  if (!searchCriteria) return true; // No search criteria provided, so return true
+
+  const { searchText } = searchCriteria;
+  if (searchText && matchesSearchText(employee, searchText)) {
+    return true; // Employee matches search criteria
+  }
+  return false; // Employee doesn't match search criteria
+};
+
+const matchesSearchText = (employee, searchText) => {
+  const name = employee.name ? employee.name.S.toLowerCase() : "";
+  const employeeId = employee.employeeId ? employee.employeeId.S : "";
+  return (
+    name.includes(searchText.toLowerCase()) ||
+    employeeId === searchText
+  );
+};
+
+const matchesBranch = (employeeBranch, branchFilter) => {
+  for (const filter of branchFilter) {
+    const phrases = filter.split(',').map(phrase => phrase.trim());
+    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const pagination = (allItems, pageNo, pageSize) => {
   console.log("inside the pagination function");
   console.log("items length", allItems.length);
