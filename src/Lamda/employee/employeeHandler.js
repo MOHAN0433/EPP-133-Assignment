@@ -385,19 +385,34 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
       return false;
     }
     console.log("Employee:", employee);
+    
+    // Log the filter conditions for debugging
+    console.log("Designation Filter:", designationFilter);
+    console.log("Branch Filter:", branchFilter);
+    console.log("Search Criteria:", searchCriteria);
+    
+    // Check individual filter conditions
     const passesDesignationFilter = designationFilter.length === 0 ||
       (employee.designation && designationFilter.includes(employee.designation.S));
-    // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
     const passesSearchCriteria = checkSearchCriteria(employee, searchCriteria);
+
+    // Log the results of individual filter conditions
+    console.log("Passes Designation Filter:", passesDesignationFilter);
+    console.log("Passes Branch Filter:", passesBranchFilter);
+    console.log("Passes Search Criteria:", passesSearchCriteria);
+
+    // Check if the employee passes all filter conditions
     const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
+    console.log("Passes Filters:", passesFilters);
+
     return passesFilters;
   });
 
   if (filteredEmployees.length === 0) {
     const errorMessage = "No employees match the specified filters.";
     console.error(errorMessage);
-    throw new Error(errorMessage); // Throw an error with a specific message
+    throw new Error(errorMessage);
   }
   return filteredEmployees;
 };
