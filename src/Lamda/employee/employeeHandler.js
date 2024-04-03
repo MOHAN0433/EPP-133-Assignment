@@ -422,6 +422,24 @@ const matchesBranch = (employeeBranch, branchFilter) => {
   return false;
 };
 
+const pagination = (allItems, pageNo, pageSize) => {
+  console.log("inside the pagination function");
+  console.log("items length", allItems.length);
+
+  const totalItems = allItems.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (pageNo - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+  const items = allItems.slice(startIndex, endIndex);
+  return {
+    items,
+    totalItems,
+    currentPage: pageNo,
+    totalPages
+  };
+};
+
 // Function to check if employeeId already exists
 const isEmployeeIdExists = async (employeeId) => {
   const params = {
