@@ -371,8 +371,15 @@ const getAllEmployees = async (event) => {
 
 const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
+  
+  if (!designationFilter.length && !branchFilter.length && !Object.keys(searchCriteria).length) {
+    // No filters or search criteria provided, return all employees
+    console.log("No filters or search criteria provided, returning all employees.");
+    return employeesData;
+  }
+
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch exists before accessing its properties
+    // Check if employee.branch and employee.designation exist before accessing their properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
       // If employee data is incomplete, skip filtering for this employee
       return false;
