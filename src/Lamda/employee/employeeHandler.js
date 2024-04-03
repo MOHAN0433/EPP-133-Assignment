@@ -366,56 +366,29 @@ const getAllEmployees = async (event) => {
       errorMsg: e.message,
     });
   }
-  console.log("Response:", response);
   return response;
 };
 
 const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
-
-  if (!designationFilter.length && !branchFilter.length && !Object.keys(searchCriteria).length) {
-    // No filters or search criteria provided, return all employees
-    console.log("No filters or search criteria provided, returning all employees.");
-    return employeesData;
-  }
-
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch and employee.designation exist before accessing their properties
+    // Check if employee.branch exists before accessing its properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
       // If employee data is incomplete, skip filtering for this employee
       return false;
     }
     console.log("Employee:", employee);
-    
-    // Log the filter conditions for debugging
-    console.log("Designation Filter:", designationFilter);
-    console.log("Branch Filter:", branchFilter);
-    console.log("Search Criteria:", searchCriteria);
-    
-    // Check individual filter conditions
     const passesDesignationFilter = designationFilter.length === 0 ||
       (employee.designation && designationFilter.includes(employee.designation.S));
+    // Note: Use `.S` to access the string value of DynamoDB attributes
     const passesBranchFilter = branchFilter.length === 0 || matchesBranch(employee.branchOffice.S, branchFilter);
-    
-    // If either designation filter or branch filter passes, return true without checking search criteria
-    if (passesDesignationFilter || passesBranchFilter) {
-      return true;
-    }
-
-    // Check search criteria only if neither designation filter nor branch filter passes
     const passesSearchCriteria = checkSearchCriteria(employee, searchCriteria);
-
-    // Log the result of the search criteria check
-    console.log("Passes Search Criteria:", passesSearchCriteria);
-
-    // Return true if the employee passes all filter conditions
-    return passesSearchCriteria;
+    const passesFilters = passesDesignationFilter && passesBranchFilter && passesSearchCriteria;
+    return passesFilters;
   });
 
   if (filteredEmployees.length === 0) {
-    const errorMessage = "No employees match the specified filters.";
-    console.error(errorMessage);
-    throw new Error(errorMessage);
+    throw new Error("No employees match the specified filters.");
   }
   return filteredEmployees;
 };
@@ -447,24 +420,6 @@ const matchesBranch = (employeeBranch, branchFilter) => {
     }
   }
   return false;
-};
-
-const pagination = (allItems, pageNo, pageSize) => {
-  console.log("inside the pagination function");
-  console.log("items length", allItems.length);
-
-  const totalItems = allItems.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const startIndex = (pageNo - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalItems);
-
-  const items = allItems.slice(startIndex, endIndex);
-  return {
-    items,
-    totalItems,
-    currentPage: pageNo,
-    totalPages
-  };
 };
 
 // Function to check if employeeId already exists
