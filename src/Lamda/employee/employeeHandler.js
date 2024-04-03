@@ -350,7 +350,7 @@ const getAllEmployees = async (event) => {
       console.log("No employees found after filtering.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
-        message: httpStatusMessages.EMPLOYEES_DETAILS_NOT_FOUND,
+        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
       });
     } else {
       console.log("Successfully retrieved filtered and paginated employees.");
@@ -361,9 +361,11 @@ const getAllEmployees = async (event) => {
     }
   } catch (e) {
     console.error(e);
+    response.statusCode = httpStatusCodes.NOT_FOUND;
     response.body = JSON.stringify({
-      statusCode: e.statusCode,
-      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEES_DETAILS,
+      //statusCode: e.statusCode,
+      //message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EMPLOYEE_DETAILS,
       errorMsg: e.message,
     });
   }
