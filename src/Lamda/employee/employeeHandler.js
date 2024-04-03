@@ -371,15 +371,8 @@ const getAllEmployees = async (event) => {
 
 const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
-  
-  if (!designationFilter.length && !branchFilter.length && !Object.keys(searchCriteria).length) {
-    // No filters or search criteria provided, return all employees
-    console.log("No filters or search criteria provided, returning all employees.");
-    return employeesData;
-  }
-
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch and employee.designation exist before accessing their properties
+    // Check if employee.branch exists before accessing its properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
       // If employee data is incomplete, skip filtering for this employee
       return false;
@@ -407,14 +400,12 @@ const checkSearchCriteria = (employee, searchCriteria) => {
   if (searchText && matchesSearchText(employee, searchText)) {
     return true; // Employee matches search criteria
   }
-  
   return false; // Employee doesn't match search criteria
 };
 
 const matchesSearchText = (employee, searchText) => {
   const name = employee.name ? employee.name.S.toLowerCase() : "";
   const employeeId = employee.employeeId ? employee.employeeId.S : "";
-  
   return (
     name.includes(searchText.toLowerCase()) ||
     employeeId === searchText
