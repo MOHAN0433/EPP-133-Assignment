@@ -371,8 +371,15 @@ const getAllEmployees = async (event) => {
 
 const applyFilters = (employeesData, designationFilter, branchFilter, searchCriteria) => {
   console.log("Applying filters...");
+
+  if (!designationFilter.length && !branchFilter.length && !Object.keys(searchCriteria).length) {
+    // No filters or search criteria provided, return all employees
+    console.log("No filters or search criteria provided, returning all employees.");
+    return employeesData;
+  }
+
   const filteredEmployees = employeesData.filter(employee => {
-    // Check if employee.branch exists before accessing its properties
+    // Check if employee.branch and employee.designation exist before accessing their properties
     if (!employee.branchOffice || !employee.branchOffice.S || !employee.designation || !employee.designation.S) {
       // If employee data is incomplete, skip filtering for this employee
       return false;
@@ -388,38 +395,11 @@ const applyFilters = (employeesData, designationFilter, branchFilter, searchCrit
   });
 
   if (filteredEmployees.length === 0) {
-    throw new Error("No employees match the specified filters.");
+    const errorMessage = "No employees match the specified filters.";
+    console.error(errorMessage);
+    throw new Error(errorMessage); // Throw an error with a specific message
   }
   return filteredEmployees;
-};
-
-const checkSearchCriteria = (employee, searchCriteria) => {
-  if (!searchCriteria) return true; // No search criteria provided, so return true
-
-  const { searchText } = searchCriteria;
-  if (searchText && matchesSearchText(employee, searchText)) {
-    return true; // Employee matches search criteria
-  }
-  return false; // Employee doesn't match search criteria
-};
-
-const matchesSearchText = (employee, searchText) => {
-  const name = employee.name ? employee.name.S.toLowerCase() : "";
-  const employeeId = employee.employeeId ? employee.employeeId.S : "";
-  return (
-    name.includes(searchText.toLowerCase()) ||
-    employeeId === searchText
-  );
-};
-
-const matchesBranch = (employeeBranch, branchFilter) => {
-  for (const filter of branchFilter) {
-    const phrases = filter.split(',').map(phrase => phrase.trim());
-    if (phrases.some(phrase => employeeBranch.includes(phrase))) {
-      return true;
-    }
-  }
-  return false;
 };
 
 const pagination = (allItems, pageNo, pageSize) => {
