@@ -408,23 +408,13 @@ const applyFilters = (employeesData, designationFilter, branchFilter) => {
 const matchesSearchText = (employee, searchText) => {
   // Check if search text meets the minimum character requirement for name search
   if (searchText.length < 3) {
-    if (!employee.employeeId || employee.employeeId.S !== searchText) {
-      throw new Error("Search text for name must be at least 3 characters long.");
-    }
+    throw new Error("Search text for name must be at least 3 characters long.");
   }
-
   const name = employee.name ? employee.name.S.toLowerCase() : "";
-  const employeeId = employee.employeeId ? employee.employeeId.S : "";
-  
-  // If search text is not at least 3 characters long, only check employee ID
-  if (searchText.length < 3) {
-    return employeeId === searchText;
-  }
-
-  // For search text of at least 3 characters, check both name and employee ID
+  //const employeeId = employee.employeeId ? employee.employeeId.N.toString() : ""; // Convert to string for comparison
   return (
-    name.includes(searchText.toLowerCase()) ||
-    employeeId === searchText
+    name.includes(searchText.toLowerCase()) 
+  //  || employeeId === searchText
   );
 };
 
