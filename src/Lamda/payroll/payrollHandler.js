@@ -190,6 +190,47 @@ for (const field of numericFields) {
     return response;
   };
 
+  const getPayrollByEmployeeId = async (event) => {
+    console.log("Fetching payroll details by employee ID");
+    const employeeId = event.pathParameters.employeeId;
+  
+    const response = { statusCode: httpStatusCodes.SUCCESS };
+    try {
+      const params = {
+        TableName: process.env.PAYROLL_TABLE,
+        FilterExpression: 'employeeId = :employeeId',
+        ExpressionAttributeValues: {
+          ':employeeId': { S: employeeId } // Assuming employeeId is a string, adjust accordingly if not
+        }
+      };
+      const command = new ScanCommand(params);
+      const { Items } = await client.send(command);
+  
+      if (!Items || Items.length === 0) {
+        console.log("Assignments for employee not found.");
+        response.statusCode = httpStatusCodes.NOT_FOUND;
+        response.body = JSON.stringify({
+          message: httpStatusMessages.PAYROLL_NOT_FOUND_FOR_EMPLOYEE,
+        });
+      } else {
+        console.log("Successfully retrieved assignments for employee.");
+        response.body = JSON.stringify({
+          message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_PAYROLL_FOR_EMPLOYEE,
+          data: Items.map(item => unmarshall(item)) // Unmarshalling each item
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.FAILED_TO_RETRIEVE_ASSIGNMENTS,
+        error: error.message
+      });
+    }
+    return response;
+  };
+
   module.exports = {
     createPayroll,
+    getPayrollByEmployeeId
   };

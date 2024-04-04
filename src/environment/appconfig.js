@@ -28,7 +28,9 @@ const httpStatusCodes = {
     FAILED_TO_CREATE_BANK_DETAILS : "Failed to create bank details.",
     FAILED_TO_RETRIEVE_ASSIGNMENT_DETAILS : "Failed to retrieve Assignment details.",
     SUCCESSFULLY_CREATED_PAYROLL_DETAILS : "successfully created payroll details.",
-    FAILED_TO_CREATE_PAYROLL_DETAILS : "Failed to create payroll details."
+    FAILED_TO_CREATE_PAYROLL_DETAILS : "Failed to create payroll details.",
+    PAYROLL_NOT_FOUND_FOR_EMPLOYEE : "Payroll Not found for employee.",
+    SUCCESSFULLY_RETRIEVED_PAYROLL_FOR_EMPLOYEE : "Successfully retrieved payroll detail."
 
   };
   

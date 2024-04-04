@@ -124,6 +124,15 @@ functions:
       - http:
           path: payroll
           method: POST
+  payrollGet:
+    handler: src/Lamda/payroll/payrollHandler.getPayrollByEmployeeId
+    name: payrollGet
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: payroll/employee/{employeeId}  # Modify path to ensure uniqueness
+          method: GET
 
 resources:
   Resources:
