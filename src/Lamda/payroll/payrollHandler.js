@@ -192,7 +192,7 @@ for (const field of numericFields) {
 
   const getPayrollByEmployeeId = async (event) => {
     console.log("Fetching payroll details by employee ID");
-    const employeeId = event.pathParameters.employeeId;
+    const { employeeId } = event.queryStringParameters;
   
     const response = { statusCode: httpStatusCodes.SUCCESS };
     try {

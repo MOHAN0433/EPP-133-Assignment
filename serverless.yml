@@ -131,8 +131,13 @@ functions:
     timeout: 120
     events:
       - http:
-          path: payroll/employee/{employeeId}  # Modify path to ensure uniqueness
+          path: payroll/get
           method: GET
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                employeeId: true
 
 resources:
   Resources:
