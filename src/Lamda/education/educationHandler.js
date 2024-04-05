@@ -145,7 +145,7 @@ for (const field of numericFields) {
         Item: marshall({
           educationId: nextSerialNumber,
           degree: requestBody.degree,
-          course: requestBody.cource,
+          course: requestBody.course,
           university: requestBody.university,
           graduationPassingYear : requestBody.graduationPassingYear,
           createdDateTime: formattedDate,
