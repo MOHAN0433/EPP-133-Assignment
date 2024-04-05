@@ -144,6 +144,7 @@ for (const field of numericFields) {
         TableName: process.env.EDUCATION_TABLE,
         Item: marshall({
           educationId: nextSerialNumber,
+          employeeId: requestBody.employeeId,
           degree: requestBody.degree,
           course: requestBody.course,
           university: requestBody.university,
