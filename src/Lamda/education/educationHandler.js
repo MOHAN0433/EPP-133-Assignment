@@ -14,7 +14,7 @@ const {
     httpStatusCodes,
     httpStatusMessages,
   } = require("../../environment/appconfig");
-const { getEducationByEmployeeId } = require("../education/educationHandler");
+//const { getEducationByEmployeeId } = require("../education/educationHandler");
   const currentDate = Date.now(); // get the current date and time in milliseconds
   const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
   
@@ -96,7 +96,7 @@ for (const field of numericFields) {
       
       // Check if an education already exists for the employee
       const existingEducation = await getEducationByEmployee(
-        requestBody.panNumber, requestBody.employeeId
+        requestBody.employeeId
       );
       if (existingEducation) {
         throw new Error("A Education Details already Employee ID.");
