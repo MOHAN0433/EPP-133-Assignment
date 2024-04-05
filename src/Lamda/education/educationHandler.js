@@ -14,12 +14,12 @@ const {
     httpStatusCodes,
     httpStatusMessages,
   } = require("../../environment/appconfig");
-const { getPayrollByEmployeeId } = require("../payroll/payrollHandler");
+const { getEducationByEmployeeId } = require("../education/educationHandler");
   const currentDate = Date.now(); // get the current date and time in milliseconds
   const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
   
   const createEducation = async (event) => {
-    console.log("Create employee details");
+    console.log("Create Education details");
     const response = { statusCode: httpStatusCodes.SUCCESS };
     try {
       const requestBody = JSON.parse(event.body);
