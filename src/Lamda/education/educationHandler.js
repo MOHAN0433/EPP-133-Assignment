@@ -86,7 +86,7 @@ for (const field of numericFields) {
             console.log("Education ID from DynamoDB:", educationIdObj); 
             const educationId = parseInt(educationIdObj.N); 
             console.log("Parsed Education ID:", educationId);
-            return payrollId;
+            return educationId;
           }
         } catch (error) {
           console.error("Error retrieving highest serial number:", error);
@@ -115,7 +115,7 @@ for (const field of numericFields) {
           const result = await client.send(new ScanCommand(params));
           return result.Items.length > 0;
         } catch (error) {
-          console.error("Error retrieving payroll by employeeId:", error);
+          console.error("Error retrieving education by employeeId:", error);
           throw error;
         }
       }
