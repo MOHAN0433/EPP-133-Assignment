@@ -10,6 +10,7 @@ provider:
     METADATA_TABLE: ${self:custom.metadataTableName}
     BANK_TABLE: ${self:custom.bankTableName}
     PAYROLL_TABLE: ${self:custom.payrollTableName}
+    EDUCATION_TABLE: ${self:custom.educationTableName}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -25,12 +26,14 @@ provider:
         - !GetAtt MetadataTable.Arn
         - !GetAtt BankTable.Arn
         - !GetAtt payrollTable.Arn
+        - !GetAtt educationTable.Arn
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
   metadataTableName: metadata
   bankTableName: bank
   payrollTableName: payroll
+  educationTableName: education
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -138,6 +141,15 @@ functions:
             parameters:
               querystrings:
                 employeeId: true
+  educationCreate:
+    handler: src/Lamda/education/educationHandler.createEducation
+    name: educationCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: education
+          method: POST
 
 resources:
   Resources:
@@ -210,6 +222,19 @@ resources:
             AttributeType: N
         KeySchema:
           - AttributeName: payrollId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    educationTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.educationTableName}
+        AttributeDefinitions:
+          - AttributeName: educationId
+            AttributeType: N
+        KeySchema:
+          - AttributeName: educationId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

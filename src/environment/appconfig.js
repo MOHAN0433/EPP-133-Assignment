@@ -30,7 +30,11 @@ const httpStatusCodes = {
     SUCCESSFULLY_CREATED_PAYROLL_DETAILS : "successfully created payroll details.",
     FAILED_TO_CREATE_PAYROLL_DETAILS : "Failed to create payroll details.",
     PAYROLL_NOT_FOUND_FOR_EMPLOYEE : "Payroll Not found for employee.",
-    SUCCESSFULLY_RETRIEVED_PAYROLL_FOR_EMPLOYEE : "Successfully retrieved payroll detail."
+    SUCCESSFULLY_RETRIEVED_PAYROLL_FOR_EMPLOYEE : "Successfully retrieved payroll detail.",
+    FAILED_TO_CREATE_EDUCATION_DETAILS : "Failed to create education details.",
+    SUCCESSFULLY_CREATED_EDUCATION_DETAILS : "Successfully created education details.",
+    
+
 
   };
   

@@ -200,7 +200,7 @@ for (const field of numericFields) {
         TableName: process.env.PAYROLL_TABLE,
         FilterExpression: 'employeeId = :employeeId',
         ExpressionAttributeValues: {
-          ':employeeId': { S: employeeId } // Assuming employeeId is a string, adjust accordingly if not
+          ':employeeId': { S: employeeId }
         }
       };
       const command = new ScanCommand(params);
