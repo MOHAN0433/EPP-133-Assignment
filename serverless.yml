@@ -233,8 +233,6 @@ resources:
         AttributeDefinitions:
           - AttributeName: educationId
             AttributeType: N
-          - AttributeName: documentUrl
-            AttributeType: S
         KeySchema:
           - AttributeName: educationId
             KeyType: HASH

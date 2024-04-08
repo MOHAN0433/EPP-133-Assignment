@@ -3,16 +3,17 @@ const { marshall } = require("@aws-sdk/util-dynamodb");
 const { parse } = require('aws-lambda-multipart-parser');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
+const AWS = require('aws-sdk');
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
+const { parse } = require('aws-lambda-multipart-parser');
 
 const dynamoDBClient = new DynamoDBClient();
-const s3Client = new S3Client();
-const s3 = new AWS.S3();
-// Configure multer for file uploads
+//const s3Client = new S3Client();
+const s3Client = new AWS.S3();
+
 const upload = multer({ dest: '/tmp' });
 
-exports.handler = async (event, context) => {
+const createEducation = async (event) => {
   try {
     // Parse form data using multer
     const formData = await parseFormData(event);
@@ -34,9 +35,7 @@ exports.handler = async (event, context) => {
       Body: file.buffer,
       ContentType: 'application/pdf'
     };
-    await s3.upload(s3Params).promise();
-
-    const fileUrl = `https://${s3Params.Bucket}.s3.amazonaws.com/${s3Params.Key}`;
+    await s3Client.upload(s3Params).promise();
 
     // Save data to DynamoDB
     const educationItem = {
@@ -45,7 +44,7 @@ exports.handler = async (event, context) => {
       course,
       university,
       graduationPassingYear,
-      fileUrl
+      fileUrl: `https://${s3Params.Bucket}.s3.amazonaws.com/${s3Params.Key}`
     };
 
     const dbParams = {
@@ -53,7 +52,7 @@ exports.handler = async (event, context) => {
       Item: educationItem
     };
 
-    await dynamodb.put(dbParams).promise();
+    await dynamoDBClient.put(dbParams).promise();
 
     return {
       statusCode: 200,
@@ -82,3 +81,7 @@ function parseFormData(event) {
     });
   });
 }
+
+module.exports = {
+  createEducation,
+};
