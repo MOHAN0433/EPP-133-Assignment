@@ -66,14 +66,22 @@ const createEducation = async (event) => {
 };
 
 // Helper function to parse form data using multer
+// Helper function to parse form data using multer
 function parseFormData(event) {
   return new Promise((resolve, reject) => {
     upload.single('file')(event, null, async err => {
       if (err) {
         reject(err);
       } else {
-        const { degree, course, university, graduationPassingYear } = event.body;
+        // Parse the form fields
+        const degree = event.body.degree;
+        const course = event.body.course;
+        const university = event.body.university;
+        const graduationPassingYear = event.body.graduationPassingYear;
+
+        // Extract the file
         const file = event.file;
+
         resolve({ degree, course, university, graduationPassingYear, file });
       }
     });
