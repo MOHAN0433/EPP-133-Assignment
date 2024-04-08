@@ -1,112 +1,71 @@
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
-const { marshall } = require("@aws-sdk/util-dynamodb");
-const { parse: multipartParse } = require('aws-lambda-multipart-parser'); // Rename the parse function to avoid conflicts
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const { v4: uuidv4 } = require("uuid");
 const AWS = require('aws-sdk');
-const multer = require('multer');
+const parseMultipart = require('parse-multipart');
 
-const dynamoDBClient = new DynamoDBClient();
-const s3Client = new AWS.S3();
+const BUCKET = 'education0433'; // Change the bucket name to match the one defined in your serverless configuration
 
-const upload = multer({ dest: '/tmp' });
+const s3 = new AWS.S3();
 
-const createEducation = async (event) => {
+function extractFile(event) {
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
+
+  //boundary
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
+  }
+
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+  console.log('--------parts', parts);
+
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+
+  const [{ filename, data }] = parts;
+
+  if (!filename || !data) {
+    throw new Error(
+      'Invalid or missing filename or data in the multipart request.'
+    );
+  }
+
+  return {
+    filename,
+    data,
+  };
+}
+
+module.exports.createEducation = async (event) => { // Changed the function name to match the one in your serverless file
   try {
-    console.log('Received event:', JSON.stringify(event));
-
-    // Parse form data using multer
-    const formData = await parseFormData(event);
-    console.log('Parsed form data:', JSON.stringify(formData));
-
-    // Validate request
-    const { degree, course, university, graduationPassingYear, file } = formData;
-    if (!degree || !course || !university || !graduationPassingYear || !file) {
-      console.error('Missing required fields');
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Missing required fields' })
-      };
-    }
-
-    // Upload file to S3
-    console.log('Uploading file to S3...');
-    const fileName = `${uuidv4()}.pdf`;
-    const s3Params = {
-      Bucket: 'education0433', // Update with your S3 bucket name
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: 'application/pdf'
-    };
-    await s3Client.upload(s3Params).promise();
-    console.log('File uploaded to S3:', fileName);
-
-    // Save data to DynamoDB
-    console.log('Saving data to DynamoDB...');
-    const educationItem = {
-      id: uuidv4(),
-      degree,
-      course,
-      university,
-      graduationPassingYear,
-      fileUrl: `https://${s3Params.Bucket}.s3.amazonaws.com/${s3Params.Key}`
-    };
-
-    const dbParams = {
-      TableName: EDUCATION_TABLE,
-      Item: educationItem
-    };
-
-    await dynamoDBClient.send(new PutItemCommand(dbParams)); // Update the DynamoDB call
-    console.log('Data saved to DynamoDB:', educationItem);
+    const { filename, data } = extractFile(event);
+    console.log('---------data', data);
+    await s3
+      .putObject({
+        Bucket: BUCKET,
+        Key: filename,
+        Body: data,
+      })
+      .promise();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Education record created successfully', educationItem })
+      body: JSON.stringify({
+        link: `https://${BUCKET}.s3.amazonaws.com/${filename}`,
+      }),
     };
-  } catch (error) {
-    console.error('Error:', error);
+  } catch (err) {
+    console.log('error-----', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Internal server error' })
+      body: JSON.stringify({ message: err.message }),
     };
   }
-};
-
-// Helper function to parse form data using multer
-function parseFormData(event) {
-  return new Promise((resolve, reject) => {
-    console.log('Incoming event:', event);
-
-    upload.single('file')(event, null, async err => {
-      if (err) {
-        console.error('Error parsing form data:', err);
-        reject(err);
-      } else {
-        console.log('Form data parsed successfully:', event.body);
-        console.log('File details:', event.file);
-
-        if (!event.file) {
-          console.error('No file detected in form data');
-          reject(new Error('No file detected in form data'));
-          return;
-        }
-        
-        // Parse the form fields
-        const degree = event.body.degree;
-        const course = event.body.course;
-        const university = event.body.university;
-        const graduationPassingYear = event.body.graduationPassingYear;
-
-        // Extract the file
-        const file = event.file;
-
-        resolve({ degree, course, university, graduationPassingYear, file });
-      }
-    });
-  });
-}
-
-module.exports = {
-  createEducation,
 };

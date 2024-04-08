@@ -239,3 +239,24 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    # Define S3 bucket for education files
+    EducationFileBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: education0433
+    # Define IAM policy for education file uploads
+    UploadEducationFilePolicy:
+      Type: AWS::IAM::Policy
+      Properties:
+        PolicyName: UploadEducationObjects
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: LambdaPutObjects
+              Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectTagging
+              Resource: "arn:aws:s3:::education0433/*"
+        Roles:
+          - lamda-s3-access
