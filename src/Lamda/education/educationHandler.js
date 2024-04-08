@@ -78,8 +78,12 @@ function parseFormData(event) {
   return new Promise((resolve, reject) => {
     upload.single('file')(event, null, async err => {
       if (err) {
+        console.error('Error parsing form data:', err);
         reject(err);
       } else {
+        console.log('Form data parsed successfully:', event.body);
+        console.log('File details:', event.file);
+        
         // Parse the form fields
         const degree = event.body.degree;
         const course = event.body.course;
