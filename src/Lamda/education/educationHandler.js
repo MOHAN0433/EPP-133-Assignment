@@ -76,6 +76,8 @@ const createEducation = async (event) => {
 // Helper function to parse form data using multer
 function parseFormData(event) {
   return new Promise((resolve, reject) => {
+    console.log('Incoming event:', event);
+
     upload.single('file')(event, null, async err => {
       if (err) {
         console.error('Error parsing form data:', err);
