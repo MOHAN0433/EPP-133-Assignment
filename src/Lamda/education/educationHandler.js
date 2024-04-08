@@ -1,14 +1,12 @@
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { marshall } = require("@aws-sdk/util-dynamodb");
-const { parse } = require('aws-lambda-multipart-parser');
+const { parse: multipartParse } = require('aws-lambda-multipart-parser'); // Rename the parse function to avoid conflicts
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 const AWS = require('aws-sdk');
 const multer = require('multer');
-const { parse } = require('aws-lambda-multipart-parser');
 
 const dynamoDBClient = new DynamoDBClient();
-//const s3Client = new S3Client();
 const s3Client = new AWS.S3();
 
 const upload = multer({ dest: '/tmp' });
@@ -52,7 +50,7 @@ const createEducation = async (event) => {
       Item: educationItem
     };
 
-    await dynamoDBClient.put(dbParams).promise();
+    await dynamoDBClient.send(new PutItemCommand(dbParams)); // Update the DynamoDB call
 
     return {
       statusCode: 200,
