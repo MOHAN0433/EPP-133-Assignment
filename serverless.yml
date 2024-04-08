@@ -259,4 +259,4 @@ resources:
                 - s3:PutObjectTagging
               Resource: "arn:aws:s3:::education0433/*"
         Roles:
-          - lambda-s3-access  # Corrected the role name
+          - lambda-s3-local  # Corrected the role name
