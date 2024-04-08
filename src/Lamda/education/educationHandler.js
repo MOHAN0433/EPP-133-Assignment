@@ -13,12 +13,16 @@ const upload = multer({ dest: '/tmp' });
 
 const createEducation = async (event) => {
   try {
+    console.log('Received event:', JSON.stringify(event));
+
     // Parse form data using multer
     const formData = await parseFormData(event);
+    console.log('Parsed form data:', JSON.stringify(formData));
 
     // Validate request
     const { degree, course, university, graduationPassingYear, file } = formData;
     if (!degree || !course || !university || !graduationPassingYear || !file) {
+      console.error('Missing required fields');
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Missing required fields' })
@@ -26,6 +30,7 @@ const createEducation = async (event) => {
     }
 
     // Upload file to S3
+    console.log('Uploading file to S3...');
     const fileName = `${uuidv4()}.pdf`;
     const s3Params = {
       Bucket: 'education0433', // Update with your S3 bucket name
@@ -34,8 +39,10 @@ const createEducation = async (event) => {
       ContentType: 'application/pdf'
     };
     await s3Client.upload(s3Params).promise();
+    console.log('File uploaded to S3:', fileName);
 
     // Save data to DynamoDB
+    console.log('Saving data to DynamoDB...');
     const educationItem = {
       id: uuidv4(),
       degree,
@@ -51,6 +58,7 @@ const createEducation = async (event) => {
     };
 
     await dynamoDBClient.send(new PutItemCommand(dbParams)); // Update the DynamoDB call
+    console.log('Data saved to DynamoDB:', educationItem);
 
     return {
       statusCode: 200,
@@ -65,7 +73,6 @@ const createEducation = async (event) => {
   }
 };
 
-// Helper function to parse form data using multer
 // Helper function to parse form data using multer
 function parseFormData(event) {
   return new Promise((resolve, reject) => {
