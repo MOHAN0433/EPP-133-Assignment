@@ -83,6 +83,12 @@ function parseFormData(event) {
       } else {
         console.log('Form data parsed successfully:', event.body);
         console.log('File details:', event.file);
+
+        if (!event.file) {
+          console.error('No file detected in form data');
+          reject(new Error('No file detected in form data'));
+          return;
+        }
         
         // Parse the form fields
         const degree = event.body.degree;
