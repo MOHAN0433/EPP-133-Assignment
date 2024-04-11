@@ -4,6 +4,10 @@ provider:
   runtime: nodejs18.x
   stage: dev
   region: us-east-1
+  apiGateway:
+    # accepted binary type for file uploads
+    binaryMediaTypes:
+      - 'multipart/form-data'
   environment:
     EMPLOYEE_TABLE: ${self:custom.employeeTableName}
     ASSIGNMENTS_TABLE: ${self:custom.assignmentTableName}
@@ -257,6 +261,11 @@ resources:
               Action:
                 - s3:PutObject
                 - s3:PutObjectTagging
-              Resource: "arn:aws:s3:::education0433/*"
+              Resource:
+                Fn::Join:
+                  - ""
+                  - - "arn:aws:s3:::"
+                    - Ref: EducationFileBucket
+                    - "/*"
         Roles:
           - lambda-s3-local  # Corrected the role name
