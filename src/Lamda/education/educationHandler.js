@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const parseMultipart = require('parse-multipart');
 
-const BUCKET = 'education0433'; // Change the bucket name to match the one defined in your serverless configuration
+const BUCKET = 'education0433123'; // Change the bucket name to match the one defined in your serverless configuration
 
 const s3 = new AWS.S3();
 
