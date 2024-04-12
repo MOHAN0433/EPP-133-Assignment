@@ -33,7 +33,7 @@ function extractFile(event) {
 
   if (!filename || !data) {
     throw new Error(
-      'Invalid or missing filename or data in the multipart request1..'
+      'Invalid or missing file name or data in the multipart request1..'
     );
   }
 
