@@ -5,7 +5,6 @@ provider:
   stage: dev
   region: us-east-1
   apiGateway:
-    # accepted binary type for file uploads
     binaryMediaTypes:
       - 'multipart/form-data'
   environment:
@@ -24,6 +23,7 @@ provider:
         - "dynamodb:Scan"
         - "dynamodb:DeleteItem"
         - "dynamodb:Query"
+        - "s3:PutObject"  # Adding permission to upload files to S3
       Resource:
         - !GetAtt EmployeeTable.Arn
         - !GetAtt AssignmentTable.Arn
@@ -31,6 +31,7 @@ provider:
         - !GetAtt BankTable.Arn
         - !GetAtt payrollTable.Arn
         - !GetAtt educationTable.Arn
+        - "arn:aws:s3:::education0433123/*"  # Replace <your-bucket-name> with your actual S3 bucket name
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
