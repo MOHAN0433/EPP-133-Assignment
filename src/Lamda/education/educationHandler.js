@@ -7,9 +7,11 @@ const client = new DynamoDBClient();
 exports.createEducation = async (event) => {
     try {
         // Parse form-data from the event body
-        const boundary = parseMultipart.getBoundary(event);
+        const boundaryHeader = event.headers['content-type'].split(';')[1].trim();
+        const boundary = boundaryHeader.split('=')[1];
+
         const bodyBuffer = Buffer.from(event.body, 'base64');
-        const parts = parseMultipart.Parse(bodyBuffer, boundary);
+        const parts = parseMultipart(bodyBuffer, boundary);
 
         // Extract the JSON data from the form-data
         let bodyData = '';
