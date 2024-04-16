@@ -6,9 +6,18 @@ const client = new DynamoDBClient();
 
 exports.createEducation = async (event) => {
     try {
+        // Log the event to check its structure
+        console.log('Event:', event);
+
         // Parse form-data from the event body
-        const boundaryHeader = event.headers['content-type'].split(';')[1].trim();
+        const contentTypeHeader = event.headers['content-type'];
+        console.log('Content-Type Header:', contentTypeHeader);
+
+        const boundaryHeader = contentTypeHeader.split(';')[1].trim();
+        console.log('Boundary Header:', boundaryHeader);
+
         const boundary = boundaryHeader.split('=')[1];
+        console.log('Boundary:', boundary);
 
         const bodyBuffer = Buffer.from(event.body, 'base64');
         const parts = parseMultipart(bodyBuffer, boundary);
