@@ -45,6 +45,7 @@ function extractDegree(event) {
 
 module.exports.createEducation = async (event) => {
   try {
+    console.log('event full body:', event.body);
     console.log('rewuest event:', event.body.degree);
     const degree = extractDegree(event);
 
