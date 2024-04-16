@@ -8,6 +8,9 @@ const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
 function extractFileAndDegree(event) {
+  console.log('Content-Type:', event.headers['Content-Type']);
+  console.log('Event body:', event.body);
+
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
