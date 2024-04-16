@@ -43,37 +43,45 @@ function extractFile(event) {
   };
 }
 
-// function extractDegree(event) {
-//   const contentType = event.headers['Content-Type'];
-//   if (!contentType) {
-//     throw new Error('Content-Type header is missing in the request.');
-//   }
+function extractDegree(event) {
+  const contentType = event.headers['Content-Type'];
+  console.log('Content-Type:', contentType);
+  console.log('Event body:', event.body);
 
-//   const boundary = parseMultipart.getBoundary(contentType);
-//   if (!boundary) {
-//     throw new Error(
-//       'Unable to determine the boundary from the Content-Type header.'
-//     );
-//   }
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
 
-//   const parts = parseMultipart.Parse(
-//     Buffer.from(event.body, 'base64'),
-//     boundary
-//   );
+  const boundary = parseMultipart.getBoundary(contentType);
+  console.log('Boundary:', boundary);
 
-//   const degreePart = parts.find(part => part.fieldName === 'degree');
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
+  }
 
-//   if (!degreePart || !degreePart.data) {
-//     throw new Error('Degree field not found in the multipart request.');
-//   }
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+  console.log('Parts:', parts);
 
-//   return degreePart.data.toString();
-// }
+  const degreePart = parts.find(part => part.fieldName === 'degree');
+  console.log('Degree part:', degreePart);
+
+  if (!degreePart || !degreePart.data) {
+    throw new Error('Degree field not found in the multipart request.');
+  }
+
+  return degreePart.data.toString();
+}
+
 
 module.exports.createEducation = async (event) => {
   try {
     const { filename, data } = extractFile(event);
-    //const degree = extractDegree(event);
+    const degree = extractDegree(event);
 
     // Upload file to S3
     await s3.putObject({
@@ -91,7 +99,7 @@ module.exports.createEducation = async (event) => {
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
         link: { S: s3ObjectUrl },
-        //degree: { S: degree },
+        degree: { S: degree },
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
     }));
