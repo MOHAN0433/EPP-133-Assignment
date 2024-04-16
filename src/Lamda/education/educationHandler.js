@@ -1,61 +1,48 @@
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const parseMultipart = require('parse-multipart');
 const moment = require("moment");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
 const client = new DynamoDBClient();
 
 exports.createEducation = async (event) => {
-    try {
-        // Check if the Content-Type header is defined
-        if (!event.headers['content-type']) {
-            throw new Error('Content-Type header is missing in the request');
-        }
+  try {
+    // Parse multipart form data
+    const bodyBuffer = Buffer.from(event.body, 'base64');
+    const boundary = event.headers['Content-Type'].split('boundary=')[1];
+    const parts = parseMultipart(bodyBuffer, boundary);
 
-        // Parse form-data from the event body
-        const boundaryHeader = event.headers['content-type'].split(';')[1]?.trim();
-        if (!boundaryHeader) {
-            throw new Error('Boundary header is missing in the Content-Type header');
-        }
-
-        const boundary = boundaryHeader.split('=')[1];
-        const bodyBuffer = Buffer.from(event.body, 'base64');
-        const parts = parseMultipart(bodyBuffer, boundary);
-
-        // Extract the JSON data from the form-data
-        let bodyData = '';
-        parts.forEach(part => {
-            if (part.fieldname === 'bodyData') {
-                bodyData = part.data.toString();
-            }
-        });
-
-        // Parse the JSON data
-        const jsonData = JSON.parse(bodyData);
-
-        // Extract degree and course from the parsed JSON data
-        const degree = jsonData.degree;
-        const course = jsonData.course;
-
-        // Prepare the item to be inserted into DynamoDB
-        await client.send(new PutItemCommand({
-            TableName: process.env.EDUCATION_TABLE,
-            Item: {
-                educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-                degree: { S: degree },
-                course: { S: course },
-                createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
-            }
-        }));
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'Degree saved successfully' })
-        };
-    } catch (error) {
-        console.error('Error saving degree:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ message: 'Error saving degree' })
-        };
+    // Find the degree field
+    let degree;
+    for (const part of parts) {
+      if (part.fieldName === 'degree') {
+        degree = part.data.toString();
+        break;
+      }
     }
+
+    if (!degree) {
+      throw new Error('Degree field not found in the request');
+    }
+
+    // Prepare the item to be inserted into DynamoDB
+    await client.send(new PutItemCommand({
+      TableName: process.env.EDUCATION_TABLE,
+      Item: {
+        educationId: { N: Date.now().toString() }, // Assuming educationId is a number
+        degree: { S: degree },
+        createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+      }
+    }));
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Degree saved successfully' })
+    };
+  } catch (error) {
+    console.error('Error saving degree:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Error saving degree' })
+    };
+  }
 };
