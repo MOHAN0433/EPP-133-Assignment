@@ -4,29 +4,22 @@ const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
 const client = new DynamoDBClient();
 
-const EDUCATION_TABLE = 'EDUCATION_TABLE';
-
 exports.createEducation = async (event) => {
   try {
+    console.log("body", event.body)
     // Extract the degree from the form data
     const degree = event['body'].split('=')[1]; // Extract the value after '='
+    console.log("degree", degree);
     
     // Prepare the item to be inserted into DynamoDB
     await client.send(new PutItemCommand({
       TableName: process.env.EDUCATION_TABLE,
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-        //link: { S: s3ObjectUrl },
         degree: { S: degree },
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
     }));
-    
-    // Create a PutItemCommand
-    //const putCommand = new PutItemCommand(params);
-    
-    // Put the item into DynamoDB
-    //await client.send(putCommand);
     
     return {
         statusCode: 200,
