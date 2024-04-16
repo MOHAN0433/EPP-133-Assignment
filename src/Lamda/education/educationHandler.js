@@ -29,23 +29,24 @@ function extractFile(event) {
     throw new Error('No parts found in the multipart request.');
   }
 
-  const [{ filename, data }] = parts;
+  const [{ filename, data }, { name, value }] = parts;
 
-  if (!filename || !data) {
+  if (!filename || !data || !name || !value) {
     throw new Error(
-      'Invalid or missing file name or data in the multipart request.'
+      'Invalid or missing file name, data, name, or value in the multipart request.'
     );
   }
 
   return {
     filename,
     data,
+    degree: value // Assuming "degree" is a field in the form-data
   };
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { filename, data } = extractFile(event);
+    const { filename, data, degree } = extractFile(event);
 
     // Upload file to S3
     await s3.putObject({
@@ -57,12 +58,13 @@ module.exports.createEducation = async (event) => {
     // Construct S3 object URL
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
-    // Save S3 object URL in DynamoDB
+    // Save S3 object URL and degree in DynamoDB
     await client.send(new PutItemCommand({
       TableName: process.env.EDUCATION_TABLE,
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
         link: { S: s3ObjectUrl },
+        degree: { S: degree }, // Saving the degree field
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
     }));
