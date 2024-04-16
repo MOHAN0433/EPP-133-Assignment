@@ -29,18 +29,29 @@ function extractFile(event) {
     throw new Error('No parts found in the multipart request.');
   }
 
-  const [{ filename, data }, { name, value }] = parts;
+  let filename;
+  let data;
+  let degree;
 
-  if (!filename || !data || !name || !value) {
+  parts.forEach(part => {
+    if (part.filename && part.data) {
+      filename = part.filename;
+      data = part.data;
+    } else if (part.name && part.value && part.name === 'degree') {
+      degree = part.value.toString(); // Ensure degree is converted to string
+    }
+  });
+
+  if (!filename || !data || !degree) {
     throw new Error(
-      'Invalid or missing file name, data, name, or value in the multipart request.'
+      'Invalid or missing file name, data, or degree field in the multipart request.'
     );
   }
 
   return {
     filename,
     data,
-    degree: value // Assuming "degree" is a field in the form-data
+    degree
   };
 }
 
