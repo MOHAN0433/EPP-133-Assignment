@@ -62,6 +62,7 @@ function extractFile(event) {
 
 module.exports.createEducation = async (event) => {
   try {
+    console.log('Event Body:', event.body);
     const { filename, data } = extractFile(event); // Extract file details
 
     // Upload file to S3
