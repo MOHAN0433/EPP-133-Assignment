@@ -21,7 +21,7 @@ exports.createEducation = async (event) => {
         }
       }
     });
-    console.log("degree", degree);
+    console.log("degree ", degree);
     
     // Prepare the item to be inserted into DynamoDB
     await client.send(new PutItemCommand({
