@@ -1,115 +1,175 @@
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
-const { marshall } = require("@aws-sdk/util-dynamodb");
+const {
+  DynamoDBClient,
+  PutItemCommand,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  GetItemCommand,
+  ScanCommand,
+  QueryCommand,
+} = require("@aws-sdk/client-dynamodb");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
-const { httpStatusCodes, httpStatusMessages } = require("../../environment/appconfig");
-const { S3 } = require('aws-sdk');
-const parseMultipart = require('parse-multipart');
-
-const BUCKET = 'education0433123';
 const client = new DynamoDBClient();
-const s3 = new S3();
+const {
+  httpStatusCodes,
+  httpStatusMessages,
+} = require("../../environment/appconfig");
+const { getPayrollByEmployeeId } = require("../payroll/payrollHandler");
+const currentDate = Date.now(); // get the current date and time in milliseconds
+const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
 const createEducation = async (event) => {
-  console.log("Create education  details");
+  console.log("Create employee details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
-      const formData = parseMultipart(event.body, event.headers['content-type']);
-      console.log("Form Data:", formData);
+    const requestBody = JSON.parse(event.body);
+    console.log("Request Body:", requestBody);
 
-      // Extract form fields
-      const fields = {};
-      formData.forEach(part => {
-          if (part.filename) {
-              // Upload education document to S3
-              const s3Params = {
-                  Bucket: BUCKET,
-                  Key: part.filename,
-                  Body: part.data,
-              };
-              s3.upload(s3Params).promise();
-              fields.educationDocumentUrl = `https://${BUCKET}.s3.amazonaws.com/${part.filename}`;
-          } else {
-              fields[part.name] = part.data.toString('utf8');
-          }
-      });
+    // Check for required fields
+    const requiredFields = [
+      "degree",
+      "course",
+      "university",
+      "graduationPassingYear",
+      "employeeId",
+    ];
+    if (!requiredFields.every((field) => requestBody[field])) {
+      throw new Error("Required fields are missing.");
+    }
 
-      console.log("Form Fields:", fields);
+//       const validatePanNumber = (panNumber) => {
+//         const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
+//         return panRegex.test(panNumber);
+//     };
 
-      // Check for required fields
-      const requiredFields = [
-          "degree",
-          "course",
-          "university",
-          "graduationPassingYear",
-          "employeeId",
-          "educationDocumentUrl"
-      ];
-      if (!requiredFields.every(field => fields[field])) {
-          throw new Error("Required fields are missing.");
-      }
+//     if (!validatePanNumber(requestBody.panNumber)) {
+//       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
+//   }
 
-      const formattedDate = moment().format("YYYY-MM-DD HH:mm:ss"); // formatting date
+const numericFields = [
+"graduationPassingYear"
+];
 
-      const highestEducationId = await getHighestEducationId();
-      console.log("Highest Education ID:", highestEducationId);
+for (const field of numericFields) {
+if (requestBody[field] !== undefined || requestBody[field] !== null ) {
+    if (requestBody[field] === '' || typeof requestBody[field] == 'string') {
+        throw new Error(`${field} must be a non-null and non-empty number.`);
+    }
+}
+}
 
-      const nextEducationId = highestEducationId !== null ? highestEducationId + 1 : 1;
+  //   const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
+  //   const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
+  //   const totalNetPay = totalEarnings - totalDeductions;
 
-      // Save education details to DynamoDB
+    const highestSerialNumber = await getHighestSerialNumber();
+    console.log("Highest Serial Number:", highestSerialNumber);
+
+    const nextSerialNumber =
+      highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
+    async function getHighestSerialNumber() {
       const params = {
-          TableName: process.env.EDUCATION_TABLE,
-          Item: marshall({
-              educationId: nextEducationId,
-              degree: fields.degree,
-              course: fields.course,
-              university: fields.university,
-              graduationPassingYear: fields.graduationPassingYear,
-              employeeId: fields.employeeId,
-              educationDocumentUrl: fields.educationDocumentUrl,
-              createdDateTime: formattedDate,
-              updatedDateTime: null,
-          }),
+        TableName: process.env.EDUCATION_TABLE,
+        ProjectionExpression: "educationId",
+        Limit: 1,
+        ScanIndexForward: false, // Sort in descending order to get the highest serial number first
       };
 
-      await client.send(new PutItemCommand(params));
-      response.body = JSON.stringify({
-          message: httpStatusMessages.SUCCESSFULLY_CREATED_EDUCATION_DETAILS,
-          educationId: nextEducationId,
-          employeeId: fields.employeeId,
-      });
-  } catch (error) {
-      console.error(error);
-      response.statusCode = httpStatusCodes.BAD_REQUEST;
-      response.body = JSON.stringify({
-          message: httpStatusMessages.FAILED_TO_CREATE_EDUCATION_DETAILS,
-          errorMsg: error.message,
-          errorStack: error.stack,
-      });
+      try {
+        const result = await client.send(new ScanCommand(params));
+        console.log("DynamoDB Result:", result); // Add this line to see the DynamoDB response
+        if (result.Items.length === 0) {
+          return 0; // If no records found, return null
+        } else {
+          // Parse and return the highest serial number without incrementing
+          const educationIdObj = result.Items[0].educationId;
+          console.log("Education ID from DynamoDB:", educationIdObj); 
+          const educationId = parseInt(educationIdObj.N); 
+          console.log("Parsed Education ID:", educationId);
+          return payrollId;
+        }
+      } catch (error) {
+        console.error("Error retrieving highest serial number:", error);
+        throw error; // Propagate the error up the call stack
+      }
+    }
+
+    // Check if an education already exists for the employee
+    const existingEducation = await getEducationByEmployee(
+      requestBody.panNumber, requestBody.employeeId
+    );
+    if (existingEducation) {
+      throw new Error("A Education Details already Employee ID.");
+  }
+
+    async function getEducationByEmployee(employeeId) {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        FilterExpression: "employeeId = :employeeId",
+        ExpressionAttributeValues: {
+          ":employeeId": { S: employeeId },
+        },
+      };
+
+      try {
+        const result = await client.send(new ScanCommand(params));
+        return result.Items.length > 0;
+      } catch (error) {
+        console.error("Error retrieving payroll by employeeId:", error);
+        throw error;
+      }
+    }
+
+    const checkEmployeeExistence = async (employeeId) => {
+      const params = {
+        TableName: process.env.EMPLOYEE_TABLE,
+        Key: marshall({
+          employeeId: employeeId,
+        }),
+      };
+
+      try {
+        const result = await client.send(new GetItemCommand(params));
+        if (!result.Item) {
+          throw new Error("Employee not found.");
+        }
+      } catch (error) {
+        console.error("Error checking employee existence:", error);
+        throw error;
+      }
+    };
+    await checkEmployeeExistence(requestBody.employeeId);
+
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Item: marshall({
+        educationId: nextSerialNumber,
+        degree: requestBody.degree,
+        cource: requestBody.cource,
+        university: requestBody.university,
+        graduationPassingYear : requestBody.graduationPassingYear,
+        createdDateTime: formattedDate,
+        updatedDateTime: null,
+      }),
+    };
+
+    await client.send(new PutItemCommand(params));
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_CREATED_EDUCATION_DETAILS,
+      educationId: nextSerialNumber,
+      employeeId:employeeId,
+    });
+  } catch (e) {
+    console.error(e);
+    response.statusCode = httpStatusCodes.BAD_REQUEST;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_CREATE_EDUCATION_DETAILS,
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
   }
   return response;
 };
-
-async function getHighestEducationId() {
-  const params = {
-      TableName: process.env.EDUCATION_TABLE,
-      ProjectionExpression: "educationId",
-      Limit: 1,
-      ScanIndexForward: false, // Sort in descending order to get the highest education ID first
-  };
-
-  try {
-      const result = await client.send(new ScanCommand(params));
-      if (result.Items.length === 0) {
-          return 0; // If no records found, return null
-      } else {
-          // Parse and return the highest education ID without incrementing
-          return parseInt(result.Items[0].educationId.N);
-      }
-  } catch (error) {
-      console.error("Error retrieving highest education ID:", error);
-      throw error;
-  }
-}
 
 module.exports = {
   createEducation,
