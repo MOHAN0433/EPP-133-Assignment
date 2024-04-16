@@ -9,6 +9,7 @@ const {
 } = require("@aws-sdk/client-dynamodb");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
+const AWS = require('aws-sdk');
 const client = new DynamoDBClient();
 const {
   httpStatusCodes,
