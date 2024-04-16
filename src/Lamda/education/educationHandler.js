@@ -6,7 +6,7 @@ const client = new DynamoDBClient();
 
 const EDUCATION_TABLE = 'EDUCATION_TABLE';
 
-exports.handler = async (event) => {
+exports.createEducation = async (event) => {
   try {
       // Parse the incoming form data from the event body
       const formData = JSON.parse(event.body);
