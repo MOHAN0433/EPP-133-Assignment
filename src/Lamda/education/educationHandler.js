@@ -46,7 +46,7 @@ function extractFile(event) {
 function extractDegree(event) {
   const contentType = event.headers['Content-Type'];
   console.log('Content-Type:', contentType);
-  console.log('Event body:', event.body);
+  //console.log('Event body:', event.body);
 
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
@@ -80,6 +80,7 @@ function extractDegree(event) {
 
 module.exports.createEducation = async (event) => {
   try {
+    console.log('rewuest event:', event.body);
     const { filename, data } = extractFile(event);
     const degree = extractDegree(event);
 
