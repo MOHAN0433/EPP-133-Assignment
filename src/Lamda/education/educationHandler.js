@@ -7,13 +7,13 @@ const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
-function extractFile(event) {
+function extractFileAndDegree(event) {
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
   }
 
-  const boundary = parseMultipart.getBoundary(contentType);
+  const boundary = contentType.split('boundary=')[1];
   if (!boundary) {
     throw new Error('Unable to determine the boundary from the Content-Type header.');
   }
@@ -23,55 +23,27 @@ function extractFile(event) {
     boundary
   );
 
-  if (!parts || parts.length === 0) {
-    throw new Error('No parts found in the multipart request.');
-  }
-
-  const [{ filename, data }] = parts;
-
-  if (!filename || !data) {
-    throw new Error('Invalid or missing file name or data in the multipart request.');
-  }
-
-  return {
-    file: filename,
-    data
-  };
-}
-
-function extractDegree(event) {
-  const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
-  }
-
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error('Unable to determine the boundary from the Content-Type header.');
-  }
-
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
-
-  if (!parts || parts.length === 0) {
-    throw new Error('No parts found in the multipart request.');
-  }
-
+  const filePart = parts.find(part => part.filename);
   const degreePart = parts.find(part => part.fieldName === 'degree');
 
-  if (!degreePart || !degreePart.value) {
+  if (!filePart) {
+    throw new Error('File part not found in the multipart request.');
+  }
+
+  if (!degreePart || !degreePart.data) {
     throw new Error('Degree field not found in the multipart request.');
   }
 
-  return degreePart.value.toString();
+  return {
+    file: filePart.filename,
+    data: filePart.data,
+    degree: degreePart.data.toString() // Convert degree data to string
+  };
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { file, data } = extractFile(event);
-    const degree = extractDegree(event);
+    const { file, data, degree } = extractFileAndDegree(event);
 
     // Upload file to S3
     await s3.putObject({
