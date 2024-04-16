@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const parseMultipart = require('parse-multipart');
 const moment = require("moment");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
@@ -7,60 +6,36 @@ const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
-function extractFile(event) {
-  const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
+function extractFileAndDegree(event) {
+  const body = Buffer.from(event.body, 'base64').toString();
+  const boundary = event.headers['Content-Type'].split('boundary=')[1];
+  const parts = body.split(`--${boundary}`);
+
+  const filePart = parts.find(part => part.includes('filename='));
+  const degreePart = parts.find(part => part.includes('name="degree"'));
+
+  if (!filePart || !degreePart) {
+    throw new Error('Invalid multipart request. File or degree field not found.');
   }
 
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
-    );
+  const filenameMatch = filePart.match(/filename="(.+?)"/);
+  const degreeMatch = degreePart.match(/\r\n\r\n(.+?)\r\n--/);
+
+  if (!filenameMatch || !degreeMatch) {
+    throw new Error('Invalid file name or degree field.');
   }
 
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
+  const file = filenameMatch[1];
+  const degree = degreeMatch[1];
 
-  if (!parts || parts.length < 2) {
-    throw new Error('Invalid multipart request. Expected at least two parts.');
-  }
-
-  const filePart = parts.find(part => part.filename);
-  const degreePart = parts.find(part => part.fieldName === 'degree');
-
-  if (!filePart) {
-    throw new Error('File part not found in the multipart request.');
-  }
-
-  const { filename: file, data } = filePart;
-
-  if (!file || !data) {
-    throw new Error(
-      'Invalid or missing file name or data in the multipart request.'
-    );
-  }
-
-  let degree;
-  if (degreePart) {
-    degree = degreePart.value.toString();
-  } else {
-    throw new Error('Degree field not found in the multipart request.');
-  }
-
-  return {
-    file,
-    data,
-    degree
-  };
+  return { file, degree };
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { file, data, degree } = extractFile(event);
+    const { file, degree } = extractFileAndDegree(event);
+
+    const data = Buffer.from(event.body, 'base64');
 
     // Upload file to S3
     await s3.putObject({
