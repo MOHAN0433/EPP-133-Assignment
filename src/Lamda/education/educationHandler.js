@@ -31,10 +31,12 @@ function extractFile(event) {
     formData[name] = content;
   }
 
-  const { filename, data } = formData.file || {};
-  const degree = formData.degree;
+  console.log('FormData:', formData);
+
+  const { file: { filename, data } = {}, degree } = formData;
+
   console.log('Filename:', filename);
-console.log('Degree:', degree);
+  console.log('Degree:', degree);
 
   if (!filename || !data || !degree) {
     throw new Error('Invalid or missing file name, data, or degree field in the multipart request.');
