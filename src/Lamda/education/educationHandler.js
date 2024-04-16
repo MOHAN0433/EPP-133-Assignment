@@ -14,7 +14,7 @@ const {
   httpStatusCodes,
   httpStatusMessages,
 } = require("../../environment/appconfig");
-const { getPayrollByEmployeeId } = require("../payroll/payrollHandler");
+//const { getEducationByEmployeeId } = require("../education/educationHandler");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
@@ -86,7 +86,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
           console.log("Education ID from DynamoDB:", educationIdObj); 
           const educationId = parseInt(educationIdObj.N); 
           console.log("Parsed Education ID:", educationId);
-          return payrollId;
+          return educationId;
         }
       } catch (error) {
         console.error("Error retrieving highest serial number:", error);
@@ -96,7 +96,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
 
     // Check if an education already exists for the employee
     const existingEducation = await getEducationByEmployee(
-      requestBody.panNumber, requestBody.employeeId
+    requestBody.employeeId
     );
     if (existingEducation) {
       throw new Error("A Education Details already Employee ID.");
@@ -115,7 +115,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
         const result = await client.send(new ScanCommand(params));
         return result.Items.length > 0;
       } catch (error) {
-        console.error("Error retrieving payroll by employeeId:", error);
+        console.error("Error retrieving education by employeeId:", error);
         throw error;
       }
     }
