@@ -1,45 +1,29 @@
-const {
-  DynamoDBClient,
-  PutItemCommand,
-  UpdateItemCommand,
-  DeleteItemCommand,
-  GetItemCommand,
-  ScanCommand,
-  QueryCommand,
-} = require("@aws-sdk/client-dynamodb");
-const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
-const moment = require("moment");
 const AWS = require('aws-sdk');
-const client = new DynamoDBClient();
-const {
-  httpStatusCodes,
-  httpStatusMessages,
-} = require("../../environment/appconfig");
-//const { getEducationByEmployeeId } = require("../education/educationHandler");
-const currentDate = Date.now(); // get the current date and time in milliseconds
-const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
-
 const parseMultipart = require('parse-multipart');
+const moment = require("moment");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
-const BUCKET = 'education0433123'; // Change the bucket name to match the one defined in your serverless 
+const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
+const client = new DynamoDBClient();
 
-// Function to extract file from multipart/form-data
 function extractFile(event) {
-  console.log('Event body:', event.body);
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
   }
 
-  // Boundary
   const boundary = parseMultipart.getBoundary(contentType);
   if (!boundary) {
-    throw new Error('Unable to determine the boundary from the Content-Type header.');
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
   }
 
-  const parts = parseMultipart.Parse(Buffer.from(event.body, 'base64'), boundary);
-  console.log('--------parts', parts);
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
 
   if (!parts || parts.length === 0) {
     throw new Error('No parts found in the multipart request.');
@@ -48,7 +32,9 @@ function extractFile(event) {
   const [{ filename, data }] = parts;
 
   if (!filename || !data) {
-    throw new Error('Invalid or missing file name or data in the multipart request.');
+    throw new Error(
+      'Invalid or missing file name or data in the multipart request.'
+    );
   }
 
   return {
@@ -59,70 +45,39 @@ function extractFile(event) {
 
 module.exports.createEducation = async (event) => {
   try {
-    // Upload file to S3
     const { filename, data } = extractFile(event);
-    await s3.putObject({ Bucket: BUCKET, Key: filename, Body: data }).promise();
 
-    // Extract data from form data
-    const formData = parseFormData(event);
-    const { educationId, degree, course, university, graduationPassingYear } = formData;
+    // Upload file to S3
+    await s3.putObject({
+      Bucket: BUCKET,
+      Key: filename,
+      Body: data,
+    }).promise();
 
-    // Check if education already exists for the employee
-    const existingEducation = await getEducationByEmployee(educationId);
-    if (existingEducation) {
-      throw new Error("Education details already exist for the employee.");
-    }
+    // Construct S3 object URL
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
-    // Get the next education ID
-    const nextSerialNumber = await getHighestSerialNumber();
-
-    // Save data to EDUCATION_TABLE
-    const params = {
+    // Save S3 object URL in DynamoDB
+    await client.send(new PutItemCommand({
       TableName: process.env.EDUCATION_TABLE,
-      Item: marshall({
-        educationId: nextSerialNumber,
-        degree,
-        course,
-        university,
-        graduationPassingYear,
-        createdDateTime: formattedDate,
-        updatedDateTime: null,
-      }),
-    };
-    await client.send(new PutItemCommand(params));
+      Item: {
+        educationId: { N: Date.now().toString() }, // Assuming educationId is a number
+        link: { S: s3ObjectUrl },
+        createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+      }
+    }));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Education details saved successfully.",
-        educationId: nextSerialNumber,
-        link: `https://${BUCKET}.s3.amazonaws.com/${filename}`,
+        link: s3ObjectUrl,
       }),
     };
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (err) {
+    console.log('error-----', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: error.message }),
+      body: JSON.stringify({ message: err.message }),
     };
   }
 };
-
-// Function to parse form data and extract required fields
-function parseFormData(event) {
-  const body = event.body;
-  const parts = parseMultipart.Parse(Buffer.from(body, "base64"), event.headers["content-type"]);
-  const formData = {};
-
-  parts.forEach(part => {
-    if (part.filename) {
-      formData.filename = part.filename;
-      formData.data = part.data;
-    } else {
-      formData[part.name] = part.data.toString();
-    }
-  });
-
-  return formData;
-}
-
