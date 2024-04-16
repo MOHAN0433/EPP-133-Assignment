@@ -26,6 +26,7 @@ const s3 = new AWS.S3();
 
 // Function to extract file from multipart/form-data
 function extractFile(event) {
+  console.log('Event body:', event.body);
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
