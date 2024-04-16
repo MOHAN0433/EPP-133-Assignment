@@ -24,82 +24,36 @@ const parseMultipart = require('parse-multipart');
 const BUCKET = 'education0433123'; // Change the bucket name to match the one defined in your serverless 
 const s3 = new AWS.S3();
 
-function extractFile(event) {
-  const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
-  }
-
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
-    );
-  }
-
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
-
-  if (!parts || parts.length === 0) {
-    throw new Error('No parts found in the multipart request.');
-  }
-
-  const [{ filename, data }] = parts;
-
-  if (!filename || !data) {
-    throw new Error(
-      'Invalid or missing file name or data in the multipart request.'
-    );
-  }
-
-  return {
-    filename,
-    data,
-  };
-}
-
 module.exports.createEducation = async (event) => {
   try {
-    console.log('Event Body:', event.body);
     const { filename, data } = extractFile(event); // Extract file details
+    console.log('File:', filename);
+
+    const formData = extractFormData(event.body); // Extract form data fields
+    console.log('Form Data:', formData);
 
     // Upload file to S3
-    await s3.putObject({
+    const s3Response = await s3.putObject({
       Bucket: BUCKET,
       Key: filename,
       Body: data,
     }).promise();
-
-    // Extract educational details from form-data
-    const formData = parseFormData(event.body);
-    const {
-      degree,
-      course,
-      university,
-      graduationPassingYear,
-      employeeId
-    } = formData;
-
-    // Validate and process educational details...
+    console.log('S3 Response:', s3Response);
 
     // Save educational details to DynamoDB
-    const params = {
-      TableName: process.env.EDUCATION_TABLE,
-      Item: {
-        educationId: nextSerialNumber,
-        degree,
-        course,
-        university,
-        graduationPassingYear,
-        fileUrl: `https://${BUCKET}.s3.amazonaws.com/${filename}`, // Include S3 file URL
-        createdDateTime: formattedDate,
-        updatedDateTime: null,
-      },
+    const educationItem = {
+      degree: formData.degree,
+      course: formData.course,
+      university: formData.university,
+      graduationPassingYear: formData.graduationPassingYear,
+      fileUrl: `https://${BUCKET}.s3.amazonaws.com/${filename}`,
+      // Add other fields as needed
     };
-
-    await client.send(new PutItemCommand(params));
+    const dbResponse = await client.send(new PutItemCommand({
+      TableName: process.env.EDUCATION_TABLE,
+      Item: marshall(educationItem),
+    }));
+    console.log('DB Response:', dbResponse);
 
     return {
       statusCode: 200,
@@ -116,18 +70,15 @@ module.exports.createEducation = async (event) => {
   }
 };
 
-function parseFormData(formData) {
-  console.log('FormData:', formData); // Log the formData variable
-  const result = {};
-  if (!formData) return result; // Return an empty object if formData is undefined or null
-  
-  const fields = formData.split(';');
-  console.log('Fields:', fields); // Log the fields array
-  for (const field of fields) {
-    const [key, value] = field.split('=');
-    console.log('Key:', key); // Log the key
-    console.log('Value:', value); // Log the value
-    result[key.trim()] = value.trim();
+function extractFormData(body) {
+  const formData = {};
+  const parts = body.split(';');
+  for (const part of parts) {
+    const match = part.match(/name="(.*)"\r\n\r\n(.*)/s);
+    if (match) {
+      formData[match[1]] = match[2];
+    }
   }
-  return result;
+  return formData;
 }
+
