@@ -21,8 +21,11 @@ function extractFileAndDegree(event) {
     throw new Error('Unable to determine the boundary from the Content-Type header.');
   }
 
+  // Decode the base64-encoded body
+  const decodedBody = Buffer.from(event.body, 'base64').toString();
+
   const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
+    Buffer.from(decodedBody),
     boundary
   );
 
