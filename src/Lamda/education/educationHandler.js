@@ -6,19 +6,18 @@ const client = new DynamoDBClient();
 
 exports.createEducation = async (event) => {
     try {
-        // Log the event to check its structure
-        console.log('Event:', event);
+        // Check if the Content-Type header is defined
+        if (!event.headers['content-type']) {
+            throw new Error('Content-Type header is missing in the request');
+        }
 
         // Parse form-data from the event body
-        const contentTypeHeader = event.headers['content-type'];
-        console.log('Content-Type Header:', contentTypeHeader);
-
-        const boundaryHeader = contentTypeHeader.split(';')[1].trim();
-        console.log('Boundary Header:', boundaryHeader);
+        const boundaryHeader = event.headers['content-type'].split(';')[1]?.trim();
+        if (!boundaryHeader) {
+            throw new Error('Boundary header is missing in the Content-Type header');
+        }
 
         const boundary = boundaryHeader.split('=')[1];
-        console.log('Boundary:', boundary);
-
         const bodyBuffer = Buffer.from(event.body, 'base64');
         const parts = parseMultipart(bodyBuffer, boundary);
 
