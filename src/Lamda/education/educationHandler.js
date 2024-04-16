@@ -10,7 +10,7 @@ exports.createEducation = async (event) => {
     console.log("body", event.body.degree);
     // Extract the degree from the form data
     const degree = event['body'].split('=')[1]; // Extract the value after '='
-    console.log("degree", degree);
+    console.log("degree ", degree);
    
     // Prepare the item to be inserted into DynamoDB
     await client.send(new PutItemCommand({
