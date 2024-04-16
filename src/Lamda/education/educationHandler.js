@@ -16,7 +16,7 @@ exports.createEducation = async (event) => {
       TableName: process.env.EDUCATION_TABLE,
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-        link: { S: s3ObjectUrl },
+        //link: { S: s3ObjectUrl },
         degree: { S: degree },
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
