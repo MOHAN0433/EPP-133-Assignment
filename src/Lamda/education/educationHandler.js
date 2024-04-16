@@ -157,7 +157,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EDUCATION_DETAILS,
       educationId: nextSerialNumber,
-      employeeId:employeeId,
+      //employeeId:employeeId,
     });
   } catch (e) {
     console.error(e);
