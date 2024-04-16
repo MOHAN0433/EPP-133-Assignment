@@ -10,7 +10,7 @@ const client = new DynamoDBClient();
 const s3 = new S3();
 
 const createEducation = async (event) => {
-  console.log("Create education details");
+  console.log("Create education  details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
       const formData = parseMultipart(event.body, event.headers['content-type']);
