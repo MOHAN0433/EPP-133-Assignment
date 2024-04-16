@@ -9,48 +9,38 @@ const client = new DynamoDBClient();
 
 function extractFile(event) {
   const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
+  if (!contentType || !contentType.includes('multipart/form-data')) {
+    throw new Error('Content-Type header is missing or incorrect in the request.');
   }
 
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
-    );
+  const boundary = contentType.split(';')[1].split('=')[1];
+
+  const body = Buffer.from(event.body, 'base64').toString('binary');
+
+  const parts = body.split(`--${boundary}`);
+
+  const formData = {};
+
+  for (let part of parts) {
+    part = part.trim();
+    if (part.length === 0) continue;
+    const [header, ...contentParts] = part.split('\r\n\r\n');
+    const content = contentParts.join('\r\n\r\n').trim();
+    const [, name] = header.match(/name="(.+?)"/) || [];
+    if (!name) continue;
+    formData[name] = content;
   }
 
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
-
-  if (!parts || parts.length === 0) {
-    throw new Error('No parts found in the multipart request.');
-  }
-
-  let filename;
-  let data;
-  let degree;
-
-  parts.forEach(part => {
-    if (part.filename && part.data) {
-      filename = part.filename;
-      data = part.data;
-    } else if (part.name && part.value && part.name === 'degree') {
-      degree = part.value.toString(); // Ensure degree is converted to string
-    }
-  });
+  const { filename, data } = formData.file || {};
+  const degree = formData.degree;
 
   if (!filename || !data || !degree) {
-    throw new Error(
-      'Invalid or missing file name, data, or degree field in the multipart request.'
-    );
+    throw new Error('Invalid or missing file name, data, or degree field in the multipart request.');
   }
 
   return {
     filename,
-    data,
+    data: Buffer.from(data, 'binary'),
     degree
   };
 }
