@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const parseMultipart = require('parse-multipart');
 const moment = require("moment");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
@@ -7,35 +8,41 @@ const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
 function extractFileAndDegree(event) {
-  const body = Buffer.from(event.body, 'base64').toString();
-  const boundary = event.headers['Content-Type'].split('boundary=')[1];
-  const parts = body.split(`--${boundary}`);
-
-  const filePart = parts.find(part => part.includes('filename='));
-  const degreePart = parts.find(part => part.includes('name="degree"'));
-
-  if (!filePart || !degreePart) {
-    throw new Error('Invalid multipart request. File or degree field not found.');
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
   }
 
-  const filenameMatch = filePart.match(/filename="(.+?)"/);
-  const degreeMatch = degreePart.match(/\r\n\r\n(.+?)\r\n--/);
-
-  if (!filenameMatch || !degreeMatch) {
-    throw new Error('Invalid file name or degree field.');
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error('Unable to determine the boundary from the Content-Type header.');
   }
 
-  const file = filenameMatch[1];
-  const degree = degreeMatch[1];
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
 
-  return { file, degree };
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+
+  const [{ filename, data }, { fieldName, value: degree }] = parts;
+
+  if (!filename || !data || !degree) {
+    throw new Error('Invalid or missing file name, data, or degree in the multipart request.');
+  }
+
+  return {
+    file: filename,
+    data,
+    degree
+  };
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { file, degree } = extractFileAndDegree(event);
-
-    const data = Buffer.from(event.body, 'base64');
+    const { file, data, degree } = extractFileAndDegree(event);
 
     // Upload file to S3
     await s3.putObject({
@@ -53,7 +60,7 @@ module.exports.createEducation = async (event) => {
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
         link: { S: s3ObjectUrl },
-        degree: { S: degree }, // Assuming degree is a string
+        degree: { S: degree },
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
     }));
