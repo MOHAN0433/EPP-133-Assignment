@@ -7,59 +7,47 @@ const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
-function extractFileAndDegree(event) {
-  console.log('Content-Type:', event.headers['Content-Type']);
-  console.log('Event body:', event.body);
-
+function extractDegree(event) {
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
   }
 
-  const boundary = contentType.split('boundary=')[1];
+  const boundary = parseMultipart.getBoundary(contentType);
   if (!boundary) {
-    throw new Error('Unable to determine the boundary from the Content-Type header.');
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
   }
 
-  // Decode the base64-encoded body
-  const decodedBody = Buffer.from(event.body, 'base64').toString();
-
   const parts = parseMultipart.Parse(
-    Buffer.from(decodedBody),
+    Buffer.from(event.body, 'base64'),
     boundary
   );
 
-  const filePart = parts.find(part => part.filename);
   const degreePart = parts.find(part => part.fieldName === 'degree');
-
-  if (!filePart) {
-    throw new Error('File part not found in the multipart request.');
-  }
 
   if (!degreePart || !degreePart.data) {
     throw new Error('Degree field not found in the multipart request.');
   }
 
-  return {
-    file: filePart.filename,
-    data: filePart.data,
-    degree: degreePart.data.toString() // Convert degree data to string
-  };
+  return degreePart.data.toString();
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { file, data, degree } = extractFileAndDegree(event);
+    const { filename, data } = extractFile(event);
+    const degree = extractDegree(event);
 
     // Upload file to S3
     await s3.putObject({
       Bucket: BUCKET,
-      Key: file,
+      Key: filename,
       Body: data,
     }).promise();
 
     // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${file}`;
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
     // Save S3 object URL and degree in DynamoDB
     await client.send(new PutItemCommand({
