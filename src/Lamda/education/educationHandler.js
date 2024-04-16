@@ -117,6 +117,8 @@ module.exports.createEducation = async (event) => {
 
 function parseFormData(formData) {
   const result = {};
+  if (!formData) return result; // Return an empty object if formData is undefined or null
+  
   const fields = formData.split(';');
   for (const field of fields) {
     const [key, value] = field.split('=');
