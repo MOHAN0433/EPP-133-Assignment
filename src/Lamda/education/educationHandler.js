@@ -80,7 +80,7 @@ function extractDegree(event) {
 
 module.exports.createEducation = async (event) => {
   try {
-    console.log('rewuest event:', event.body);
+    console.log('rewuest event:', event.body.degree);
     const { filename, data } = extractFile(event);
     const degree = extractDegree(event);
 
