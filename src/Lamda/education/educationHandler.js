@@ -33,6 +33,8 @@ function extractFile(event) {
 
   const { filename, data } = formData.file || {};
   const degree = formData.degree;
+  console.log('Filename:', filename);
+console.log('Degree:', degree);
 
   if (!filename || !data || !degree) {
     throw new Error('Invalid or missing file name, data, or degree field in the multipart request.');
@@ -47,6 +49,7 @@ function extractFile(event) {
 
 module.exports.createEducation = async (event) => {
   try {
+    console.log('Event Body:', event.body);
     const { filename, data, degree } = extractFile(event);
 
     // Upload file to S3
