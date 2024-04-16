@@ -145,7 +145,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
       Item: marshall({
         educationId: nextSerialNumber,
         degree: requestBody.degree,
-        course: requestBody.cource,
+        course: requestBody.course,
         university: requestBody.university,
         graduationPassingYear : requestBody.graduationPassingYear,
         createdDateTime: formattedDate,
