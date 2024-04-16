@@ -9,43 +9,49 @@ const client = new DynamoDBClient();
 
 function extractFile(event) {
   const contentType = event.headers['Content-Type'];
-  if (!contentType || !contentType.includes('multipart/form-data')) {
-    throw new Error('Content-Type header is missing or incorrect in the request.');
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
   }
 
-  const boundary = contentType.split(';')[1].split('=')[1];
-
-  const body = Buffer.from(event.body, 'base64').toString('binary');
-
-  const parts = body.split(`--${boundary}`);
-
-  const formData = {};
-
-  for (let part of parts) {
-    part = part.trim();
-    if (part.length === 0) continue;
-    const [header, ...contentParts] = part.split('\r\n\r\n');
-    const content = contentParts.join('\r\n\r\n').trim();
-    const [, name] = header.match(/name="(.+?)"/) || [];
-    if (!name) continue;
-    formData[name] = content;
+  // Boundary
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
   }
 
-  console.log('FormData:', formData);
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+  console.log('--------parts', parts);
 
-  const { file: { filename, data } = {}, degree } = formData;
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
 
-  console.log('Filename:', filename);
-  console.log('Degree:', degree);
+  let filename, data, degree;
+
+  for (const part of parts) {
+    if (part.filename) {
+      filename = part.filename;
+      data = part.data;
+    } else if (part.fieldname === 'degree') {
+      degree = part.data.toString();
+    }
+  }
 
   if (!filename || !data || !degree) {
-    throw new Error('Invalid or missing file name, data, or degree field in the multipart request.');
+    throw new Error(
+      'Invalid or missing file name, data, or degree field in the multipart request.'
+    );
   }
 
   return {
     filename,
-    data: Buffer.from(data, 'binary'),
-    degree
+    data,
+    degree,
   };
 }
 
