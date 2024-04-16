@@ -7,6 +7,42 @@ const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
+function extractFile(event) {
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
+
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
+  }
+
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+
+  const [{ filename, data }] = parts;
+
+  if (!filename || !data) {
+    throw new Error(
+      'Invalid or missing file name or data in the multipart request.'
+    );
+  }
+
+  return {
+    filename,
+    data,
+  };
+}
+
 function extractDegree(event) {
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
