@@ -9,6 +9,8 @@ const client = new DynamoDBClient();
 
 function extractFile(event) {
   const contentType = event.headers['Content-Type'];
+  console.log('Content-Type:', contentType);
+  console.log('Event body:', event.body);
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
   }
