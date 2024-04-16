@@ -43,37 +43,37 @@ function extractFile(event) {
   };
 }
 
-function extractDegree(event) {
-  const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
-  }
+// function extractDegree(event) {
+//   const contentType = event.headers['Content-Type'];
+//   if (!contentType) {
+//     throw new Error('Content-Type header is missing in the request.');
+//   }
 
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
-    );
-  }
+//   const boundary = parseMultipart.getBoundary(contentType);
+//   if (!boundary) {
+//     throw new Error(
+//       'Unable to determine the boundary from the Content-Type header.'
+//     );
+//   }
 
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
+//   const parts = parseMultipart.Parse(
+//     Buffer.from(event.body, 'base64'),
+//     boundary
+//   );
 
-  const degreePart = parts.find(part => part.fieldName === 'degree');
+//   const degreePart = parts.find(part => part.fieldName === 'degree');
 
-  if (!degreePart || !degreePart.data) {
-    throw new Error('Degree field not found in the multipart request.');
-  }
+//   if (!degreePart || !degreePart.data) {
+//     throw new Error('Degree field not found in the multipart request.');
+//   }
 
-  return degreePart.data.toString();
-}
+//   return degreePart.data.toString();
+// }
 
 module.exports.createEducation = async (event) => {
   try {
     const { filename, data } = extractFile(event);
-    const degree = extractDegree(event);
+    //const degree = extractDegree(event);
 
     // Upload file to S3
     await s3.putObject({
@@ -91,7 +91,7 @@ module.exports.createEducation = async (event) => {
       Item: {
         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
         link: { S: s3ObjectUrl },
-        degree: { S: degree },
+        //degree: { S: degree },
         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
       }
     }));
