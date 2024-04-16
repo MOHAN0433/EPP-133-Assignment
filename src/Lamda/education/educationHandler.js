@@ -9,8 +9,6 @@ const client = new DynamoDBClient();
 
 function extractFile(event) {
   const contentType = event.headers['Content-Type'];
-  console.log('Content-Type:', contentType);
-  console.log('Event body:', event.body);
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
   }
@@ -31,16 +29,16 @@ function extractFile(event) {
     throw new Error('No parts found in the multipart request.');
   }
 
-  const [{ filename, data }, { fieldName, value: degree }] = parts;
+  const [{ filename: file, data }, { fieldName, value: degree }] = parts;
 
-  if (!filename || !data || !degree) {
+  if (!file || !data || !degree) {
     throw new Error(
       'Invalid or missing file name, data, or degree in the multipart request.'
     );
   }
 
   return {
-    filename,
+    file,
     data,
     degree
   };
@@ -48,17 +46,17 @@ function extractFile(event) {
 
 module.exports.createEducation = async (event) => {
   try {
-    const { filename, data, degree } = extractFile(event);
+    const { file, data, degree } = extractFile(event);
 
     // Upload file to S3
     await s3.putObject({
       Bucket: BUCKET,
-      Key: filename,
+      Key: file,
       Body: data,
     }).promise();
 
     // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${file}`;
 
     // Save S3 object URL and degree in DynamoDB
     await client.send(new PutItemCommand({
