@@ -61,7 +61,7 @@ module.exports.createEducation = async (event) => {
     // Save filename to DynamoDB table
     await dynamoDB
       .put({
-        TableName: DYNAMODB_TABLE,
+        TableName: EDUCATION_TABLE,
         Item: {
           filename: filename,
           createdAt: Date.now(), // Optionally, you can include a createdAt timestamp
