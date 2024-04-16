@@ -23,7 +23,7 @@ exports.createEducation = async (event) => {
     const putCommand = new PutItemCommand(params);
     
     // Put the item into DynamoDB
-    await dynamoDBClient.send(putCommand);
+    await client.send(putCommand);
     
     return {
         statusCode: 200,
