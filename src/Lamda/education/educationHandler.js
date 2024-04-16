@@ -12,18 +12,21 @@ exports.createEducation = async (event) => {
     const degree = event['body'].split('=')[1]; // Extract the value after '='
     
     // Prepare the item to be inserted into DynamoDB
-    const params = {
-        TableName: EDUCATION_TABLE,
-        Item: {
-            degree: { S: degree } // Assuming 'degree' is a string attribute
-        }
-    };
+    await client.send(new PutItemCommand({
+      TableName: process.env.EDUCATION_TABLE,
+      Item: {
+        educationId: { N: Date.now().toString() }, // Assuming educationId is a number
+        link: { S: s3ObjectUrl },
+        degree: { S: degree },
+        createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+      }
+    }));
     
     // Create a PutItemCommand
-    const putCommand = new PutItemCommand(params);
+    //const putCommand = new PutItemCommand(params);
     
     // Put the item into DynamoDB
-    await client.send(putCommand);
+    //await client.send(putCommand);
     
     return {
         statusCode: 200,
