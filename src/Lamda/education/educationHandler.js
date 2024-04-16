@@ -26,16 +26,16 @@ const createEducation = async (event) => {
     console.log("Request Body:", requestBody);
 
     // Check for required fields
-    const requiredFields = [
-      "degree",
-      "course",
-      "university",
-      "graduationPassingYear",
-      "employeeId",
-    ];
-    if (!requiredFields.every((field) => requestBody[field])) {
-      throw new Error("Required fields are missing.");
-    }
+    // const requiredFields = [
+    //   "degree",
+    //   "course",
+    //   "university",
+    //   "graduationPassingYear",
+    //   "employeeId",
+    // ];
+    // if (!requiredFields.every((field) => requestBody[field])) {
+    //   throw new Error("Required fields are missing.");
+    // }
 
 //       const validatePanNumber = (panNumber) => {
 //         const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
@@ -145,7 +145,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
       Item: marshall({
         educationId: nextSerialNumber,
         degree: requestBody.degree,
-        cource: requestBody.cource,
+        course: requestBody.cource,
         university: requestBody.university,
         graduationPassingYear : requestBody.graduationPassingYear,
         createdDateTime: formattedDate,
