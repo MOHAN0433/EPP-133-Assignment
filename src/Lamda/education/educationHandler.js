@@ -7,7 +7,7 @@ const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 const client = new DynamoDBClient();
 
-function extractFileAndDegree(event) {
+function extractFile(event) {
   const contentType = event.headers['Content-Type'];
   if (!contentType) {
     throw new Error('Content-Type header is missing in the request.');
@@ -27,22 +27,51 @@ function extractFileAndDegree(event) {
     throw new Error('No parts found in the multipart request.');
   }
 
-  const [{ filename, data }, { fieldName, value: degree }] = parts;
+  const [{ filename, data }] = parts;
 
-  if (!filename || !data || !degree) {
-    throw new Error('Invalid or missing file name, data, or degree in the multipart request.');
+  if (!filename || !data) {
+    throw new Error('Invalid or missing file name or data in the multipart request.');
   }
 
   return {
     file: filename,
-    data,
-    degree
+    data
   };
+}
+
+function extractDegree(event) {
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
+
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error('Unable to determine the boundary from the Content-Type header.');
+  }
+
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+
+  const degreePart = parts.find(part => part.fieldName === 'degree');
+
+  if (!degreePart || !degreePart.value) {
+    throw new Error('Degree field not found in the multipart request.');
+  }
+
+  return degreePart.value.toString();
 }
 
 module.exports.createEducation = async (event) => {
   try {
-    const { file, data, degree } = extractFileAndDegree(event);
+    const { file, data } = extractFile(event);
+    const degree = extractDegree(event);
 
     // Upload file to S3
     await s3.putObject({
