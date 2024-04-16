@@ -5,36 +5,41 @@ const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const client = new DynamoDBClient();
 
 function extractDegree(event) {
-  const contentType = event.headers['Content-Type'];
-  console.log('Content-Type:', contentType);
+  try {
+    const contentType = event.headers['Content-Type'];
+    console.log('Content-Type:', contentType);
 
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
-  }
+    if (!contentType) {
+      throw new Error('Content-Type header is missing in the request.');
+    }
 
-  const boundary = parseMultipart.getBoundary(contentType);
-  console.log('Boundary:', boundary);
+    const boundary = parseMultipart.getBoundary(contentType);
+    console.log('Boundary:', boundary);
 
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
+    if (!boundary) {
+      throw new Error(
+        'Unable to determine the boundary from the Content-Type header.'
+      );
+    }
+
+    const parts = parseMultipart.Parse(
+      Buffer.from(event.body, 'base64'),
+      boundary
     );
+    console.log('Parts:', parts);
+
+    const degreePart = parts.find(part => part.fieldName === 'degree');
+    console.log('Degree part:', degreePart);
+
+    if (!degreePart || !degreePart.data) {
+      throw new Error('Degree field not found in the multipart request.');
+    }
+
+    return degreePart.data.toString();
+  } catch (error) {
+    console.error('Error extracting degree:', error);
+    throw error;
   }
-
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
-  console.log('Parts:', parts);
-
-  const degreePart = parts.find(part => part.fieldName === 'degree');
-  console.log('Degree part:', degreePart);
-
-  if (!degreePart || !degreePart.data) {
-    throw new Error('Degree field not found in the multipart request.');
-  }
-
-  return degreePart.data.toString();
 }
 
 
