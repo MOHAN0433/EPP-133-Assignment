@@ -175,7 +175,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
   return response;
 };
 
-const updateEducation = async (event) => {
+const uploadEducation = async (event) => {
   try {
     const educationId = event.pathParameters.educationId; // Assuming educationId is passed as a path parameter
     const { filename, data } = extractFile(event);
