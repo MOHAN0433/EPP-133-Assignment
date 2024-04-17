@@ -85,7 +85,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
           console.log("Education ID from DynamoDB:", educationIdObj); 
           const educationId = parseInt(educationIdObj.N); 
           console.log("Parsed Education ID:", educationId);
-          return payrollId;
+          return educationId;
         }
       } catch (error) {
         console.error("Error retrieving highest serial number:", error);
