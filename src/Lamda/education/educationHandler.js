@@ -1,4 +1,5 @@
-const parseMultipart = require('parse-multipart');
+// const parseMultipart = require('parse-multipart');
+const multipart = require('aws-lambda-multipart-parser');
 const moment = require("moment");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
