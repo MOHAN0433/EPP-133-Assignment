@@ -177,7 +177,17 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
 
 const uploadEducation = async (event) => {
   try {
-    const educationId = event.pathParameters.educationId; // Assuming educationId is passed as a path parameter
+    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!employeeId) {
+      throw new Error('employeeId is required');
+    }
+
+    const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!educationId) {
+      throw new Error('educationId is required');
+    }
     const { filename, data } = extractFile(event);
 
     // Upload file to S3
@@ -189,6 +199,25 @@ const uploadEducation = async (event) => {
 
     // Construct S3 object URL
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+
+    async function getEducationByEmployee(educationId) {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        KeyConditionExpression: "educationId = :educationId",
+        ExpressionAttributeValues: {
+          ":educationId": { "N": educationId.toString() },
+        },
+      };
+    
+      try {
+        const result = await client.send(new QueryCommand(params));
+        return result.Items.length > 0; // Assuming you want to return true if education exists, false otherwise
+      } catch (error) {
+        console.error("Error retrieving education by educationId:", error);
+        throw error;
+      }
+    }
+    
 
     // Update item in DynamoDB
     await client.send(new UpdateItemCommand({
