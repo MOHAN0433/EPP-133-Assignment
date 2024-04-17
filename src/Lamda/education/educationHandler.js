@@ -204,8 +204,8 @@ const uploadEducation = async (event) => {
     const existingEducation = await getEducationByEmployee(
       event.pathParameters.educationId
       );
-      if (existingEducation) {
-        throw new Error("A Education Details already Employee ID.");
+      if (!existingEducation) {
+        throw new Error("Education Details Not found.");
     }
     async function getEducationByEmployee(educationId) {
       const params = {
