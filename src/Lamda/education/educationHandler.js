@@ -1,15 +1,15 @@
-import parseMultipart, { getBoundary } from 'parse-multipart';
-import moment from "moment";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+const parseMultipart = require('parse-multipart');
+const moment = require("moment");
+const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 
 const client = new DynamoDBClient();
 
-export async function createEducation(event) {
+exports.createEducation = async (event) => {
   try {
     console.log("body", event.body);
 
     // Parse multipart form data
-    const boundary = getBoundary(event.headers['Content-Type']);
+    const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
     const parts = parseMultipart(event.body, boundary);
 
     let degree = '';
@@ -46,4 +46,4 @@ export async function createEducation(event) {
       body: JSON.stringify({ message: 'Error saving degree' })
     };
   }
-}
+};
