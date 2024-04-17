@@ -200,6 +200,13 @@ const uploadEducation = async (event) => {
     // Construct S3 object URL
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
+    // Check if an education already exists for the employee
+    const existingEducation = await getEducationByEmployee(
+      event.pathParameters.educationId
+      );
+      if (existingEducation) {
+        throw new Error("A Education Details already Employee ID.");
+    }
     async function getEducationByEmployee(educationId) {
       const params = {
         TableName: process.env.EDUCATION_TABLE,
