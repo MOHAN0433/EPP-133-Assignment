@@ -6,14 +6,24 @@ const client = new DynamoDBClient();
 
 exports.createEducation = async (event) => {
   try {
-    console.log("body", event.body);
+    // console.log("body", event.body);
    
-    console.log("event", event);
-    let decodedBase64 = Buffer.from(event?.body, 'base64').toString('utf-8');
-    console.log("decodedBase64", decodedBase64);
-    // Parse multipart form data
-    const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
-    const parts = parseMultipart(event.body, boundary);
+    // console.log("event", event);
+    // let decodedBase64 = Buffer.from(event?.body, 'base64').toString('utf-8');
+    // console.log("decodedBase64", decodedBase64);
+    // // Parse multipart form data
+    // const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
+    // const parts = parseMultipart(event.body, boundary);
+
+    const parsedFormData = multipart.parse(event);
+
+    // Access parsed fields
+    const degre = parsedFormData.degree;
+    const test = parsedFormData.test;
+
+    // Do something with the parsed fields
+    console.log('Degree:', degree);
+    console.log('Test:', test);
 
     let degree = '';
 
