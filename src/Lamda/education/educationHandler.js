@@ -115,7 +115,7 @@ module.exports.createEducation = async (event) => {
   try {
     console.log('rewuest event:', event.body.degree);
     const { filename, data } = extractFile(event);
-    const degree = extractDegree(event);
+    //const degree = extractDegree(event);
 
     // Upload file to S3
     await s3.putObject({
