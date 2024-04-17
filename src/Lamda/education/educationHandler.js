@@ -8,7 +8,8 @@ exports.createEducation = async (event) => {
   try {
     console.log("body", event.body);
     // Extract the degree from the form data
-    const degree = event['body'].split(':')[1].trim(); // Extract the value after ':' and trim any whitespace
+    const bodyParts = event['body'].split(':');
+    const degree = bodyParts.length >= 2 ? bodyParts[1].trim() : ''; // Extract the value after ':' and trim any whitespace, or use an empty string if not found
     console.log("degree", degree);
    
     // Prepare the item to be inserted into DynamoDB
