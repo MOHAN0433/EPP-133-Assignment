@@ -6,9 +6,9 @@ const client = new DynamoDBClient();
  
 exports.createEducation = async (event) => {
   try {
-    console.log("body", event.body)
+    console.log("body", event.body);
     // Extract the degree from the form data
-    const degree = event['body'].split('=')[1]; // Extract the value after '='
+    const degree = event['body'].split(':')[1].trim(); // Extract the value after ':' and trim any whitespace
     console.log("degree", degree);
    
     // Prepare the item to be inserted into DynamoDB
@@ -25,11 +25,11 @@ exports.createEducation = async (event) => {
         statusCode: 200,
         body: JSON.stringify({ message: 'Degree saved successfully' })
     };
-} catch (error) {
+  } catch (error) {
     console.error('Error saving degree:', error);
     return {
         statusCode: 500,
         body: JSON.stringify({ message: 'Error saving degree' })
     };
-}
+  }
 };
