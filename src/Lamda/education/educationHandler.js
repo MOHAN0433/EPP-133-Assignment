@@ -18,13 +18,15 @@ exports.createEducation = async (event) => {
 
     const parsedFormData = multipart.parse(event);
 
+    console.log("parsedFormData", parsedFormData)
+
     // Access parsed fields
     const degre = parsedFormData.degree;
     const test = parsedFormData.test;
 
     // Do something with the parsed fields
-    console.log('Degree:', degree);
-    console.log('Test:', test);
+    console.log('Degree:', degre || "");
+    console.log('Test:', test || "");
 
     let degree = '';
 
