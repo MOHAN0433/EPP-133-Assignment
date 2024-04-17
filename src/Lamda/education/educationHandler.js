@@ -7,10 +7,10 @@ const client = new DynamoDBClient();
 exports.createEducation = async (event) => {
   try {
     const parsedFormData = multipart.parse(event);
-    console.log("parsedFormData", parsedFormData)
+    console.log("parsedFormData", parsedFormData.files)
     // Access parsed fields
-    const degree = parsedFormData.files.degree.content.toString(); // Access value using the content property
-    const test = parsedFormData.files.test.content.toString(); // Access value using the content property
+    const degree = parsedFormData?.files?.degree?.content?.toString(); // Access value using the content property
+    const test = parsedFormData?.files?.test?.content?.toString(); // Access value using the content property
     // Do something with the parsed fields
     console.log('Degree:', degree || "");
     console.log('Test:', test || "");
