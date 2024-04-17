@@ -6,6 +6,10 @@ const moment = require("moment");
 const { DynamoDBClient, PutItemCommand, UpdateItemCommand } = require("@aws-sdk/client-dynamodb");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
+const {
+  httpStatusCodes,
+  httpStatusMessages,
+} = require("../../environment/appconfig");
 
 const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
