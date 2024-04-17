@@ -177,40 +177,23 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
 
 const uploadEducation = async (event) => {
   try {
-
-    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
-
-    if (!employeeId) {
-      throw new Error('employeeId is required');
-    }
-
-    const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
-
-    if (!educationId) {
-      throw new Error('educationId is required');
+    const employeeId = event.pathParameters.employeeId;
+    const educationId = event.pathParameters.educationId;
+    
+    if (!employeeId || !educationId) {
+      throw new Error('Both employeeId and educationId are required');
     }
 
     const { filename, data } = extractFile(event);
- 
+
     // Upload file to S3
     await s3.putObject({
       Bucket: BUCKET,
       Key: filename,
       Body: data,
     }).promise();
- 
-    // Construct S3 object URL
+
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
- 
-    // Save S3 object URL in DynamoDB
-    // await client.send(new PutItemCommand({
-    //   TableName: process.env.EDUCATION_TABLE,
-    //   Item: {
-    //     educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-    //     link: { S: s3ObjectUrl },
-    //     createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
-    //   }
-    // }));
 
     // Allowed fields to be updated
     const allowedFields = ['s3ObjectUrl'];
@@ -219,30 +202,28 @@ const uploadEducation = async (event) => {
     const expressionAttributeValues = {};
 
     // Construct update expression and attribute values for each allowed field
-    allowedFields.forEach((s3ObjectUrl) => {
-      if (s3ObjectUrl !== undefined) {
-        updateExpression += `, ${field} = :${field}`;
-        expressionAttributeValues[`:${field}`] = s3ObjectUrl;
-      }
+    allowedFields.forEach((field) => {
+      updateExpression += `, ${field} = :${field}`;
+      expressionAttributeValues[`:${field}`] = s3ObjectUrl;
     });
 
     // Construct the key for the DynamoDB update
-    const key = marshall({
-      educationId: educationId,
-      employeeId: employeeId
-    });
+    const key = {
+      educationId: { N: educationId.toString() },
+      employeeId: { S: employeeId },
+    };
 
     // Construct update parameters
     const params = {
       TableName: process.env.EDUCATION_TABLE,
-      Key: key,
-      UpdateExpression: updateExpression.substring(2),
-      ExpressionAttributeValues: marshall(expressionAttributeValues)
+      Key: marshall(key),
+      UpdateExpression: 'SET ' + updateExpression.substring(2), // Remove leading comma and space
+      ExpressionAttributeValues: marshall(expressionAttributeValues),
     };
 
     // Execute the update operation
     await client.send(new UpdateItemCommand(params));
- 
+
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -250,13 +231,14 @@ const uploadEducation = async (event) => {
       }),
     };
   } catch (err) {
-    console.log('error-----', err);
+    console.error('Error:', err);
     return {
       statusCode: 500,
       body: JSON.stringify({ message: err.message }),
     };
   }
 };
+
 
 function extractFile(event) {
   const contentType = event.headers['Content-Type'];
