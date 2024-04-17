@@ -215,8 +215,11 @@ const uploadEducation = async (event) => {
     // Allowed fields to be updated
     const allowedFields = ['s3ObjectUrl'];
 
+    let updateExpression = ''; // Initialize update expression
+    const expressionAttributeValues = {};
+
     // Construct update expression and attribute values for each allowed field
-    allowedFields.forEach((field) => {
+    allowedFields.forEach((s3ObjectUrl) => {
       if (link !== undefined) {
         updateExpression += `, ${field} = :${field}`;
         expressionAttributeValues[`:${field}`] = s3ObjectUrl;
@@ -233,7 +236,7 @@ const uploadEducation = async (event) => {
     const params = {
       TableName: process.env.EDUCATION_TABLE,
       Key: key,
-      UpdateExpression: updateExpression,
+      UpdateExpression: updateExpression.substring(2),
       ExpressionAttributeValues: marshall(expressionAttributeValues)
     };
 
