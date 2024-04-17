@@ -178,10 +178,10 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
 const uploadEducation = async (event) => {
   try {
     const employeeId = event.pathParameters.employeeId;
-    const educationId = event.pathParameters.educationId;
+    const educationId = parseInt(event.pathParameters.educationId); // Parse educationId as a number
     
-    if (!employeeId || !educationId) {
-      throw new Error('Both employeeId and educationId are required');
+    if (!employeeId || isNaN(educationId)) { // Check if educationId is a valid number
+      throw new Error('Both employeeId and educationId are required and educationId should be a number');
     }
 
     const { filename, data } = extractFile(event);
@@ -199,7 +199,7 @@ const uploadEducation = async (event) => {
     const updateParams = {
       TableName: process.env.EDUCATION_TABLE,
       Key: marshall({
-        educationId: educationId.toString(),
+        educationId: educationId,
         employeeId: employeeId,
       }),
       UpdateExpression: 'SET link = :link',
