@@ -1,121 +1,175 @@
-const AWS = require('aws-sdk');
-const parseMultipart = require('parse-multipart');
+const {
+  DynamoDBClient,
+  PutItemCommand,
+  UpdateItemCommand,
+  DeleteItemCommand,
+  GetItemCommand,
+  ScanCommand,
+  QueryCommand,
+} = require("@aws-sdk/client-dynamodb");
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
-
-const BUCKET = 'education0433123';
-const s3 = new AWS.S3();
 const client = new DynamoDBClient();
+const {
+  httpStatusCodes,
+  httpStatusMessages,
+} = require("../../environment/appconfig");
+const currentDate = Date.now(); // get the current date and time in milliseconds
+const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
-function extractFile(event) {
-  const contentType = event.headers['Content-Type'];
-  if (!contentType) {
-    throw new Error('Content-Type header is missing in the request.');
-  }
+const createEducation = async (event) => {
+  console.log("Create employee details");
+  const response = { statusCode: httpStatusCodes.SUCCESS };
+  try {
+    const requestBody = JSON.parse(event.body);
+    console.log("Request Body:", requestBody);
 
-  const boundary = parseMultipart.getBoundary(contentType);
-  if (!boundary) {
-    throw new Error(
-      'Unable to determine the boundary from the Content-Type header.'
-    );
-  }
+    // Check for required fields
+    const requiredFields = [
+      "degree",
+      "course",
+      "university",
+      "graduationPassingYear",
+      "employeeId",
+    ];
+    if (!requiredFields.every((field) => requestBody[field])) {
+      throw new Error("Required fields are missing.");
+    }
 
-  const parts = parseMultipart.Parse(
-    Buffer.from(event.body, 'base64'),
-    boundary
-  );
+//       const validatePanNumber = (panNumber) => {
+//         const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
+//         return panRegex.test(panNumber);
+//     };
 
-  if (!parts || parts.length === 0) {
-    throw new Error('No parts found in the multipart request.');
-  }
+//     if (!validatePanNumber(requestBody.panNumber)) {
+//       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
+//   }
 
-  const [{ filename, data }] = parts;
+const numericFields = [
+"graduationPassingYear"
+];
 
-  if (!filename || !data) {
-    throw new Error(
-      'Invalid or missing file name or data in the multipart request.'
-    );
-  }
-
-  return {
-    filename,
-    data,
-  };
+for (const field of numericFields) {
+if (requestBody[field] !== undefined || requestBody[field] !== null ) {
+    if (requestBody[field] === '' || typeof requestBody[field] == 'string') {
+        throw new Error(`${field} must be a non-null and non-empty number.`);
+    }
+}
 }
 
-// function extractDegree(event) {
-//   const contentType = event.headers['Content-Type'];
-//   console.log('Content-Type:', contentType);
-//   //console.log('Event body:', event.body);
+  //   const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
+  //   const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
+  //   const totalNetPay = totalEarnings - totalDeductions;
 
-//   if (!contentType) {
-//     throw new Error('Content-Type header is missing in the request.');
-//   }
+    const highestSerialNumber = await getHighestSerialNumber();
+    console.log("Highest Serial Number:", highestSerialNumber);
 
-//   const boundary = parseMultipart.getBoundary(contentType);
-//   console.log('Boundary:', boundary);
+    const nextSerialNumber =
+      highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
+    async function getHighestSerialNumber() {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        ProjectionExpression: "educationId",
+        Limit: 1,
+        ScanIndexForward: false, // Sort in descending order to get the highest serial number first
+      };
 
-//   if (!boundary) {
-//     throw new Error(
-//       'Unable to determine the boundary from the Content-Type header.'
-//     );
-//   }
-
-//   const parts = parseMultipart.Parse(
-//     Buffer.from(event.body, 'base64'),
-//     boundary
-//   );
-//   console.log('Parts:', parts);
-
-//   const degreePart = parts.find(part => part.fieldName === 'degree');
-//   console.log('Degree part:', degreePart);
-
-//   if (!degreePart || !degreePart.data) {
-//     throw new Error('Degree field not found in the multipart request.');
-//   }
-
-//   return degreePart.data.toString();
-// }
-
-
-module.exports.createEducation = async (event) => {
-  try {
-    console.log('rewuest event:', event.body.degree);
-    const { filename, data } = extractFile(event);
-    //const degree = extractDegree(event);
-
-    // Upload file to S3
-    await s3.putObject({
-      Bucket: BUCKET,
-      Key: filename,
-      Body: data,
-    }).promise();
-
-    // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
-
-    // Save S3 object URL and degree in DynamoDB
-    await client.send(new PutItemCommand({
-      TableName: process.env.EDUCATION_TABLE,
-      Item: {
-        educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-        link: { S: s3ObjectUrl },
-        //degree: { S: degree },
-        createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+      try {
+        const result = await client.send(new ScanCommand(params));
+        console.log("DynamoDB Result:", result); // Add this line to see the DynamoDB response
+        if (result.Items.length === 0) {
+          return 0; // If no records found, return null
+        } else {
+          // Parse and return the highest serial number without incrementing
+          const educationIdObj = result.Items[0].educationId;
+          console.log("Education ID from DynamoDB:", educationIdObj); 
+          const educationId = parseInt(educationIdObj.N); 
+          console.log("Parsed Education ID:", educationId);
+          return payrollId;
+        }
+      } catch (error) {
+        console.error("Error retrieving highest serial number:", error);
+        throw error; // Propagate the error up the call stack
       }
-    }));
+    }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        link: s3ObjectUrl,
+    // Check if an education already exists for the employee
+    const existingEducation = await getEducationByEmployee(
+      requestBody.employeeId, requestBody.employeeId
+    );
+    if (existingEducation) {
+      throw new Error("A Education Details already Employee ID.");
+  }
+
+    async function getEducationByEmployee(employeeId) {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        FilterExpression: "employeeId = :employeeId",
+        ExpressionAttributeValues: {
+          ":employeeId": { S: employeeId },
+        },
+      };
+
+      try {
+        const result = await client.send(new ScanCommand(params));
+        return result.Items.length > 0;
+      } catch (error) {
+        console.error("Error retrieving payroll by employeeId:", error);
+        throw error;
+      }
+    }
+
+    const checkEmployeeExistence = async (employeeId) => {
+      const params = {
+        TableName: process.env.EMPLOYEE_TABLE,
+        Key: marshall({
+          employeeId: employeeId,
+        }),
+      };
+
+      try {
+        const result = await client.send(new GetItemCommand(params));
+        if (!result.Item) {
+          throw new Error("Employee not found.");
+        }
+      } catch (error) {
+        console.error("Error checking employee existence:", error);
+        throw error;
+      }
+    };
+    await checkEmployeeExistence(requestBody.employeeId);
+
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Item: marshall({
+        educationId: nextSerialNumber,
+        degree: requestBody.degree,
+        course: requestBody.course,
+        university: requestBody.university,
+        graduationPassingYear : requestBody.graduationPassingYear,
+        createdDateTime: formattedDate,
+        updatedDateTime: null,
       }),
     };
-  } catch (err) {
-    console.log('error-----', err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: err.message }),
-    };
+
+    await client.send(new PutItemCommand(params));
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_CREATED_EDUCATION_DETAILS,
+      educationId: nextSerialNumber,
+      employeeId:employeeId,
+    });
+  } catch (e) {
+    console.error(e);
+    response.statusCode = httpStatusCodes.BAD_REQUEST;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_CREATE_EDUCATION_DETAILS,
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
   }
+  return response;
+};
+
+module.exports = {
+  createEducation,
 };
