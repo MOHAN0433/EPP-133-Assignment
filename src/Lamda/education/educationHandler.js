@@ -18,8 +18,8 @@ const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 const parseMultipart = require('parse-multipart');
 const BUCKET = 'education0433123';
-const s3 = new AWS.S3();
 const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
 
 const createEducation = async (event) => {
   console.log("Create employee details");
