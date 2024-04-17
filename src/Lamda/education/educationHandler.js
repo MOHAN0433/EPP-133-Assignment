@@ -213,13 +213,13 @@ const uploadEducation = async (event) => {
     // }));
 
     // Allowed fields to be updated
-    const allowedFields = ['link'];
+    const allowedFields = ['s3ObjectUrl'];
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((field) => {
       if (link !== undefined) {
         updateExpression += `, ${field} = :${field}`;
-        expressionAttributeValues[`:${field}`] = link;
+        expressionAttributeValues[`:${field}`] = s3ObjectUrl;
       }
     });
 
