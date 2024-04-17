@@ -175,15 +175,9 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
   return response;
 };
 
-const uploadEducation = async (event) => {
+const updateEducation = async (event) => {
   try {
-    const employeeId = event.pathParameters.employeeId;
-    const educationId = event.pathParameters.educationId;
-    
-    if (!employeeId || !educationId) {
-      throw new Error('Both employeeId and educationId are required');
-    }
-
+    const educationId = event.pathParameters.educationId; // Assuming educationId is passed as a path parameter
     const { filename, data } = extractFile(event);
 
     // Upload file to S3
@@ -193,45 +187,31 @@ const uploadEducation = async (event) => {
       Body: data,
     }).promise();
 
+    // Construct S3 object URL
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
-    // Allowed fields to be updated
-    const allowedFields = ['s3ObjectUrl'];
-
-    let updateExpression = ''; // Initialize update expression
-    const expressionAttributeValues = {};
-
-    // Construct update expression and attribute values for each allowed field
-    allowedFields.forEach((field) => {
-      updateExpression += `, ${field} = :${field}`;
-      expressionAttributeValues[`:${field}`] = s3ObjectUrl;
-    });
-
-    // Construct the key for the DynamoDB update
-    const key = {
-      educationId: { N: educationId.toString() },
-      employeeId: { S: employeeId },
-    };
-
-    // Construct update parameters
-    const params = {
+    // Update item in DynamoDB
+    await client.send(new UpdateItemCommand({
       TableName: process.env.EDUCATION_TABLE,
-      Key: marshall(key),
-      UpdateExpression: 'SET ' + updateExpression.substring(2), // Remove leading comma and space
-      ExpressionAttributeValues: marshall(expressionAttributeValues),
-    };
-
-    // Execute the update operation
-    await client.send(new UpdateItemCommand(params));
+      Key: {
+        educationId: { N: educationId.toString() }, // Assuming educationId is a number
+      },
+      UpdateExpression: "SET link = :link",
+      ExpressionAttributeValues: {
+        ":link": { S: s3ObjectUrl },
+      },
+      ReturnValues: "ALL_NEW" // Return the updated item
+    }));
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        s3ObjectUrl: s3ObjectUrl,
+        link: s3ObjectUrl,
+        message: "Education record updated successfully",
       }),
     };
   } catch (err) {
-    console.error('Error:', err);
+    console.log('error-----', err);
     return {
       statusCode: 500,
       body: JSON.stringify({ message: err.message }),
