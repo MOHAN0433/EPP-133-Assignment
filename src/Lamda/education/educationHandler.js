@@ -7,6 +7,8 @@ const client = new DynamoDBClient();
 exports.createEducation = async (event) => {
   try {
     console.log("body", event.body);
+    console.log("event.body.degree", event.body.degree);
+    console.log("event", event);
 
     // Parse multipart form data
     const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
