@@ -132,7 +132,7 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
           throw new Error("Employee not found.");
         }
       } catch (error) {
-        console.error("Error checking employee existence:", error);
+        console.error("Error checking employee existence data:", error);
         throw error;
       }
     };
