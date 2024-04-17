@@ -7,9 +7,10 @@ const client = new DynamoDBClient();
 exports.createEducation = async (event) => {
   try {
     console.log("body", event.body);
-    console.log("event.body.degree", event.body.degree);
+   
     console.log("event", event);
-
+    let decodedBase64 = Buffer.from(event?.body, 'base64').toString('utf-8');
+    console.log("decodedBase64", decodedBase64);
     // Parse multipart form data
     const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
     const parts = parseMultipart(event.body, boundary);
