@@ -16,30 +16,30 @@ exports.createEducation = async (event) => {
     // const boundary = parseMultipart.getBoundary(event.headers['Content-Type']);
     // const parts = parseMultipart(event.body, boundary);
 
-    const parsedFormData = multipart.parse(event);
+    const parsedFormData = multipart.parse(event?.body);
 
     console.log("parsedFormData", parsedFormData)
 
     // Access parsed fields
-    const degre = parsedFormData.degree;
+    const degree = parsedFormData.degree;
     const test = parsedFormData.test;
 
     // Do something with the parsed fields
-    console.log('Degree:', degre || "");
+    console.log('Degree:', degree || "");
     console.log('Test:', test || "");
 
-    let degree = '';
+    // let degree = '';
 
-    // Iterate over parts to find the degree field
-    parts.forEach(part => {
-      if (part.filename === undefined) {
-        if (part.name === 'degree') {
-          degree = part.data.toString('utf-8');
-        }
-      }
-    });
+    // // Iterate over parts to find the degree field
+    // parts.forEach(part => {
+    //   if (part.filename === undefined) {
+    //     if (part.name === 'degree') {
+    //       degree = part.data.toString('utf-8');
+    //     }
+    //   }
+    // });
 
-    console.log("degree", degree);
+    // console.log("degree", degree);
 
     // Prepare the item to be inserted into DynamoDB
     await client.send(new PutItemCommand({
