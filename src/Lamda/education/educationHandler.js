@@ -196,36 +196,20 @@ const uploadEducation = async (event) => {
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
     // Construct update parameters
-    let updateExpression = ''; // Initialize update expression
-    const expressionAttributeValues = {}; // Initialize expression attribute values
-
-    // Allowed fields to be updated
-    const allowedFields = ['link'];
-
-    // Construct update expression and attribute values for each allowed field
-    allowedFields.forEach((field) => {
-      if (field === 'link') { // Check if the field is 'link'
-        updateExpression += `, ${field} = :${field}`;
-        expressionAttributeValues[`:${field}`] = { S: s3ObjectUrl };
-      }
-    });
-
-    // Construct the key for the DynamoDB update
-    const key = {
-      educationId: { N: educationId.toString() },
-      employeeId: { S: employeeId },
-    };
-
-    // Construct update parameters
-    const params = {
+    const updateParams = {
       TableName: process.env.EDUCATION_TABLE,
-      Key: marshall(key),
-      UpdateExpression: 'SET ' + updateExpression.substring(2), // Remove leading comma and space
-      ExpressionAttributeValues: marshall(expressionAttributeValues),
+      Key: marshall({
+        educationId: educationId.toString(),
+        employeeId: employeeId,
+      }),
+      UpdateExpression: 'SET link = :link',
+      ExpressionAttributeValues: marshall({
+        ':link': s3ObjectUrl,
+      }),
     };
 
     // Execute the update operation
-    await client.send(new UpdateItemCommand(params)).promise();
+    await client.send(new UpdateItemCommand(updateParams));
 
     return {
       statusCode: 200,
