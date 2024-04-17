@@ -220,7 +220,7 @@ const uploadEducation = async (event) => {
 
     // Construct update expression and attribute values for each allowed field
     allowedFields.forEach((s3ObjectUrl) => {
-      if (link !== undefined) {
+      if (s3ObjectUrl !== undefined) {
         updateExpression += `, ${field} = :${field}`;
         expressionAttributeValues[`:${field}`] = s3ObjectUrl;
       }
@@ -246,7 +246,7 @@ const uploadEducation = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        link: s3ObjectUrl,
+        s3ObjectUrl: s3ObjectUrl,
       }),
     };
   } catch (err) {
