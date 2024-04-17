@@ -162,7 +162,7 @@ functions:
     timeout: 120
     events:
       - http:
-          path: education/{educationId}/employee/{employeeId}
+          path: education/{educationId}
           method: PUT
 
 resources:

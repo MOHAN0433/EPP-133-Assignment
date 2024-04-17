@@ -40,15 +40,6 @@ const createEducation = async (event) => {
       throw new Error("Required fields are missing.");
     }
 
-//       const validatePanNumber = (panNumber) => {
-//         const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
-//         return panRegex.test(panNumber);
-//     };
-
-//     if (!validatePanNumber(requestBody.panNumber)) {
-//       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
-//   }
-
 const numericFields = [
 "graduationPassingYear"
 ];
@@ -56,14 +47,16 @@ const numericFields = [
 for (const field of numericFields) {
 if (requestBody[field] !== undefined || requestBody[field] !== null ) {
     if (requestBody[field] === '' || typeof requestBody[field] == 'string') {
-        throw new Error(`${field} must be a non-null and non-empty number.`);
+        throw new Error(`${field} must be a number.`);
     }
 }
 }
 
-  //   const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
-  //   const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
-  //   const totalNetPay = totalEarnings - totalDeductions;
+// Check if graduationPassingYear is a future year
+const currentYear = new Date().getFullYear();
+if (requestBody.graduationPassingYear > currentYear) {
+  throw new Error("graduationPassingYear cannot be a future year.");
+}
 
     const highestSerialNumber = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber);
@@ -284,6 +277,13 @@ function extractFile(event) {
     throw new Error(
       'Invalid or missing file name or data in the multipart request.'
     );
+  }
+
+  // Check file size (assuming data is in binary format)
+  const fileSizeInMB = data.length / (1024 * 1024); // Convert bytes to MB
+  const maxSizeInMB = 3;
+  if (fileSizeInMB > maxSizeInMB) {
+    throw new Error(`File size exceeds the maximum limit of ${maxSizeInMB} MB.`);
   }
  
   return {
