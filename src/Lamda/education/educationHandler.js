@@ -1,72 +1,281 @@
 const multipart = require('aws-lambda-multipart-parser');
 const AWS = require('aws-sdk');
 const parseMultipart = require('parse-multipart');
+const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const currentDate = Date.now(); // get the current date and time in milliseconds
+const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
 const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
 
 const client = new DynamoDBClient();
 
-// exports.createEducation = async (event) => {
-//   try {
-//     const parsedFormData = multipart.parse(event);
-//     console.log("parsedFormData", parsedFormData.files)
-//     // Access parsed fields
-//     const degree = parsedFormData?.files?.degree?.content?.toString(); // Access value using the content property
-//     const test = parsedFormData?.files?.test?.content?.toString(); // Access value using the content property
-//     // Do something with the parsed fields
-//     console.log('Degree:', degree || "");
-//     console.log('Test:', test || "");
-//     // Prepare the item to be inserted into DynamoDB
-//     await client.send(new PutItemCommand({
-//       TableName: process.env.EDUCATION_TABLE,
-//       Item: {
-//         educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-//         degree: { S: degree },
-//         createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
-//       }
-//     }));
-//     return {
-//       statusCode: 200,
-//       body: JSON.stringify({ message: 'Degree saved successfully' })
-//     };
-//   } catch (error) {
-//     console.error('Error saving degree:', error);
-//     return {
-//       statusCode: 500,
-//       body: JSON.stringify({ message: 'Error saving degree' })
-//     };
-//   }
-// };
-
-exports.createEducation = async (event) => {
+const createEducation = async (event) => {
+  console.log("Create employee details");
+  const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
-    console.log("body", event.body)
-    // Extract the degree from the form data
-    const degree = event['body'].split('=')[1]; // Extract the value after '='
-    console.log("degree", degree);
-   
-    // Prepare the item to be inserted into DynamoDB
-    await client.send(new PutItemCommand({
-      TableName: process.env.EDUCATION_TABLE,
-      Item: {
-        educationId: { N: Date.now().toString() }, // Assuming educationId is a number
-        degree: { S: degree },
-        createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
-      }
-    }));
-   
-    return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Degree saved successfully' })
-    };
-} catch (error) {
-    console.error('Error saving degree:', error);
-    return {
-        statusCode: 500,
-        body: JSON.stringify({ message: 'Error saving degree' })
-    };
+    const requestBody = JSON.parse(event.body);
+    console.log("Request Body:", requestBody);
+ 
+    // Check for required fields
+    // const requiredFields = [
+    //   "degree",
+    //   "course",
+    //   "university",
+    //   "graduationPassingYear",
+    //   "employeeId",
+    // ];
+    // if (!requiredFields.every((field) => requestBody[field])) {
+    //   throw new Error("Required fields are missing.");
+    // }
+ 
+//       const validatePanNumber = (panNumber) => {
+//         const panRegex = /[A-Z]{5}[0-9]{4}[A-Z]/;
+//         return panRegex.test(panNumber);
+//     };
+ 
+//     if (!validatePanNumber(requestBody.panNumber)) {
+//       throw new Error("Invalid PAN Number. PAN Number should be in the format ABCDE1234F.");
+//   }
+ 
+const numericFields = [
+"graduationPassingYear"
+];
+ 
+for (const field of numericFields) {
+if (requestBody[field] !== undefined || requestBody[field] !== null ) {
+    if (requestBody[field] === '' || typeof requestBody[field] == 'string') {
+        throw new Error(`${field} must be a non-null and non-empty number.`);
+    }
 }
+}
+ 
+  //   const totalEarnings = requestBody.basicPay + requestBody.HRA + requestBody.medicalAllowances + requestBody.conveyances + requestBody.otherEarnings + requestBody.bonus + requestBody.variablePay + requestBody.enCashment;
+  //   const totalDeductions = requestBody.incomeTax + requestBody.professionalTax + requestBody.providentFund;
+  //   const totalNetPay = totalEarnings - totalDeductions;
+ 
+    const highestSerialNumber = await getHighestSerialNumber();
+    console.log("Highest Serial Number:", highestSerialNumber);
+ 
+    const nextSerialNumber =
+      highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
+    async function getHighestSerialNumber() {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        ProjectionExpression: "educationId",
+        Limit: 1,
+        ScanIndexForward: false, // Sort in descending order to get the highest serial number first
+      };
+ 
+      try {
+        const result = await client.send(new ScanCommand(params));
+        console.log("DynamoDB Result:", result); // Add this line to see the DynamoDB response
+        if (result.Items.length === 0) {
+          return 0; // If no records found, return null
+        } else {
+          // Parse and return the highest serial number without incrementing
+          const educationIdObj = result.Items[0].educationId;
+          console.log("Education ID from DynamoDB:", educationIdObj);
+          const educationId = parseInt(educationIdObj.N);
+          console.log("Parsed Education ID:", educationId);
+          return educationId;
+        }
+      } catch (error) {
+        console.error("Error retrieving highest serial number:", error);
+        throw error; // Propagate the error up the call stack
+      }
+    }
+ 
+    // Check if an education already exists for the employee
+    const existingEducation = await getEducationByEmployee(
+    requestBody.employeeId
+    );
+    if (existingEducation) {
+      throw new Error("A Education Details already Employee ID.");
+  }
+ 
+    async function getEducationByEmployee(employeeId) {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        FilterExpression: "employeeId = :employeeId",
+        ExpressionAttributeValues: {
+          ":employeeId": { S: employeeId },
+        },
+      };
+ 
+      try {
+        const result = await client.send(new ScanCommand(params));
+        return result.Items.length > 0;
+      } catch (error) {
+        console.error("Error retrieving education by employeeId:", error);
+        throw error;
+      }
+    }
+ 
+    const checkEmployeeExistence = async (employeeId) => {
+      const params = {
+        TableName: process.env.EMPLOYEE_TABLE,
+        Key: marshall({
+          employeeId: employeeId,
+        }),
+      };
+ 
+      try {
+        const result = await client.send(new GetItemCommand(params));
+        if (!result.Item) {
+          throw new Error("Employee not found.");
+        }
+      } catch (error) {
+        console.error("Error checking employee existence:", error);
+        throw error;
+      }
+    };
+    await checkEmployeeExistence(requestBody.employeeId);
+ 
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Item: marshall({
+        educationId: nextSerialNumber,
+        degree: requestBody.degree,
+        course: requestBody.course,
+        university: requestBody.university,
+        graduationPassingYear : requestBody.graduationPassingYear,
+        createdDateTime: formattedDate,
+        updatedDateTime: null,
+      }),
+    };
+ 
+    await client.send(new PutItemCommand(params));
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_CREATED_EDUCATION_DETAILS,
+      educationId: nextSerialNumber,
+      //employeeId:employeeId,
+    });
+  } catch (e) {
+    console.error(e);
+    response.statusCode = httpStatusCodes.BAD_REQUEST;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_CREATE_EDUCATION_DETAILS,
+      errorMsg: e.message,
+      errorStack: e.stack,
+    });
+  }
+  return response;
+};
+
+function extractFile(event) {
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
+ 
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
+  }
+ 
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+ 
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+ 
+  const [{ filename, data }] = parts;
+ 
+  if (!filename || !data) {
+    throw new Error(
+      'Invalid or missing file name or data in the multipart request.'
+    );
+  }
+ 
+  return {
+    filename,
+    data,
+  };
+}
+ 
+const uploadEducation = async (event) => {
+  try {
+
+    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!employeeId) {
+      throw new Error('employeeId is required');
+    }
+
+    const { filename, data } = extractFile(event);
+ 
+    // Upload file to S3
+    await s3.putObject({
+      Bucket: BUCKET,
+      Key: filename,
+      Body: data,
+    }).promise();
+ 
+    // Construct S3 object URL
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+ 
+    // Save S3 object URL in DynamoDB
+    // await client.send(new PutItemCommand({
+    //   TableName: process.env.EDUCATION_TABLE,
+    //   Item: {
+    //     educationId: { N: Date.now().toString() }, // Assuming educationId is a number
+    //     link: { S: s3ObjectUrl },
+    //     createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+    //   }
+    // }));
+
+    // Allowed fields to be updated
+    const allowedFields = ['link'];
+
+    // Construct update expression and attribute values for each allowed field
+    allowedFields.forEach((field) => {
+      if (link !== undefined) {
+        updateExpression += `, ${field} = :${field}`;
+        expressionAttributeValues[`:${field}`] = link;
+      }
+    });
+
+    // Construct the key for the DynamoDB update
+    const key = marshall({
+      educationId: educationId,
+      employeeId: employeeId
+    });
+
+    // Construct update parameters
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Key: key,
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: marshall(expressionAttributeValues)
+    };
+
+    // Execute the update operation
+    await client.send(new UpdateItemCommand(params));
+ 
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        link: s3ObjectUrl,
+      }),
+    };
+  } catch (err) {
+    console.log('error-----', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
+};
+ 
+module.exports = {
+  createEducation,
+  uploadEducation
 };
