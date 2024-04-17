@@ -3,7 +3,7 @@ const AWS = require('aws-sdk');
 const parseMultipart = require('parse-multipart');
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
-const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBClient, PutItemCommand, UpdateItemCommand } = require("@aws-sdk/client-dynamodb");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 
@@ -208,6 +208,12 @@ const uploadEducation = async (event) => {
 
     if (!employeeId) {
       throw new Error('employeeId is required');
+    }
+
+    const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!educationId) {
+      throw new Error('educationId is required');
     }
 
     const { filename, data } = extractFile(event);
