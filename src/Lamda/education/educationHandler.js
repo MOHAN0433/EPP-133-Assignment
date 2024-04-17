@@ -19,6 +19,7 @@ const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // form
 const parseMultipart = require('parse-multipart');
 const BUCKET = 'education0433123';
 const s3 = new AWS.S3();
+const AWS = require('aws-sdk');
 
 const createEducation = async (event) => {
   console.log("Create employee details");
