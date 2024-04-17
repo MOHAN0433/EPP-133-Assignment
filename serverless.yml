@@ -155,15 +155,6 @@ functions:
       - http:
           path: education
           method: POST
-  educationUpload:
-    handler: src/Lamda/education/educationHandler.uploadEducation
-    name: educationUpload
-    memorySize: 128
-    timeout: 120
-    events:
-      - http:
-          path: education/{educationId}/employee/{employeeId}
-          method: PUT
 
 resources:
   Resources:
