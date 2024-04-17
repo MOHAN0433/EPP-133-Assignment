@@ -171,6 +171,110 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
   return response;
 };
 
+const uploadEducation = async (event) => {
+  try {
+    const employeeId = event.pathParameters.employeeId;
+    const educationId = event.pathParameters.educationId;
+    
+    if (!employeeId || !educationId) {
+      throw new Error('Both employeeId and educationId are required');
+    }
+
+    const { filename, data } = extractFile(event);
+
+    // Upload file to S3
+    await s3.putObject({
+      Bucket: BUCKET,
+      Key: filename,
+      Body: data,
+    }).promise();
+
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+
+    // Construct update parameters
+    let updateExpression = ''; // Initialize update expression
+    const expressionAttributeValues = {}; // Initialize expression attribute values
+
+    // Allowed fields to be updated
+    const allowedFields = ['link'];
+
+    // Construct update expression and attribute values for each allowed field
+    allowedFields.forEach((field) => {
+      if (field === 'link') { // Check if the field is 'link'
+        updateExpression += `, ${field} = :${field}`;
+        expressionAttributeValues[`:${field}`] = { S: s3ObjectUrl };
+      }
+    });
+
+    // Construct the key for the DynamoDB update
+    const key = {
+      educationId: { N: educationId.toString() },
+      employeeId: { S: employeeId },
+    };
+
+    // Construct update parameters
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Key: marshall(key),
+      UpdateExpression: 'SET ' + updateExpression.substring(2), // Remove leading comma and space
+      ExpressionAttributeValues: marshall(expressionAttributeValues),
+    };
+
+    // Execute the update operation
+    await client.send(new UpdateItemCommand(params)).promise();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        link: s3ObjectUrl,
+      }),
+    };
+  } catch (err) {
+    console.error('Error:', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
+  }
+};
+
+function extractFile(event) {
+  const contentType = event.headers['Content-Type'];
+  if (!contentType) {
+    throw new Error('Content-Type header is missing in the request.');
+  }
+ 
+  const boundary = parseMultipart.getBoundary(contentType);
+  if (!boundary) {
+    throw new Error(
+      'Unable to determine the boundary from the Content-Type header.'
+    );
+  }
+ 
+  const parts = parseMultipart.Parse(
+    Buffer.from(event.body, 'base64'),
+    boundary
+  );
+ 
+  if (!parts || parts.length === 0) {
+    throw new Error('No parts found in the multipart request.');
+  }
+ 
+  const [{ filename, data }] = parts;
+ 
+  if (!filename || !data) {
+    throw new Error(
+      'Invalid or missing file name or data in the multipart request.'
+    );
+  }
+ 
+  return {
+    filename,
+    data,
+  };
+}
+
 module.exports = {
   createEducation,
+  uploadEducation
 };
