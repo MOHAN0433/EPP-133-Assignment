@@ -177,40 +177,69 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
 
 const uploadEducation = async (event) => {
   try {
-    const employeeId = event.pathParameters.employeeId;
-    const educationId = parseInt(event.pathParameters.educationId); // Parse educationId as a number
-    
-    if (!employeeId || isNaN(educationId)) { // Check if educationId is a valid number
-      throw new Error('Both employeeId and educationId are required and educationId should be a number');
+
+    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!employeeId) {
+      throw new Error('employeeId is required');
+    }
+
+    const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
+
+    if (!educationId) {
+      throw new Error('educationId is required');
     }
 
     const { filename, data } = extractFile(event);
-
+ 
     // Upload file to S3
     await s3.putObject({
       Bucket: BUCKET,
       Key: filename,
       Body: data,
     }).promise();
-
+ 
+    // Construct S3 object URL
     const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+ 
+    // Save S3 object URL in DynamoDB
+    // await client.send(new PutItemCommand({
+    //   TableName: process.env.EDUCATION_TABLE,
+    //   Item: {
+    //     educationId: { N: Date.now().toString() }, // Assuming educationId is a number
+    //     link: { S: s3ObjectUrl },
+    //     createdAt: { S: moment().format("YYYY-MM-DD HH:mm:ss") }
+    //   }
+    // }));
+
+    // Allowed fields to be updated
+    const allowedFields = ['link'];
+
+    // Construct update expression and attribute values for each allowed field
+    allowedFields.forEach((field) => {
+      if (link !== undefined) {
+        updateExpression += `, ${field} = :${field}`;
+        expressionAttributeValues[`:${field}`] = link;
+      }
+    });
+
+    // Construct the key for the DynamoDB update
+    const key = marshall({
+      educationId: educationId,
+      employeeId: employeeId
+    });
 
     // Construct update parameters
-    const updateParams = {
+    const params = {
       TableName: process.env.EDUCATION_TABLE,
-      Key: marshall({
-        educationId: educationId,
-        employeeId: employeeId,
-      }),
-      UpdateExpression: 'SET link = :link',
-      ExpressionAttributeValues: marshall({
-        ':link': s3ObjectUrl,
-      }),
+      Key: key,
+      UpdateExpression: updateExpression,
+      ExpressionAttributeValues: marshall(expressionAttributeValues)
     };
 
     // Execute the update operation
-    await client.send(new UpdateItemCommand(updateParams));
-
+    await client.send(new UpdateItemCommand(params));
+ 
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -218,7 +247,7 @@ const uploadEducation = async (event) => {
       }),
     };
   } catch (err) {
-    console.error('Error:', err);
+    console.log('error-----', err);
     return {
       statusCode: 500,
       body: JSON.stringify({ message: err.message }),
