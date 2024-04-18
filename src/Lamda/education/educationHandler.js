@@ -26,8 +26,7 @@ const createEducation = async (event) => {
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
     const requestBody = JSON.parse(event.body);
-    console.log("Request Body:", requestBody);
-
+    
     // Check for required fields
     const requiredFields = [
       "degree",
@@ -92,7 +91,7 @@ if (requestBody.graduationPassingYear > currentYear) {
 
     // Check if an education already exists for the employee
     const existingEducation = await getEducationByEmployee(
-      requestBody.employeeId, requestBody.employeeId
+      requestBody.employeeId
     );
     if (existingEducation) {
       throw new Error("A Education Details already Employee ID.");
@@ -119,9 +118,7 @@ if (requestBody.graduationPassingYear > currentYear) {
     const checkEmployeeExistence = async (employeeId) => {
       const params = {
         TableName: process.env.EMPLOYEE_TABLE,
-        Key: marshall({
-          employeeId: employeeId,
-        }),
+        Key: { employeeId: { N: employeeId } },
       };
 
       try {
