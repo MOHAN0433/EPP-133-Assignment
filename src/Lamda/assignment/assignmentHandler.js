@@ -111,6 +111,31 @@ const updateAssignment = async (event) => {
     requestBody.billableResource = "Yes";
   }
 
+  const existingAssignment = await getAssignmentByEmployeeId(
+    requestBody.employeeId
+  );
+  if (existingAssignment) {
+    throw new Error("An assignment already exists for this employee.");
+  }
+
+  async function getAssignmentByEmployeeId(employeeId) {
+    const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      FilterExpression: "employeeId = :employeeId",
+      ExpressionAttributeValues: {
+        ":employeeId": { S: employeeId }, // Assuming employeeId is a string
+      },
+    };
+
+    try {
+      const result = await client.send(new ScanCommand(params));
+      return result.Items.length > 0;
+    } catch (error) {
+      console.error("Error retrieving assignment by employeeId:", error);
+      throw error;
+    }
+  }
+
 
 const checkEmployeeExistence = async (employeeId) => {
   const params = {
