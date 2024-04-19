@@ -121,27 +121,26 @@ if (!existingAssignment || existingAssignment.assignmentId !== assignmentId) {
     throw new Error("No assignment found for the employee with the provided assignmentId.");
 }
 
-async function getAssignmentByEmployeeId(employeeId) {
-    const params = {
-        TableName: process.env.ASSIGNMENTS_TABLE,
-        KeyConditionExpression: "employeeId = :employeeId",
-        ExpressionAttributeValues: {
-            ":employeeId": { S: employeeId }, // Assuming employeeId is a string
-        },
-    };
+async function getAssignmentByEmployeeId(employeeId, assignmentId) {
+  const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      Key: {
+          "employeeId": { S: employeeId }, // Assuming employeeId is a string
+          "assignmentId": { N: assignmentId.toString() }, // Assuming assignmentId is a number
+      },
+  };
 
-    try {
-        const result = await client.send(new QueryCommand(params));
-        if (result.Items.length > 0) {
-            // Assuming you want to return the first assignment found for the employee
-            return result.Items[0];
-        } else {
-            return null; // No assignment found for the employee
-        }
-    } catch (error) {
-        console.error("Error retrieving assignment by employeeId:", error);
-        throw error;
-    }
+  try {
+      const result = await client.send(new GetItemCommand(params));
+      if (result.Item) {
+          return result.Item;
+      } else {
+          return null; // No assignment found for the employee
+      }
+  } catch (error) {
+      console.error("Error retrieving assignment by employeeId:", error);
+      throw error;
+  }
 }
 
     // Allowed fields to be updated
