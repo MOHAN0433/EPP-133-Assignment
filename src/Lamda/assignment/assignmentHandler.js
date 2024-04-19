@@ -114,29 +114,30 @@ const updateAssignment = async (event) => {
   // Check if an assignment already exists for the employee
   const existingAssignment = await getAssignmentByEmployeeId(
     requestBody.employeeId, parseInt(event.pathParameters.assignmentId)
-  );
-  if (!existingAssignment) {
-    throw new Error("An assignment already exists for this employee.");
-  }
+);
 
-  async function getAssignmentByEmployeeId(employeeId, assignmentId) {
+if (!existingAssignment) {
+    throw new Error("No assignment found for this employee and assignment ID combination.");
+}
+
+async function getAssignmentByEmployeeId(employeeId, assignmentId) {
     const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      FilterExpression: "employeeId = :employeeId AND assignmentId = :assignmentId",
-      ExpressionAttributeValues: {
-        ":employeeId": { S: employeeId }, // Assuming employeeId is a string
-        ":assignmentId": { N: assignmentId.toString() },
-      },
+        TableName: process.env.ASSIGNMENTS_TABLE,
+        FilterExpression: "employeeId = :employeeId AND assignmentId = :assignmentId",
+        ExpressionAttributeValues: {
+            ":employeeId": { S: employeeId }, // Assuming employeeId is a string
+            ":assignmentId": { N: assignmentId.toString() }, // Convert assignmentId to string
+        },
     };
 
     try {
-      const result = await client.send(new ScanCommand(params));
-      return result.Items.length > 0;
+        const result = await client.send(new ScanCommand(params));
+        return result.Items.length > 0;
     } catch (error) {
-      console.error("Error retrieving assignment by employeeId:", error);
-      throw error;
+        console.error("Error retrieving assignment by employeeId:", error);
+        throw error;
     }
-  }
+}
 
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
