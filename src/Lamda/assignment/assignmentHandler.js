@@ -113,7 +113,7 @@ const updateAssignment = async (event) => {
 
   // Check if an assignment already exists for the employee
 const existingAssignment = await getAssignmentByEmployeeId(
-    requestBody.employeeId
+    requestBody.employeeId, event.pathParameters.assignmentId
 );
 
 // Check if the existing assignment's assignmentId matches the one from the request
