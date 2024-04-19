@@ -112,28 +112,52 @@ const updateAssignment = async (event) => {
   }
 
   // Check if an assignment already exists for the employee
+  async function getAssignmentRecord(assignmentId) {
+    const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      Key: {
+        assignmentId: { N: assignmentId.toString() } // Assuming assignmentId is of type number in the database
+      }
+    };
+  
+    try {
+      const { Item } = await client.send(new GetItemCommand(params));
+      console.log('Assignment Record:', Item); // Add this line to log the fetched item
+      return Item;
+    } catch (error) {
+      console.error("Error fetching assignment record:", error);
+      return null;
+    }
+  }
+  
   const assignmentRecord = await getAssignmentRecord(assignmentId);
-
+  
+  console.log('Fetched Assignment Record:', assignmentRecord); // Add this line to log the fetched assignment record
+  
   if (!assignmentRecord || assignmentRecord.employeeId !== employeeId) {
+    console.log('Mismatched employeeId:', assignmentRecord.employeeId, '!==', employeeId); // Add this line to log the values
     throw new Error('Assignment not found for the provided employee');
   }
 
-async function getAssignmentRecord(assignmentId) {
+const checkEmployeeExistence = async (employeeId) => {
   const params = {
-    TableName: process.env.ASSIGNMENTS_TABLE,
-    Key: {
-      assignmentId: { N: assignmentId.toString() } // Assuming assignmentId is of type number in the database
-    }
+    TableName: process.env.EMPLOYEE_TABLE,
+    Key: marshall({
+      employeeId: employeeId,
+    }),
   };
 
   try {
-    const { Item } = await dynamoDBClient.send(new GetItemCommand(params));
-    return Item;
+    const result = await client.send(new GetItemCommand(params));
+    if (!result.Item) {
+      throw new Error("Employee not found.");
+    }
   } catch (error) {
-    console.error("Error fetching assignment record:", error);
-    return null;
+    console.error("Error checking employee existence:", error);
+    throw error;
   }
-}
+};
+await checkEmployeeExistence(requestBody.employeeId);
 
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
