@@ -113,18 +113,19 @@ const updateAssignment = async (event) => {
 
   // Check if an assignment already exists for the employee
   const existingAssignment = await getAssignmentByEmployeeId(
-    requestBody.employeeId
+    requestBody.employeeId, assignmentId
   );
   if (existingAssignment) {
     throw new Error("An assignment already exists for this employee.");
   }
 
-  async function getAssignmentByEmployeeId(employeeId) {
+  async function getAssignmentByEmployeeId(employeeId, assignmentId) {
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
-      FilterExpression: "employeeId = :employeeId",
+      FilterExpression: "employeeId = :employeeId OR assignmentId = :assignmentId",
       ExpressionAttributeValues: {
         ":employeeId": { S: employeeId }, // Assuming employeeId is a string
+        ":assignmentId": { N: assignmentId },
       },
     };
 
