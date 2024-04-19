@@ -112,27 +112,32 @@ const updateAssignment = async (event) => {
   }
 
   // Check if an assignment already exists for the employee
-  const existingAssignment = await getAssignmentByEmployeeId(
-    requestBody.employeeId, parseInt(event.pathParameters.assignmentId)
+const existingAssignment = await getAssignmentByEmployeeId(
+    requestBody.employeeId
 );
 
-if (!existingAssignment) {
-    throw new Error("No assignment found for this employee and assignment ID combination.");
+// Check if the existing assignment's assignmentId matches the one from the request
+if (!existingAssignment || existingAssignment.assignmentId !== assignmentId) {
+    throw new Error("No assignment found for the employee with the provided assignmentId.");
 }
 
-async function getAssignmentByEmployeeId(employeeId, assignmentId) {
+async function getAssignmentByEmployeeId(employeeId) {
     const params = {
         TableName: process.env.ASSIGNMENTS_TABLE,
-        FilterExpression: "employeeId = :employeeId AND assignmentId = :assignmentId",
+        KeyConditionExpression: "employeeId = :employeeId",
         ExpressionAttributeValues: {
             ":employeeId": { S: employeeId }, // Assuming employeeId is a string
-            ":assignmentId": { N: assignmentId.toString() }, // Convert assignmentId to string
         },
     };
 
     try {
-        const result = await client.send(new ScanCommand(params));
-        return result.Items.length > 0;
+        const result = await client.send(new QueryCommand(params));
+        if (result.Items.length > 0) {
+            // Assuming you want to return the first assignment found for the employee
+            return result.Items[0];
+        } else {
+            return null; // No assignment found for the employee
+        }
     } catch (error) {
         console.error("Error retrieving assignment by employeeId:", error);
         throw error;
