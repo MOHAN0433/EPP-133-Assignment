@@ -111,6 +111,32 @@ const updateAssignment = async (event) => {
     requestBody.billableResource = "Yes";
   }
 
+  // Check if an assignment already exists for the employee
+  const existingAssignment = await getAssignmentByEmployeeId(
+    requestBody.employeeId
+  );
+  if (existingAssignment) {
+    throw new Error("An assignment already exists for this employee.");
+  }
+
+  async function getAssignmentByEmployeeId(employeeId) {
+    const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      FilterExpression: "employeeId = :employeeId",
+      ExpressionAttributeValues: {
+        ":employeeId": { S: employeeId }, // Assuming employeeId is a string
+      },
+    };
+
+    try {
+      const result = await client.send(new ScanCommand(params));
+      return result.Items.length > 0;
+    } catch (error) {
+      console.error("Error retrieving assignment by employeeId:", error);
+      throw error;
+    }
+  }
+
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
 
