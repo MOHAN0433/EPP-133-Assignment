@@ -111,33 +111,6 @@ const updateAssignment = async (event) => {
     requestBody.billableResource = "Yes";
   }
 
-  // Check if an assignment already exists for the employee
-  async function getAssignmentRecord(assignmentId) {
-    const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: {
-        assignmentId: { N: assignmentId.toString() } // Assuming assignmentId is of type number in the database
-      }
-    };
-  
-    try {
-      const { Item } = await client.send(new GetItemCommand(params));
-      console.log('Assignment Record:', Item); // Add this line to log the fetched item
-      return Item;
-    } catch (error) {
-      console.error("Error fetching assignment record:", error);
-      return null;
-    }
-  }
-  
-  const assignmentRecord = await getAssignmentRecord(assignmentId);
-  
-  console.log('Fetched Assignment Record:', assignmentRecord); // Add this line to log the fetched assignment record
-  
-  if (!assignmentRecord || assignmentRecord.employeeId !== employeeId) {
-    console.log('Mismatched employeeId:', assignmentRecord.employeeId, '!==', employeeId); // Add this line to log the values
-    throw new Error('Assignment not found for the provided employee');
-  }
 
 const checkEmployeeExistence = async (employeeId) => {
   const params = {
