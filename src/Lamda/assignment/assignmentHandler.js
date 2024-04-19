@@ -117,7 +117,8 @@ const existingAssignment = await getAssignmentByEmployeeId(
 );
 
 // Check if the existing assignment's assignmentId matches the one from the request
-if (existingAssignment.assignmentId !== assignmentId) {
+if (existingAssignment.assignmentId !== event.pathParameters.assignmentId) {
+  console.log("existingAssignment.assignmentId",existingAssignment.assignmentId + "pathParameters.assignmentId",event.pathParameters.assignmentId)
     throw new Error("No assignment found for the employee with the provided assignmentId.");
 }
 
