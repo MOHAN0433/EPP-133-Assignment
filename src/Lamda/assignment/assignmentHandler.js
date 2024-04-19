@@ -112,35 +112,26 @@ const updateAssignment = async (event) => {
   }
 
   // Check if an assignment already exists for the employee
-const existingAssignment = await getAssignmentByEmployeeId(
-    requestBody.employeeId, event.pathParameters.assignmentId
-);
+  const assignmentRecord = await getAssignmentRecord(assignmentId);
 
-// Check if the existing assignment's assignmentId matches the one from the request
-if (existingAssignment.assignmentId !== event.pathParameters.assignmentId) {
-  console.log("existingAssignment.assignmentId",existingAssignment.assignmentId + "pathParameters.assignmentId",event.pathParameters.assignmentId)
-    throw new Error("No assignment found for the employee with the provided assignmentId.");
-}
+  if (!assignmentRecord || assignmentRecord.employeeId !== employeeId) {
+    throw new Error('Assignment not found for the provided employee');
+  }
 
-async function getAssignmentByEmployeeId(employeeId, assignmentId) {
+async function getAssignmentRecord(assignmentId) {
   const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      Key: {
-          "employeeId": { S: employeeId }, // Assuming employeeId is a string
-          "assignmentId": { N: assignmentId.toString() }, // Assuming assignmentId is a number
-      },
+    TableName: process.env.ASSIGNMENTS_TABLE,
+    Key: {
+      assignmentId: { N: assignmentId.toString() } // Assuming assignmentId is of type number in the database
+    }
   };
 
   try {
-      const result = await client.send(new GetItemCommand(params));
-      if (result.Item) {
-          return result.Item;
-      } else {
-          return null; // No assignment found for the employee
-      }
+    const { Item } = await dynamoDBClient.send(new GetItemCommand(params));
+    return Item;
   } catch (error) {
-      console.error("Error retrieving assignment by employeeId:", error);
-      throw error;
+    console.error("Error fetching assignment record:", error);
+    return null;
   }
 }
 
