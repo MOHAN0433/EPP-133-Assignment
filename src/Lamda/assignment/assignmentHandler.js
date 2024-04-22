@@ -42,15 +42,6 @@ const updateAssignment = async (event) => {
       ':updatedDateTime': formattedDate
     };
 
-    // Convert coreTechnology field to an array of objects if it's a single value
-    //or else call the designation table and set the id
-    // if (typeof requestBody.coreTechnology === 'string') {
-    //   requestBody.coreTechnology = [{ name: requestBody.coreTechnology }];
-    // } else if (Array.isArray(requestBody.coreTechnology)) {
-    //   // Convert coreTechnology field to an array of objects if it's an array of values
-    //   requestBody.coreTechnology = requestBody.coreTechnology.map(value => ({ name: value }));
-    // }
-
     if (requestBody.branchOffice !== undefined) {
     if (
       requestBody.branchOffice === null ||
@@ -110,52 +101,6 @@ const updateAssignment = async (event) => {
   } else {
     requestBody.billableResource = "Yes";
   }
-  
-  // Check if the employee is already assigned to another assignment
-  const existingAssignment = await getAssignmentByEmployeeId(employeeId);
-  if (existingAssignment && existingAssignment.assignmentId !== assignmentId) {
-    throw new Error("This employee is already assigned to another assignment.");
-  }
-
-  // Define function to retrieve assignment by employeeId
-  async function getAssignmentByEmployeeId(employeeId) {
-    const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      FilterExpression: "employeeId = :employeeId",
-      ExpressionAttributeValues: {
-        ":employeeId": { N: String(employeeId) }, // Assuming employeeId is a number
-      },
-    };
-
-    try {
-      const result = await client.send(new ScanCommand(params));
-      return result.Items.find(item => item.assignmentId && parseInt(item.assignmentId.N) !== assignmentId);
-    } catch (error) {
-      console.error("Error retrieving assignment by employeeId:", error);
-      throw error;
-    }
-  }
-
-
-const checkEmployeeExistence = async (employeeId) => {
-  const params = {
-    TableName: process.env.EMPLOYEE_TABLE,
-    Key: marshall({
-      employeeId: employeeId,
-    }),
-  };
-
-  try {
-    const result = await client.send(new GetItemCommand(params));
-    if (!result.Item) {
-      throw new Error("Employee not found.");
-    }
-  } catch (error) {
-    console.error("Error checking employee existence:", error);
-    throw error;
-  }
-};
-await checkEmployeeExistence(requestBody.employeeId);
 
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
