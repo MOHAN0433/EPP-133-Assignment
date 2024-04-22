@@ -41,7 +41,7 @@ const updateAssignment = async (event) => {
     const expressionAttributeValues = {
       ':updatedDateTime': formattedDate
     };
-
+    
     if (requestBody.branchOffice !== undefined) {
     if (
       requestBody.branchOffice === null ||
@@ -101,6 +101,52 @@ const updateAssignment = async (event) => {
   } else {
     requestBody.billableResource = "Yes";
   }
+  
+//   // Check if the employee is already assigned to another assignment
+//   const existingAssignment = await getAssignmentByEmployeeId(employeeId);
+//   if (existingAssignment && existingAssignment.assignmentId !== assignmentId) {
+//     throw new Error("This employee is already assigned to another assignment.");
+//   }
+
+//   // Define function to retrieve assignment by employeeId
+//   async function getAssignmentByEmployeeId(employeeId) {
+//     const params = {
+//       TableName: process.env.ASSIGNMENTS_TABLE,
+//       FilterExpression: "employeeId = :employeeId",
+//       ExpressionAttributeValues: {
+//         ":employeeId": { N: String(employeeId) }, // Assuming employeeId is a number
+//       },
+//     };
+
+//     try {
+//       const result = await client.send(new ScanCommand(params));
+//       return result.Items.find(item => item.assignmentId && parseInt(item.assignmentId.N) !== assignmentId);
+//     } catch (error) {
+//       console.error("Error retrieving assignment by employeeId:", error);
+//       throw error;
+//     }
+//   }
+
+
+// const checkEmployeeExistence = async (employeeId) => {
+//   const params = {
+//     TableName: process.env.EMPLOYEE_TABLE,
+//     Key: marshall({
+//       employeeId: employeeId,
+//     }),
+//   };
+
+//   try {
+//     const result = await client.send(new GetItemCommand(params));
+//     if (!result.Item) {
+//       throw new Error("Employee not found.");
+//     }
+//   } catch (error) {
+//     console.error("Error checking employee existence:", error);
+//     throw error;
+//   }
+// };
+// await checkEmployeeExistence(requestBody.employeeId);
 
     // Allowed fields to be updated
     const allowedFields = ['branchOffice', 'department', 'designation', 'coreTechnology', 'framework', 'reportingManager', 'billableResource', "assignedProject", "onsite"];
@@ -112,14 +158,12 @@ const updateAssignment = async (event) => {
         expressionAttributeValues[`:${field}`] = requestBody[field];
       }
     });
-    console.log("Key before marshalling:", { assignmentId: assignmentId, employeeId: employeeId });
 
     // Construct the key for the DynamoDB update
     const key = marshall({
-      assignmentId: { N: String(assignmentId) },
-      employeeId: { N: String(employeeId) }
+      assignmentId: String(assignmentId),
+      employeeId: String(employeeId)
     });
-    console.log("Marshalled Key:", key);
 
     // Construct update parameters
     const params = {
@@ -129,7 +173,6 @@ const updateAssignment = async (event) => {
       ExpressionAttributeValues: marshall(expressionAttributeValues)
     };
 
-    console.log("Update Parameters:", params);
     // Execute the update operation
     await client.send(new UpdateItemCommand(params));
 
