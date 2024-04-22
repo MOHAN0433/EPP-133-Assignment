@@ -62,32 +62,31 @@ if (requestBody.graduationPassingYear > currentYear) {
 
     const nextSerialNumber =
       highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
-    async function getHighestSerialNumber() {
-      const params = {
-        TableName: process.env.EDUCATION_TABLE,
-        ProjectionExpression: "educationId",
-        Limit: 1,
-        ScanIndexForward: false, // Sort in descending order to get the highest serial number first
-      };
-
-      try {
-        const result = await client.send(new ScanCommand(params));
-        console.log("DynamoDB Result:", result); // Add this line to see the DynamoDB response
-        if (result.Items.length === 0) {
-          return 0; // If no records found, return null
-        } else {
-          // Parse and return the highest serial number without incrementing
-          const educationIdObj = result.Items[0].educationId;
-          console.log("Education ID from DynamoDB:", educationIdObj); 
-          const educationId = parseInt(educationIdObj.N); 
-          console.log("Parsed Education ID:", educationId);
-          return educationId;
+      async function getHighestSerialNumber() {
+        const params = {
+          TableName: process.env.EDUCATION_TABLE,
+          ProjectionExpression: "educationId",
+          Limit: 100, // Increase the limit to retrieve more items for sorting
+        };
+        try {
+          const result = await client.send(new ScanCommand(params));
+          // Sort the items in descending order based on assignmentId
+          const sortedItems = result.Items.sort((a, b) => {
+            return parseInt(b.educationId.N) - parseInt(a.educationId.N);
+          });
+          console.log("Sorted Items:", sortedItems); // Log the sorted items
+          if (sortedItems.length === 0) {
+            return 0; // If no records found, return null
+          } else {
+            const highestEducationId = parseInt(sortedItems[0].educationId.N);
+            console.log("Highest educationId ID:", highestEducationId);
+            return highestEducationId;
+          }
+        } catch (error) {
+          console.error("Error retrieving highest serial number:", error);
+          throw error; // Propagate the error up the call stack
         }
-      } catch (error) {
-        console.error("Error retrieving highest serial number:", error);
-        throw error; // Propagate the error up the call stack
       }
-    }
 
     // Check if an education already exists for the employee
     const existingEducation = await getEducationByEmployee(
