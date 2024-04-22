@@ -14,7 +14,7 @@ const createBankDetails = async (event) => {
     console.log("Request Body:", requestBody);
 
     // Retrieve onsite value based on employeeId
-    const onsiteStatus = await getOnsiteStatus(parseInt(requestBody.assignmentId), requestBody.employeeId);
+    const onsiteStatus = await getOnsiteStatus(parseInt(requestBody.assignmentId), parseInt(requestBody.employeeId));
     console.log("Onsite Status:", onsiteStatus);
 
     let bankFields = {};
@@ -86,7 +86,7 @@ const createBankDetails = async (event) => {
         TableName: process.env.BANK_TABLE,
         FilterExpression: "employeeId = :employeeId",
         ExpressionAttributeValues: {
-          ":employeeId": { S: employeeId },
+          ":employeeId": { N: employeeId },
         },
       };
 

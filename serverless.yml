@@ -173,7 +173,7 @@ resources:
         TableName: ${self:custom.employeeTableName}
         AttributeDefinitions:
           - AttributeName: employeeId
-            AttributeType: S
+            AttributeType: N
         KeySchema:
           - AttributeName: employeeId
             KeyType: HASH
@@ -188,7 +188,7 @@ resources:
           - AttributeName: assignmentId
             AttributeType: N
           - AttributeName: employeeId
-            AttributeType: S
+            AttributeType: N
         KeySchema:
           - AttributeName: assignmentId
             KeyType: HASH
@@ -218,7 +218,7 @@ resources:
           - AttributeName: bankId
             AttributeType: N
           - AttributeName: employeeId
-            AttributeType: S
+            AttributeType: N
         KeySchema:
           - AttributeName: bankId
             KeyType: HASH

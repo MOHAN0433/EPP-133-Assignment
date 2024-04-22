@@ -110,74 +110,26 @@ const updateAssignment = async (event) => {
   } else {
     requestBody.billableResource = "Yes";
   }
-
-  const isNameAndTypeNotIdExists = async (assignmentId, employeeId) => {
-    console.log("inside isNameAndTypeNotIdExists");
-    const params = {
-      TableName: process.env.ASSIGNMENTS_TABLE,
-      FilterExpression: "#attrName = :assignmentIdValue AND #attrType = :employeeIdValue",
-      ExpressionAttributeNames: {
-        "#attrName": "assignmentId",
-        "#attrType": "employeeId",
-      },
-      ExpressionAttributeValues: {
-        ":assignmentIdValue": assignmentId,
-        ":employeeIdValue": employeeId,
-      },
-    };
-    const command = new ScanCommand(params);
-    const data = await client.send(command);
   
-    if (data.Items && data.Items.length > 0) {
-      const matchingItem = data.Items.find(
-        (item) => item.assignmentId && item.assignmentId.N === assignmentId
-      );
-      if (matchingItem) {
-        console.log(`Found metadataId in data`);
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      return false;
-    }
-  };
-  
-  const validateNameAndTypeExists = await isNameAndTypeNotIdExists(
-    event.pathParameters.assignmentId,
-    requestBody.employeeId,
-  );
-  if (validateNameAndTypeExists) {
-    console.log(
-      `assignment already assignment exists.`
-    );
-    response.statusCode = 400;
-    response.body = JSON.stringify({
-      message: `assignment already assignment exists.`,
-    });
-    return response;
-  }
-  
-
-  const existingAssignment = await getAssignmentByEmployeeId(
-    requestBody.employeeId
-  );
-  if (existingAssignment) {
-    throw new Error("An assignment already exists for this employee.");
+  // Check if the employee is already assigned to another assignment
+  const existingAssignment = await getAssignmentByEmployeeId(employeeId);
+  if (existingAssignment && existingAssignment.assignmentId !== assignmentId) {
+    throw new Error("This employee is already assigned to another assignment.");
   }
 
+  // Define function to retrieve assignment by employeeId
   async function getAssignmentByEmployeeId(employeeId) {
     const params = {
       TableName: process.env.ASSIGNMENTS_TABLE,
       FilterExpression: "employeeId = :employeeId",
       ExpressionAttributeValues: {
-        ":employeeId": { S: employeeId }, // Assuming employeeId is a string
+        ":employeeId": { N: String(employeeId) }, // Assuming employeeId is a number
       },
     };
 
     try {
       const result = await client.send(new ScanCommand(params));
-      return result.Items.length > 0;
+      return result.Items.find(item => item.assignmentId && parseInt(item.assignmentId.N) !== assignmentId);
     } catch (error) {
       console.error("Error retrieving assignment by employeeId:", error);
       throw error;
