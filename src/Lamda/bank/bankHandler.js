@@ -76,7 +76,7 @@ const createBankDetails = async (event) => {
     }
 
     // Check if an assignment already exists for the employee
-    const existingBank = await getBankByEmployeeId(requestBody.employeeId);
+    const existingBank = await getBankByEmployeeId(parseInt(requestBody.employeeId));
     if (existingBank) {
       throw new Error("Bank already exists for this employee.");
     }
@@ -86,10 +86,10 @@ const createBankDetails = async (event) => {
         TableName: process.env.BANK_TABLE,
         FilterExpression: "employeeId = :employeeId",
         ExpressionAttributeValues: {
-          ":employeeId": { N: employeeId },
+          ":employeeId": { N: String(employeeId) }, // Convert employeeId to string explicitly
         },
       };
-
+    
       try {
         const result = await client.send(new ScanCommand(params));
         return result.Items.length > 0;
