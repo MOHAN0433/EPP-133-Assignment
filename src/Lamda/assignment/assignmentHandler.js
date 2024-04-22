@@ -133,7 +133,7 @@ const updateAssignment = async (event) => {
         (item) => item.assignmentId && item.assignmentId.N === assignmentId
       );
       if (matchingItem) {
-        console.log(`Found metadataId ${assignmentId} in data`);
+        console.log(`Found metadataId in data`);
         return false;
       } else {
         return true;
@@ -144,16 +144,16 @@ const updateAssignment = async (event) => {
   };
   
   const validateNameAndTypeExists = await isNameAndTypeNotIdExists(
-    assignmentId,
+    event.pathParameters.assignmentId,
     requestBody.employeeId,
   );
   if (validateNameAndTypeExists) {
     console.log(
-      `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`
+      `assignment already assignment exists.`
     );
     response.statusCode = 400;
     response.body = JSON.stringify({
-      message: `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`,
+      message: `assignment already assignment exists.`,
     });
     return response;
   }
