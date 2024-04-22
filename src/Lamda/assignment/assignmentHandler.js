@@ -111,6 +111,53 @@ const updateAssignment = async (event) => {
     requestBody.billableResource = "Yes";
   }
 
+  const validateNameAndTypeExists = await isNameAndTypeNotIdExists(
+    assignmentId,
+    requestBody.employeeId,
+  );
+  if (validateNameAndTypeExists) {
+    console.log(
+      `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`
+    );
+    response.statusCode = 400;
+    response.body = JSON.stringify({
+      message: `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`,
+    });
+    return response;
+  }
+
+  const isNameAndTypeNotIdExists = async (assignmentId, employeeId) => {
+    console.log("inside isNameAndTypeNotIdExists");
+    const params = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
+      FilterExpression: "#attrName = :assignmentIdValue AND #attrType = :employeeIdValue",
+      ExpressionAttributeNames: {
+        "#attrName": "assignmentId",
+        "#attrType": "employeeId",
+      },
+      ExpressionAttributeValues: {
+        ":nameValue": { N: assignmentId },
+        ":typeValue": { S: employeeId },
+      },
+    };
+    const command = new ScanCommand(params);
+    const data = await client.send(command);
+  
+    if (data.Items && data.Items.length > 0) {
+      const matchingItem = data.Items.find(
+        (item) => item.assignmentId && item.assignmentId.N === assignmentId
+      );
+      if (matchingItem) {
+        console.log(`Found metadataId ${assignmentId} in data`);
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  };
+
   const existingAssignment = await getAssignmentByEmployeeId(
     requestBody.employeeId
   );
