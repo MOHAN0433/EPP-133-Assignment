@@ -112,12 +112,14 @@ const updateAssignment = async (event) => {
         expressionAttributeValues[`:${field}`] = requestBody[field];
       }
     });
+    console.log("Key before marshalling:", { assignmentId: assignmentId, employeeId: employeeId });
 
     // Construct the key for the DynamoDB update
     const key = marshall({
       assignmentId: { N: String(assignmentId) },
       employeeId: { N: String(employeeId) }
     });
+    console.log("Marshalled Key:", key);
 
     // Construct update parameters
     const params = {
@@ -127,6 +129,7 @@ const updateAssignment = async (event) => {
       ExpressionAttributeValues: marshall(expressionAttributeValues)
     };
 
+    console.log("Update Parameters:", params);
     // Execute the update operation
     await client.send(new UpdateItemCommand(params));
 
