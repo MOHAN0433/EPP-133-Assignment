@@ -30,7 +30,7 @@ const updateAssignment = async (event) => {
       throw new Error('Invalid assignmentId provided');
     }
 
-    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
+    const employeeId = parseInt(event.pathParameters.employeeId); // Assuming employeeId is provided in the path parameters as a string
 
     if (!employeeId) {
       throw new Error('employeeId is required');
@@ -161,8 +161,8 @@ const updateAssignment = async (event) => {
 
     // Construct the key for the DynamoDB update
     const key = marshall({
-      assignmentId: String(assignmentId),
-      employeeId: String(employeeId)
+      assignmentId: { N: assignmentId},
+      employeeId: { N: employeeId } 
     });
 
     // Construct update parameters
