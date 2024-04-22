@@ -170,8 +170,8 @@ await checkEmployeeExistence(requestBody.employeeId);
 
     // Construct the key for the DynamoDB update
     const key = marshall({
-      assignmentId: assignmentId,
-      employeeId: employeeId
+      assignmentId: { N: String(assignmentId) },
+      employeeId: { N: String(employeeId) }
     });
 
     // Construct update parameters
