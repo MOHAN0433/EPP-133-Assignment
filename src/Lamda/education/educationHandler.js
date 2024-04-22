@@ -50,6 +50,13 @@ if (requestBody[field] !== undefined || requestBody[field] !== null ) {
     }
 }
 }
+// Validate fields to allow only string values
+const stringFields = ["degree", "course", "university"];
+for (const field of stringFields) {
+  if (typeof requestBody[field] !== "string") {
+    throw new Error(`${field} must be a string.`);
+  }
+}
 
 // Check if graduationPassingYear is a future year
 const currentYear = new Date().getFullYear();
