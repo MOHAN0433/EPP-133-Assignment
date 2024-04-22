@@ -111,21 +111,6 @@ const updateAssignment = async (event) => {
     requestBody.billableResource = "Yes";
   }
 
-  const validateNameAndTypeExists = await isNameAndTypeNotIdExists(
-    assignmentId,
-    requestBody.employeeId,
-  );
-  if (validateNameAndTypeExists) {
-    console.log(
-      `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`
-    );
-    response.statusCode = 400;
-    response.body = JSON.stringify({
-      message: `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`,
-    });
-    return response;
-  }
-
   const isNameAndTypeNotIdExists = async (assignmentId, employeeId) => {
     console.log("inside isNameAndTypeNotIdExists");
     const params = {
@@ -136,8 +121,8 @@ const updateAssignment = async (event) => {
         "#attrType": "employeeId",
       },
       ExpressionAttributeValues: {
-        ":nameValue": { N: assignmentId },
-        ":typeValue": { S: employeeId },
+        ":assignmentIdValue": assignmentId,
+        ":employeeIdValue": employeeId,
       },
     };
     const command = new ScanCommand(params);
@@ -157,6 +142,22 @@ const updateAssignment = async (event) => {
       return false;
     }
   };
+  
+  const validateNameAndTypeExists = await isNameAndTypeNotIdExists(
+    assignmentId,
+    requestBody.employeeId,
+  );
+  if (validateNameAndTypeExists) {
+    console.log(
+      `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`
+    );
+    response.statusCode = 400;
+    response.body = JSON.stringify({
+      message: `With Name: ${assignmentId} And type: ${requestBody.employeeId} already assignment exists.`,
+    });
+    return response;
+  }
+  
 
   const existingAssignment = await getAssignmentByEmployeeId(
     requestBody.employeeId
