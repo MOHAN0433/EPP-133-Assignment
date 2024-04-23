@@ -22,7 +22,7 @@ const AWS = require('aws-sdk');
 const s3 = new AWS.S3();
 
 const createEducation = async (event) => {
-  console.log("Create employee details");
+  console.log("Create emmployee details");
   const response = { statusCode: httpStatusCodes.SUCCESS };
   try {
     const requestBody = JSON.parse(event.body);
