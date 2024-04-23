@@ -173,11 +173,11 @@ if (requestBody.graduationPassingYear > currentYear) {
 
 const uploadEducation = async (event) => {
   try {
-    const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
+    // const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
 
-    if (!employeeId) {
-      throw new Error('employeeId is required');
-    }
+    // if (!employeeId) {
+    //   throw new Error('employeeId is required');
+    // }
 
     const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
 
