@@ -14,6 +14,7 @@ provider:
     BANK_TABLE: ${self:custom.bankTableName}
     PAYROLL_TABLE: ${self:custom.payrollTableName}
     EDUCATION_TABLE: ${self:custom.educationTableName}
+    CERTIFICATION_TABLE: ${self:custom.certificationTableName}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
@@ -31,7 +32,9 @@ provider:
         - !GetAtt BankTable.Arn
         - !GetAtt payrollTable.Arn
         - !GetAtt educationTable.Arn
-        - "arn:aws:s3:::education0433123/*"  # Replace <your-bucket-name> with your actual S3 bucket name
+        - !GetAtt certificationTable.Arn
+        - "arn:aws:s3:::education0433123/*"  # S3 bucket name
+        - "arn:aws:s3:::certificationdocuments/*"
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
@@ -39,6 +42,7 @@ custom:
   bankTableName: bank
   payrollTableName: payroll
   educationTableName: education
+  certificationTableName: certification
 plugins:
   - serverless-iam-roles-per-function
 functions:
@@ -164,6 +168,24 @@ functions:
       - http:
           path: education/{educationId}
           method: PUT
+  certificationCreate:
+    handler: src/Lamda/certification/certificationHandler.createCertification
+    name: certificationCreate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: certification
+          method: POST
+  certificationUpload:
+    handler: src/Lamda/certification/certification.uploadCertification
+    name: certificationUpload
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: certification/{certificationId}
+          method: PUT
 
 resources:
   Resources:
@@ -249,6 +271,19 @@ resources:
             AttributeType: N
         KeySchema:
           - AttributeName: educationId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    certificationTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.certificationTableName}
+        AttributeDefinitions:
+          - AttributeName: certificationId
+            AttributeType: N
+        KeySchema:
+          - AttributeName: certificationId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
