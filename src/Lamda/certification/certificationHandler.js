@@ -29,82 +29,82 @@ const createCertification = async (event) => {
       }
     }
 
-    const alphabetRegex = /^[A-Za-z\s]+$/;
-    if (!alphabetRegex.test(requestBody.certificationAuthority)) {
-      throw new Error("Technology name and certification authority must contain only alphabets.");
-    }
+    // const alphabetRegex = /^[A-Za-z\s]+$/;
+    // if (!alphabetRegex.test(requestBody.certificationAuthority)) {
+    //   throw new Error("Technology name and certification authority must contain only alphabets.");
+    // }
 
 
-      const validateDate = (date) => {
-        if (date === null || date === undefined || date === "") {
-          return true;
-        }
-        const datePattern = /^\d{2}-\d{2}-\d{4}$/;
-        if (datePattern.test(date)) {
-          return true;
-        } else {
-          return false;
-        }
-      };
+    //   const validateDate = (date) => {
+    //     if (date === null || date === undefined || date === "") {
+    //       return true;
+    //     }
+    //     const datePattern = /^\d{2}-\d{2}-\d{4}$/;
+    //     if (datePattern.test(date)) {
+    //       return true;
+    //     } else {
+    //       return false;
+    //     }
+    //   };
 
-      const validatePastAndCurrentDate = (date) => {
-        if (date === null || date === undefined || date === "") {
-          return true;
-        }
-        const currentDate = new Date();
-        const inputDate = new Date(date);
-        if (isNaN(inputDate.getTime())) {
-          return false;
-        }
-        if (inputDate <= currentDate) {
-          return true;
-        } else {
-          return false;
-        }
-      };
-      const validateFeatureAndCurrentDate = (date) => {
-        if (date === null || date === undefined || date === "") {
-          return true;
-        }
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
+    //   const validatePastAndCurrentDate = (date) => {
+    //     if (date === null || date === undefined || date === "") {
+    //       return true;
+    //     }
+    //     const currentDate = new Date();
+    //     const inputDate = new Date(date);
+    //     if (isNaN(inputDate.getTime())) {
+    //       return false;
+    //     }
+    //     if (inputDate <= currentDate) {
+    //       return true;
+    //     } else {
+    //       return false;
+    //     }
+    //   };
+    //   const validateFeatureAndCurrentDate = (date) => {
+    //     if (date === null || date === undefined || date === "") {
+    //       return true;
+    //     }
+    //     const currentDate = new Date();
+    //     currentDate.setHours(0, 0, 0, 0);
       
-        const inputDate = new Date(date);
-        inputDate.setHours(0, 0, 0, 0);
+    //     const inputDate = new Date(date);
+    //     inputDate.setHours(0, 0, 0, 0);
       
-        if (isNaN(inputDate.getTime())) {
-          return false;
-        }
-        if (inputDate >= currentDate) {
-          return true;
-        } else {
-          return false;
-        }
-      };
+    //     if (isNaN(inputDate.getTime())) {
+    //       return false;
+    //     }
+    //     if (inputDate >= currentDate) {
+    //       return true;
+    //     } else {
+    //       return false;
+    //     }
+    //   };
 
-      if (!validateDate(requestBody.certifiedDate)) {
-        response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
-        return response;
-      }
-      if (!validateDate(requestBody.validityLastDate)) {
-        response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
-        return response;
-      }
-      if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
-        response.validationMessage = `certifiedDate should have Current and Past Date`;
-        return response;
-      }
-      if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
-        response.validationMessage = `validityLastDate should have Current and feature Date`;
-        return response;
-      }
+    //   if (!validateDate(requestBody.certifiedDate)) {
+    //     response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
+    //     return response;
+    //   }
+    //   if (!validateDate(requestBody.validityLastDate)) {
+    //     response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
+    //     return response;
+    //   }
+    //   if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
+    //     response.validationMessage = `certifiedDate should have Current and Past Date`;
+    //     return response;
+    //   }
+    //   if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
+    //     response.validationMessage = `validityLastDate should have Current and feature Date`;
+    //     return response;
+    //   }
 
-      const certifiedDate = new Date(requestBody.certifiedDate);
-    const validityLastDate = new Date(requestBody.validityLastDate);
+    //   const certifiedDate = new Date(requestBody.certifiedDate);
+    // const validityLastDate = new Date(requestBody.validityLastDate);
 
-    if (certifiedDate > validityLastDate) {
-      throw new Error("CertifiedDate cannot be greater than validityLastDate.");
-    }
+    // if (certifiedDate > validityLastDate) {
+    //   throw new Error("CertifiedDate cannot be greater than validityLastDate.");
+    // }
 
     const highestSerialNumber = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber);
