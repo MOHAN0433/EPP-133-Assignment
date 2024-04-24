@@ -103,7 +103,7 @@ const createCertification = async (event) => {
     const validityLastDate = new Date(requestBody.validityLastDate);
 
     if (certifiedDate > validityLastDate) {
-      throw new Error("certifiedDate cannot be greater than validityLastDate.");
+      throw new Error("CertifiedDate cannot be greater than validityLastDate.");
     }
 
     const highestSerialNumber = await getHighestSerialNumber();
