@@ -34,30 +34,7 @@ const createCertification = async (event) => {
       throw new Error("Technology name and certification authority must contain only alphabets.");
     }
 
-    if (!validateDate(requestBody.certifiedDate)) {
-        response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
-        return response;
-      }
-      if (!validateDate(requestBody.validityLastDate)) {
-        response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
-        return response;
-      }
-      if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
-        response.validationMessage = `certifiedDate should have Current and Past Date`;
-        return response;
-      }
-      if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
-        response.validationMessage = `validityLastDate should have Current and feature Date`;
-        return response;
-      }
 
-      const certifiedDate = new Date(requestBody.certifiedDate);
-    const validityLastDate = new Date(requestBody.validityLastDate);
-
-    if (certifiedDate > validityLastDate) {
-      throw new Error("certifiedDate cannot be greater than validityLastDate.");
-    }
-    
       const validateDate = (date) => {
         if (date === null || date === undefined || date === "") {
           return true;
@@ -104,6 +81,30 @@ const createCertification = async (event) => {
           return false;
         }
       };
+
+      if (!validateDate(requestBody.certifiedDate)) {
+        response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
+        return response;
+      }
+      if (!validateDate(requestBody.validityLastDate)) {
+        response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
+        return response;
+      }
+      if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
+        response.validationMessage = `certifiedDate should have Current and Past Date`;
+        return response;
+      }
+      if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
+        response.validationMessage = `validityLastDate should have Current and feature Date`;
+        return response;
+      }
+
+      const certifiedDate = new Date(requestBody.certifiedDate);
+    const validityLastDate = new Date(requestBody.validityLastDate);
+
+    if (certifiedDate > validityLastDate) {
+      throw new Error("certifiedDate cannot be greater than validityLastDate.");
+    }
 
     const highestSerialNumber = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber);
