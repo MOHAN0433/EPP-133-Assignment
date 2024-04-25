@@ -220,17 +220,20 @@ const uploadCertification = async (event) => {
     }
     const { filename, data } = extractFile(event);
 
+    // Modify filename to include certificationId
+    const modifiedFilename = `${certificationId}_${filename}`;
+
     // Upload file to S3
     await s3
       .putObject({
         Bucket: BUCKET,
-        Key: filename,
+        Key: modifiedFilename,
         Body: data,
       })
       .promise();
 
     // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${modifiedFilename}`;
 
     // Check if an certification already exists for the employee
     const existingCertification = await getCertificationByEmployee(event.pathParameters.certificationId);
