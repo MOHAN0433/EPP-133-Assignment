@@ -173,28 +173,11 @@ if (requestBody.graduationPassingYear > currentYear) {
 
 const uploadEducation = async (event) => {
   try {
-    // const employeeId = event.pathParameters.employeeId; // Assuming employeeId is provided in the path parameters as a string
-
-    // if (!employeeId) {
-    //   throw new Error('employeeId is required');
-    // }
-
     const educationId = event.pathParameters.educationId; // Assuming employeeId is provided in the path parameters as a string
 
     if (!educationId) {
       throw new Error('educationId is required');
     }
-    const { filename, data } = extractFile(event);
-
-    // Upload file to S3
-    await s3.putObject({
-      Bucket: BUCKET,
-      Key: filename,
-      Body: data,
-    }).promise();
-
-    // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
 
     // Check if an education already exists for the employee
     const existingEducation = await getEducationByEmployee(
@@ -221,7 +204,18 @@ const uploadEducation = async (event) => {
       }
     }
     
+    const { filename, data } = extractFile(event);
 
+    // Upload file to S3
+    await s3.putObject({
+      Bucket: BUCKET,
+      Key: filename,
+      Body: data,
+    }).promise();
+
+    // Construct S3 object URL
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${filename}`;
+    
     // Update item in DynamoDB
     await client.send(new UpdateItemCommand({
       TableName: process.env.EDUCATION_TABLE,

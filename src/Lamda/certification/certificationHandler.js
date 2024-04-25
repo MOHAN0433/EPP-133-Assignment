@@ -218,23 +218,6 @@ const uploadCertification = async (event) => {
     if (!certificationId) {
       throw new Error("certificationId is required");
     }
-    const { filename, data } = extractFile(event);
-
-    // Modify filename to include certificationId
-    const modifiedFilename = `${certificationId}_${filename}`;
-
-    // Upload file to S3
-    await s3
-      .putObject({
-        Bucket: BUCKET,
-        Key: modifiedFilename,
-        Body: data,
-      })
-      .promise();
-
-    // Construct S3 object URL
-    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${modifiedFilename}`;
-
     // Check if an certification already exists for the employee
     const existingCertification = await getCertificationByEmployee(event.pathParameters.certificationId);
     if (!existingCertification) {
@@ -251,12 +234,29 @@ const uploadCertification = async (event) => {
 
       try {
         const result = await client.send(new QueryCommand(params));
-        return result.Items.length > 0; //return true if education exists, false otherwise
+        return result.Items.length > 0;
       } catch (error) {
         console.error("Error retrieving certification by certificationId:", error);
         throw error;
       }
     }
+    
+    const { filename, data } = extractFile(event);
+
+    // Modify filename to include certificationId
+    const modifiedFilename = `${certificationId}_${filename}`;
+
+    // Upload file to S3
+    await s3
+      .putObject({
+        Bucket: BUCKET,
+        Key: modifiedFilename,
+        Body: data,
+      })
+      .promise();
+
+    // Construct S3 object URL
+    const s3ObjectUrl = `https://${BUCKET}.s3.amazonaws.com/${modifiedFilename}`;
 
     await client.send(
       new UpdateItemCommand({
