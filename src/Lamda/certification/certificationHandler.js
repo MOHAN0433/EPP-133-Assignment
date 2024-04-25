@@ -48,6 +48,7 @@ const createCertification = async (event) => {
       };
 
       const validatePastAndCurrentDate = (date) => {
+        console.log(date);
         if (date === null || date === undefined || date === "") {
           return true;
         }
