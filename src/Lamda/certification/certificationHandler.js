@@ -91,14 +91,14 @@ const createCertification = async (event) => {
         throw new Error(`validityLastDate  should be in format \"MM-DD-YYYY\"`);
         //return response;
       }
-      if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
-        throw new Error(`certifiedDate should have Current and Past Date`);
-        //return response;
-      }
-      if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
-        throw new Error(`validityLastDate should have Current and feature Date`);
-        //return response;
-      }
+    //   if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
+    //     throw new Error(`certifiedDate should have Current and Past Date`);
+    //     //return response;
+    //   }
+    //   if (!validateFeatureAndCurrentDate(requestBody.validityLastDate)) {
+    //     throw new Error(`validityLastDate should have Current and feature Date`);
+    //     //return response;
+    //   }
 
       const certifiedDate = new Date(requestBody.certifiedDate);
     const validityLastDate = new Date(requestBody.validityLastDate);
