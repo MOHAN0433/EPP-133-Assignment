@@ -34,7 +34,7 @@ provider:
         - !GetAtt educationTable.Arn
         - !GetAtt certificationTable.Arn
         - "arn:aws:s3:::education0433123/*"  # S3 bucket name
-        - "arn:aws:s3:::certificationdocuments/*"
+        - "arn:aws:s3:::certification_documents/*"
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
