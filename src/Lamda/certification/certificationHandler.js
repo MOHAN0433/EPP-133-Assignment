@@ -83,8 +83,8 @@ const createCertification = async (event) => {
     //   };
 
       if (!validateDate(requestBody.certifiedDate)) {
-        response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
-        return response;
+        throw new Error(`certifiedDate  should be in format \"MM-DD-YYYY\"`);
+        //return response;
       }
       if (!validateDate(requestBody.validityLastDate)) {
         response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
