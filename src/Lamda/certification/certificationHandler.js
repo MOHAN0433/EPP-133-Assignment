@@ -29,23 +29,23 @@ const createCertification = async (event) => {
       }
     }
 
-    // const alphabetRegex = /^[A-Za-z\s]+$/;
-    // if (!alphabetRegex.test(requestBody.certificationAuthority)) {
-    //   throw new Error("Technology name and certification authority must contain only alphabets.");
-    // }
+    const alphabetRegex = /^[A-Za-z\s]+$/;
+    if (!alphabetRegex.test(requestBody.certificationAuthority)) {
+      throw new Error("Technology name and certification authority must contain only alphabets.");
+    }
 
 
-    //   const validateDate = (date) => {
-    //     if (date === null || date === undefined || date === "") {
-    //       return true;
-    //     }
-    //     const datePattern = /^\d{2}-\d{2}-\d{4}$/;
-    //     if (datePattern.test(date)) {
-    //       return true;
-    //     } else {
-    //       return false;
-    //     }
-    //   };
+      const validateDate = (date) => {
+        if (date === null || date === undefined || date === "") {
+          return true;
+        }
+        const datePattern = /^\d{2}-\d{2}-\d{4}$/;
+        if (datePattern.test(date)) {
+          return true;
+        } else {
+          return false;
+        }
+      };
 
     //   const validatePastAndCurrentDate = (date) => {
     //     if (date === null || date === undefined || date === "") {
@@ -82,14 +82,14 @@ const createCertification = async (event) => {
     //     }
     //   };
 
-    //   if (!validateDate(requestBody.certifiedDate)) {
-    //     response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
-    //     return response;
-    //   }
-    //   if (!validateDate(requestBody.validityLastDate)) {
-    //     response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
-    //     return response;
-    //   }
+      if (!validateDate(requestBody.certifiedDate)) {
+        response.validationMessage = `certifiedDate  should be in format \"MM-DD-YYYY\"`;
+        return response;
+      }
+      if (!validateDate(requestBody.validityLastDate)) {
+        response.validationMessage = `validityLastDate  should be in format \"MM-DD-YYYY\"`;
+        return response;
+      }
     //   if (!validatePastAndCurrentDate(requestBody.certifiedDate)) {
     //     response.validationMessage = `certifiedDate should have Current and Past Date`;
     //     return response;
