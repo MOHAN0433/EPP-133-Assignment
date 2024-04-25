@@ -178,7 +178,7 @@ functions:
           path: certification
           method: POST
   certificationUpload:
-    handler: src/Lamda/certification/certification.uploadCertification
+    handler: src/Lamda/certification/certificationHandler.uploadCertification
     name: certificationUpload
     memorySize: 128
     timeout: 120
