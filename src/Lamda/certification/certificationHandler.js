@@ -140,7 +140,7 @@ const createCertification = async (event) => {
     // Check if an Certification already exists for the employee
     const existingCertification = await getCertificationByEmployee(requestBody.employeeId);
     if (existingCertification) {
-      throw new Error("A Certification Details already Employee ID.");
+      throw new Error("A Certification Details already exists for Employee ID.");
     }
 
     async function getCertificationByEmployee(employeeId) {
@@ -215,6 +215,13 @@ const uploadCertification = async (event) => {
   try {
     const certificationId = event.pathParameters.certificationId;
 
+    const response = {
+        statusCode: httpStatusCodes.SUCCESS,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      };
+
     if (!certificationId) {
       throw new Error("certificationId is required");
     }
@@ -240,7 +247,7 @@ const uploadCertification = async (event) => {
         throw error;
       }
     }
-    
+
     const { filename, data } = extractFile(event);
 
     // Modify filename to include certificationId
@@ -273,20 +280,26 @@ const uploadCertification = async (event) => {
     );
 
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        link: s3ObjectUrl,
-        message: "Certification Document updated successfully",
-      }),
-    };
-  } catch (err) {
-    console.log("error-----", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: err.message }),
-    };
-  }
-};
+        statusCode: 200,
+        body: JSON.stringify({
+          link: s3ObjectUrl,
+          message: "Certification Document updated successfully",
+        }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      };
+    } catch (err) {
+      console.log("error-----", err);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: err.message }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      };
+    }
+  };
 
 function extractFile(event) {
   const contentType = event.headers["Content-Type"];
