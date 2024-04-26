@@ -6,7 +6,7 @@ const { httpStatusCodes, httpStatusMessages } = require("../../environment/appco
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 const parseMultipart = require("parse-multipart");
-const BUCKET = "employee-certification-documents";
+const BUCKET = process.env.BUCKET;
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
 

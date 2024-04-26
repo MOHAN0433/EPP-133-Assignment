@@ -15,6 +15,7 @@ provider:
     PAYROLL_TABLE: ${self:custom.payrollTableName}
     EDUCATION_TABLE: ${self:custom.educationTableName}
     CERTIFICATION_TABLE: ${self:custom.certificationTableName}
+    BUCKET: dev-employees-certification-documents
   iamRoleStatements:
     - Effect: "Allow"
       Action:
