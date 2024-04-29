@@ -6,6 +6,7 @@ const { httpStatusCodes, httpStatusMessages } = require("../../environment/appco
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("YYYY-MM-DD HH:mm:ss"); // formatting date
 const parseMultipart = require("parse-multipart");
+const path = require('path');
 const BUCKET = process.env.BUCKET;
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
@@ -333,6 +334,11 @@ function extractFile(event) {
 
   if (!filename || !data) {
     throw new Error("Invalid or missing file name or data in the multipart request.");
+  }
+
+  const fileType = path.extname(filename).toLowerCase();
+  if (fileType !== '.pdf') {
+    throw new Error("Invalid file type. Only PDF files are allowed.");
   }
 
   // Check file size in binary format)
