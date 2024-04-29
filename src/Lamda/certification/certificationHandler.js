@@ -251,7 +251,7 @@ const uploadCertification = async (event) => {
     const { filename, data } = extractFile(event);
 
     // Modify filename to include certificationId
-    const modifiedFilename = `${certificationId}_${filename}`;
+    const modifiedFilename = `${certificationId}_${filename.replace(/\s/g, "_")}`;
 
     // Upload file to S3
     await s3
