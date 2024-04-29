@@ -254,15 +254,15 @@ const uploadCertification = async (event) => {
     const modifiedFilename = `${certificationId}_${filename.replace(/\s/g, "_")}`;
 
     // Check if an object with the same certificationId exists in the S3 bucket
-const listObjectsResponse = await s3.listObjectsV2({ Bucket: BUCKET }).promise();
-const objectsWithSameCertificationId = listObjectsResponse.Contents.filter(object => object.Key.startsWith(`${certificationId}_`));
+// const listObjectsResponse = await s3.listObjectsV2({ Bucket: BUCKET }).promise();
+// const objectsWithSameCertificationId = listObjectsResponse.Contents.filter(object => object.Key.startsWith(`${certificationId}_`));
 
 // If there are objects with the same certificationId, delete them
-if (objectsWithSameCertificationId.length > 0) {
-  await Promise.all(objectsWithSameCertificationId.map(object => {
-    return s3.deleteObject({ Bucket: BUCKET, Key: object.Key }).promise();
-  }));
-}
+// if (objectsWithSameCertificationId.length > 0) {
+//   await Promise.all(objectsWithSameCertificationId.map(object => {
+//     return s3.deleteObject({ Bucket: BUCKET, Key: object.Key }).promise();
+//   }));
+// }
 
     // Upload file to S3
     await s3
