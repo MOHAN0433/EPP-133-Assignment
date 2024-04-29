@@ -181,8 +181,8 @@ functions:
   certificationUpload:
     handler: src/Lamda/certification/certificationHandler.uploadCertification
     name: certificationUpload
-    memorySize: 512
-    timeout: 600
+    memorySize: 256
+    timeout: 240
     events:
       - http:
           path: certification/{certificationId}
