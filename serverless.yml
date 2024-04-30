@@ -164,7 +164,7 @@ functions:
     handler: src/Lamda/education/educationHandler.uploadEducation
     name: educationUpload
     memorySize: 128
-    timeout: 120
+    timeout: 600
     events:
       - http:
           path: education/{educationId}
@@ -182,7 +182,7 @@ functions:
     handler: src/Lamda/certification/certificationHandler.uploadCertification
     name: certificationUpload
     memorySize: 256
-    timeout: 240
+    timeout: 600
     events:
       - http:
           path: certification/{certificationId}

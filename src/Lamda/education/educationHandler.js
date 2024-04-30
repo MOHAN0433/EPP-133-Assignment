@@ -237,18 +237,11 @@ const uploadEducation = async (event) => {
       }),
     };
   } catch (err) {
-    if (err.statusCode === 413) {
-      return {
-        statusCode: 400, // or appropriate status code
-        body: JSON.stringify({ message: "The file is too large than expected." }),
-      };
-    } else {
-      console.log('error-----', err);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ message: err.message }),
-      };
-    }
+    console.log('error-----', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: err.message }),
+    };
   }
 };
 
