@@ -200,7 +200,7 @@ functions:
           request:
             parameters:
               querystrings:
-                educationId: true
+                employeeId: true
 
 resources:
   Resources:
