@@ -96,55 +96,54 @@ if (requestBody.graduationPassingYear > currentYear) {
       }
 
     // Check if an education already exists for the employee
-    const existingEducation = await getEducationByEmployee(
-      requestBody.employeeId
-    );
-    if (existingEducation) {
-      throw new Error("A Education Details already Employee ID.");
+    const existingEducation = await getEducationByEmployee(requestBody.employeeId);
+if (existingEducation.length > 0) {
+  const matchingEducation = existingEducation.find(edu => edu.graduationYear === requestBody.graduationYear);
+  if (matchingEducation) {
+    throw new Error(`Education details for employee ID ${requestBody.employeeId} and graduation year ${requestBody.graduationYear} already exist.`);
   }
+}
 
-    async function getEducationByEmployee(employeeId) {
-      const params = {
-        TableName: process.env.EDUCATION_TABLE,
-        FilterExpression: "employeeId = :employeeId",
-        ExpressionAttributeValues: {
-          ":employeeId": { S: employeeId },
-        },
-      };
+async function getEducationByEmployee(employeeId) {
+  const params = {
+    TableName: process.env.EDUCATION_TABLE,
+    FilterExpression: "employeeId = :employeeId",
+    ExpressionAttributeValues: {
+      ":employeeId": { S: employeeId },
+    },
+  };
 
-      try {
-        const result = await client.send(new ScanCommand(params));
-        return result.Items.length > 0;
-      } catch (error) {
-        console.error("Error retrieving payroll by employeeId:", error);
-        throw error;
-      }
-    }
+  try {
+    const result = await client.send(new ScanCommand(params));
+    return result.Items.map(item => ({
+      employeeId: item.employeeId.S,
+      graduationYear: item.graduationYear.N, // Assuming graduationYear is stored as a Number attribute
+      // Add other attributes as needed
+    }));
+  } catch (error) {
+    console.error("Error retrieving Education by employeeId:", error);
+    throw error;
+  }
+}   
+
 
     const checkEmployeeExistence = async (employeeId) => {
       const params = {
         TableName: process.env.EMPLOYEE_TABLE,
-        Key: {
-          employeeId: { N: employeeId },
-        },
+        Key: { employeeId: { N: employeeId } },
       };
-    
+
       try {
         const result = await client.send(new GetItemCommand(params));
-        if (result.Item) {
-          const existingGraduationPassingYear = result.Item.graduationPassingYear;
-          if (existingGraduationPassingYear && existingGraduationPassingYear.N) {
-            throw new Error("Graduation passing year already exists for this employee.");
-          }
+        if (!result.Item) {
+          throw new Error("Employee not found.");
         }
       } catch (error) {
         console.error("Error checking employee existence:", error);
         throw error;
       }
     };
-    
-    const { employeeId } = requestBody;
-    await checkEmployeeExistence(employeeId);       
+    await checkEmployeeExistence(requestBody.employeeId);
 
     const params = {
       TableName: process.env.EDUCATION_TABLE,
