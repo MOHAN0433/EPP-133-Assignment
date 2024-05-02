@@ -187,6 +187,20 @@ functions:
       - http:
           path: certification/{certificationId}
           method: PUT
+  educationGet:
+    handler: src/Lamda/education/educationHandler.geteducationDetailsByEmployeeId
+    name: educationsGet
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: educations/get
+          method: GET
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                educationId: true
 
 resources:
   Resources:

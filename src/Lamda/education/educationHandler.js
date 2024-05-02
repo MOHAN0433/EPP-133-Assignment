@@ -289,7 +289,53 @@ function extractFile(event) {
   };
 }
 
+const geteducationDetailsByEmployeeId = async (event) => {
+  console.log("Fetching education details by employee ID");
+  const { employeeId } = event.queryStringParameters;
+
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
+  try {
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      FilterExpression: 'employeeId = :employeeId',
+      ExpressionAttributeValues: {
+        ':employeeId': { S: employeeId }
+      }
+    };
+    const command = new ScanCommand(params);
+    const { Items } = await client.send(command);
+
+    if (!Items || Items.length === 0) {
+      console.log("education Details for employee not found.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.EDUCATION_NOT_FOUND_FOR_EMPLOYEE,
+      });
+    } else {
+      console.log("Successfully retrieved education details for employee.");
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EDUCATION_FOR_EMPLOYEE,
+        data: Items.map(item => unmarshall(item))
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EDUCATION,
+      error: error.message
+    });
+  }
+  return response;
+};
+
 module.exports = {
   createEducation,
-  uploadEducation
+  uploadEducation,
+  geteducationDetailsByEmployeeId
 };
