@@ -97,34 +97,37 @@ if (requestBody.graduationPassingYear > currentYear) {
 
     // Check if an education already exists for the employee
     const existingEducation = await getEducationByEmployee(requestBody.employeeId);
-if (existingEducation.length > 0) {
-  const matchingEducation = existingEducation.find(edu => edu.graduationYear === requestBody.graduationYear);
-  if (matchingEducation) {
-    throw new Error(`Education details for employee ID ${requestBody.employeeId} and graduation year ${requestBody.graduationYear} already exist.`);
-  }
-}
-
-async function getEducationByEmployee(employeeId) {
-  const params = {
-    TableName: process.env.EDUCATION_TABLE,
-    FilterExpression: "employeeId = :employeeId",
-    ExpressionAttributeValues: {
-      ":employeeId": { S: employeeId },
-    },
-  };
-
-  try {
-    const result = await client.send(new ScanCommand(params));
-    return result.Items.map(item => ({
-      employeeId: item.employeeId.S,
-      graduationYear: item.graduationYear.N, // Assuming graduationYear is stored as a Number attribute
-      // Add other attributes as needed
-    }));
-  } catch (error) {
-    console.error("Error retrieving Education by employeeId:", error);
-    throw error;
-  }
-}   
+    if (existingEducation.length > 0) {
+      const matchingEducation = existingEducation.find(edu => edu.graduationPassingYear === requestBody.graduationPassingYear);
+      if (matchingEducation) {
+        throw new Error(`Education details for employee ID ${requestBody.employeeId} and graduation year ${requestBody.graduationPassingYear} already exist.`);
+      }
+    }
+    
+    async function getEducationByEmployee(employeeId) {
+      const params = {
+        TableName: process.env.EDUCATION_TABLE,
+        FilterExpression: "employeeId = :employeeId",
+        ExpressionAttributeValues: {
+          ":employeeId": { S: employeeId },
+        },
+      };
+    
+      try {
+        const result = await client.send(new ScanCommand(params));
+        return result.Items.map(item => {
+          const graduationPassingYear = item.graduationPassingYear ? parseInt(item.graduationPassingYear.N) : null;
+          return {
+            employeeId: item.employeeId.S,
+            graduationPassingYear: graduationPassingYear,
+            // Add other attributes as needed
+          };
+        });
+      } catch (error) {
+        console.error("Error retrieving Education by employeeId:", error);
+        throw error;
+      }
+    }     
 
 
     const checkEmployeeExistence = async (employeeId) => {
