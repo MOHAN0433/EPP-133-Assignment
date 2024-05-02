@@ -124,20 +124,27 @@ if (requestBody.graduationPassingYear > currentYear) {
     const checkEmployeeExistence = async (employeeId) => {
       const params = {
         TableName: process.env.EMPLOYEE_TABLE,
-        Key: { employeeId: { N: employeeId } },
+        Key: {
+          employeeId: { N: employeeId },
+        },
       };
-
+    
       try {
         const result = await client.send(new GetItemCommand(params));
-        if (!result.Item) {
-          throw new Error("Employee not found.");
+        if (result.Item) {
+          const existingGraduationPassingYear = result.Item.graduationPassingYear;
+          if (existingGraduationPassingYear && existingGraduationPassingYear.N) {
+            throw new Error("Graduation passing year already exists for this employee.");
+          }
         }
       } catch (error) {
         console.error("Error checking employee existence:", error);
         throw error;
       }
     };
-    await checkEmployeeExistence(requestBody.employeeId);
+    
+    const { employeeId } = requestBody;
+    await checkEmployeeExistence(employeeId);       
 
     const params = {
       TableName: process.env.EDUCATION_TABLE,
