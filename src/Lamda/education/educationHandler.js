@@ -321,6 +321,7 @@ const geteducationDetailsByEmployeeId = async (event) => {
       });
     } else {
       console.log("Successfully retrieved Employee details.");
+    }
 
     const params = {
       TableName: process.env.EDUCATION_TABLE,
