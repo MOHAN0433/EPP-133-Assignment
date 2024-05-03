@@ -320,23 +320,26 @@ const createAssignment = async (event) => {
     }
 
     const checkEmployeeExistence = async (employeeId) => {
+      // Convert employeeId to number
+      const employeeIdNumber = parseInt(employeeId);
+  
       const params = {
-        TableName: process.env.EMPLOYEE_TABLE,
-        Key: marshall({
-          employeeId: employeeId,
-        }),
+          TableName: process.env.EMPLOYEE_TABLE,
+          Key: marshall({
+              employeeId: employeeIdNumber,
+          }),
       };
-
+  
       try {
-        const result = await client.send(new GetItemCommand(params));
-        if (!result.Item) {
-          throw new Error("Employee not found.");
-        }
+          const result = await client.send(new GetItemCommand(params));
+          if (!result.Item) {
+              throw new Error("Employee not found.");
+          }
       } catch (error) {
-        console.error("Error checking employee existence:", error);
-        throw error;
+          console.error("Error checking employee existence:", error);
+          throw error;
       }
-    };
+  };
     await checkEmployeeExistence(requestBody.employeeId);
 
     const params = {
