@@ -308,11 +308,11 @@ const geteducationDetailsByEmployeeId = async (event) => {
     },
   };
   try {
-    const params = {
+    const params1 = {
       TableName: process.env.EMPLOYEE_TABLE,
       Key: { employeeId: { N: employeeId } },
     };
-    const { Item } = await client.send(new GetItemCommand(params));
+    const { Item } = await client.send(new GetItemCommand(params1));
     if (!Item) {
       console.log("Employee details not found.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
