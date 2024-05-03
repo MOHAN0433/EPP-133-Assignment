@@ -309,6 +309,20 @@ const geteducationDetailsByEmployeeId = async (event) => {
   };
   try {
     const params = {
+      TableName: process.env.EMPLOYEE_TABLE,
+      Key: { employeeId: { N: employeeId } },
+    };
+    const { Item } = await client.send(new GetItemCommand(params));
+    if (!Item) {
+      console.log("Employee details not found.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.EMPLOYEE_DETAILS_NOT_FOUND,
+      });
+    } else {
+      console.log("Successfully retrieved Employee details.");
+
+    const params = {
       TableName: process.env.EDUCATION_TABLE,
       FilterExpression: 'employeeId = :employeeId',
       ExpressionAttributeValues: {
