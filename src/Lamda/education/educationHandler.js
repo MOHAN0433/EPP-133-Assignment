@@ -357,8 +357,45 @@ const geteducationDetailsByEmployeeId = async (event) => {
   return response;
 };
 
+const geteducationDetailByEducationId = async (event) => {
+  console.log("Fetching education details by education ID");
+  const { educationId } = event.queryStringParameters;
+
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
+  try {
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Key: { educationId: { N: educationId } },
+    };
+    const { Item } = await client.send(new GetItemCommand(params));
+    if (!Item) {
+      console.log("Education details not found.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: httpStatusMessages.EDUCATION_DETAILS_NOT_FOUND,
+      });
+    } else {
+      console.log("Successfully retrieved Education details.");
+    }
+  } catch (error) {
+    console.error(error);
+    response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_RETRIEVE_EDUCATION,
+      error: error.message
+    });
+  }
+  return response;
+};
+
 module.exports = {
   createEducation,
   uploadEducation,
-  geteducationDetailsByEmployeeId
+  geteducationDetailsByEmployeeId,
+  geteducationDetailByEducationId
 };

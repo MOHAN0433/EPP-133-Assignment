@@ -37,7 +37,8 @@ const httpStatusCodes = {
     FAILED_TO_CREATE_CERTIFICATION_DETAILS : "Failed to create certification details.",
     EDUCATION_NOT_FOUND_FOR_EMPLOYEE : "Education Details not found for employee.",
     SUCCESSFULLY_RETRIEVED_EDUCATION_FOR_EMPLOYEE : "Successfully retrieved education details.",
-    FAILED_TO_RETRIEVE_EDUCATION : "Failed to Retriev education details."
+    FAILED_TO_RETRIEVE_EDUCATION : "Failed to Retriev education details.",
+    EDUCATION_DETAILS_NOT_FOUND : "Education details not found."
     
 
 

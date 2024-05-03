@@ -201,6 +201,20 @@ functions:
             parameters:
               querystrings:
                 employeeId: true
+  educationGetById:
+    handler: src/Lamda/education/educationHandler.geteducationDetailByEducationId
+    name: educationGetById
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: education
+          method: GET
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                educationId: true
 
 resources:
   Resources:
