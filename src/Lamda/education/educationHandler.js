@@ -120,7 +120,6 @@ if (requestBody.graduationPassingYear > currentYear) {
           return {
             employeeId: item.employeeId.S,
             graduationPassingYear: graduationPassingYear,
-            // Add other attributes as needed
           };
         });
       } catch (error) {

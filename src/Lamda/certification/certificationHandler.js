@@ -139,28 +139,28 @@ const createCertification = async (event) => {
     }
 
     // Check if an Certification already exists for the employee
-    const existingCertification = await getCertificationByEmployee(requestBody.employeeId);
-    if (existingCertification) {
-      throw new Error("A Certification Details already exists for Employee ID.");
-    }
+    // const existingCertification = await getCertificationByEmployee(requestBody.employeeId);
+    // if (existingCertification) {
+    //   throw new Error("A Certification Details already exists for Employee ID.");
+    // }
 
-    async function getCertificationByEmployee(employeeId) {
-      const params = {
-        TableName: process.env.CERTIFICATION_TABLE,
-        FilterExpression: "employeeId = :employeeId",
-        ExpressionAttributeValues: {
-          ":employeeId": { S: employeeId },
-        },
-      };
+    // async function getCertificationByEmployee(employeeId) {
+    //   const params = {
+    //     TableName: process.env.CERTIFICATION_TABLE,
+    //     FilterExpression: "employeeId = :employeeId",
+    //     ExpressionAttributeValues: {
+    //       ":employeeId": { S: employeeId },
+    //     },
+    //   };
 
-      try {
-        const result = await client.send(new ScanCommand(params));
-        return result.Items.length > 0;
-      } catch (error) {
-        console.error("Error retrieving cerification by employeeId:", error);
-        throw error;
-      }
-    }
+    //   try {
+    //     const result = await client.send(new ScanCommand(params));
+    //     return result.Items.length > 0;
+    //   } catch (error) {
+    //     console.error("Error retrieving cerification by employeeId:", error);
+    //     throw error;
+    //   }
+    // }
 
     const checkCerticationExistence = async (employeeId) => {
       const params = {
