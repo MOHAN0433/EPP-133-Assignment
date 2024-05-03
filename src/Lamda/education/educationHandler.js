@@ -370,18 +370,29 @@ const geteducationDetailByEducationId = async (event) => {
   try {
     const params = {
       TableName: process.env.EDUCATION_TABLE,
-      Key: { educationId: { N: educationId } },
+      FilterExpression: 'educationId = :educationId',
+      ExpressionAttributeValues: {
+        ':educationId': { N: educationId.toString() }
+      }
     };
-    const { Item } = await client.send(new GetItemCommand(params));
-    if (!Item) {
+    
+    const command = new ScanCommand(params);
+    const { Items } = await client.send(command);
+    
+    if (!Items || Items.length === 0) {
       console.log("Education details not found.");
       response.statusCode = httpStatusCodes.NOT_FOUND;
       response.body = JSON.stringify({
         message: httpStatusMessages.EDUCATION_DETAILS_NOT_FOUND,
       });
     } else {
-      console.log("Successfully retrieved Education details.");
+      console.log("Successfully retrieved education details.");
+      response.body = JSON.stringify({
+        message: httpStatusMessages.SUCCESSFULLY_RETRIEVED_EDUCATION_DETAILS,
+        data: Items.map(item => unmarshall(item))
+      });
     }
+    
   } catch (error) {
     console.error(error);
     response.statusCode = httpStatusCodes.INTERNAL_SERVER_ERROR;
