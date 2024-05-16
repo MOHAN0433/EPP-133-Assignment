@@ -16,6 +16,10 @@ provider:
     EDUCATION_TABLE: ${self:custom.educationTableName}
     CERTIFICATION_TABLE: ${self:custom.certificationTableName}
     BUCKET: employee-certification-documents
+    SENDGRID_API_KEY: "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"
+    API_Key_ID: "j-Cqgw36SP6L2W5HfIM-vA"
+    TEMPLATE_ID: "d-a8a35d647ac547acb9bdd28a3fe83f2a"
+    SENDER_MAIL_ID: "ravi@hyniva.com"
   iamRoleStatements:
     - Effect: "Allow"
       Action:

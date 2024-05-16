@@ -10,6 +10,7 @@ const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
 const moment = require("moment");
 const client = new DynamoDBClient();
 const {QueryCommand } = require("@aws-sdk/client-dynamodb");
+const sgMail = require('@sendgrid/mail');
 // const {
 //   validateEmployeeDetails,
 //   validateUpdateEmployeeDetails,
@@ -69,6 +70,11 @@ const createEmployee = async (event) => {
       }),
     };
     const createResult = await client.send(new PutItemCommand(params));
+
+    console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
+    console.log("Sender Email ID:", process.env.SENDER_MAIL_ID);
+    console.log("Template ID:", process.env.TEMPLATE_ID)
+    await sendEmailNotificationToOnbordingCustomer(requestBody);
 
     const requiredAssignmentFields = [
       "designation",
@@ -140,6 +146,33 @@ const createEmployee = async (event) => {
     });
   }
   return response;
+};
+
+const sendEmailNotificationToOnbordingCustomer = async (employee) => {
+  console.log("inside the notification method");
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const resetPasswordLink = `https://dev.d3k5lezo15oi2f.amplifyapp.com/resetPassword`;
+  console.log("reset ped link", resetPasswordLink);
+  console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
+  const msg = {
+    to: employee.officialEmailId,
+    from: process.env.SENDER_MAIL_ID, // Your verified SendGrid sender email
+    templateId: process.env.TEMPLATE_ID, // Your SendGrid dynamic template ID
+    dynamic_template_data: {
+      Employee_Name: `${employee.firstName} ${employee.lastName}`,
+      Email: employee.officialEmailId,
+      Employee_Portal_Access_Link: resetPasswordLink,
+    },
+  };
+  console.log("all the values assigned message", msg);
+ 
+  try {
+    console.log("inside the try block of send email method");
+    await sgMail.send(msg);
+    console.log(`Email sent to ${employee.officeEmailAddress}`);
+  } catch (error) {
+    console.error(`Failed to send email: ${error.message}`);
+  }
 };
 
 
@@ -450,7 +483,7 @@ const pagination = (allItems, pageNo, pageSize) => {
 const isEmployeeIdExists = async (employeeId) => {
   const params = {
     TableName: process.env.EMPLOYEE_TABLE,
-    Key: { employeeId: { S: employeeId } },
+    Key: { employeeId: { N: employeeId } },
   };
   const { Item } = await client.send(new GetItemCommand(params));
   // If Item is not null, employeeId exists
@@ -479,7 +512,7 @@ const isEmailNotEmployeeIdExists = async (emailAddress, employeeId) => {
     FilterExpression: "officeEmailAddress = :email AND employeeId <> :id",
     ExpressionAttributeValues: {
       ":email": { S: emailAddress },
-      ":id": { S: employeeId }, // Assuming employeeId is a string, adjust if needed
+      ":id": { N: employeeId }, // Assuming employeeId is a string, adjust if needed
     },
     ProjectionExpression: "officeEmailAddress",
   };
