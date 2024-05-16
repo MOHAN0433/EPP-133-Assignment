@@ -43,6 +43,11 @@ const createEmployee = async (event) => {
       throw new Error("Email address already exists.");
     }
 
+    console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
+    console.log("Sender Email ID:", process.env.SENDER_MAIL_ID);
+    console.log("Template ID:", process.env.TEMPLATE_ID)
+    await sendEmailNotificationToOnbordingCustomer(requestBody);
+
     // Fetch the highest highestSerialNumber from the DynamoDB table
     const highestSerialNumber = await getHighestSerialNumber();
     console.log("Highest Serial Number:", highestSerialNumber);
@@ -70,11 +75,6 @@ const createEmployee = async (event) => {
       }),
     };
     const createResult = await client.send(new PutItemCommand(params));
-
-    console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
-    console.log("Sender Email ID:", process.env.SENDER_MAIL_ID);
-    console.log("Template ID:", process.env.TEMPLATE_ID)
-    await sendEmailNotificationToOnbordingCustomer(requestBody);
 
     const requiredAssignmentFields = [
       "designation",
@@ -155,12 +155,12 @@ const sendEmailNotificationToOnbordingCustomer = async (employee) => {
   console.log("reset ped link", resetPasswordLink);
   console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
   const msg = {
-    to: employee.officialEmailId,
+    to: employee.officeEmailAddress,
     from: process.env.SENDER_MAIL_ID, // Your verified SendGrid sender email
     templateId: process.env.TEMPLATE_ID, // Your SendGrid dynamic template ID
     dynamic_template_data: {
       Employee_Name: `${employee.firstName} ${employee.lastName}`,
-      Email: employee.officialEmailId,
+      Email: employee.officeEmailAddress,
       Employee_Portal_Access_Link: resetPasswordLink,
     },
   };
