@@ -52,6 +52,10 @@ const createEmployee = async (event) => {
       process.env.EMPLOYEE_TABLE,
       "employeeId"
     );
+    const newAssignmentId = await autoIncreamentId(
+      process.env.ASSIGNMENTS_TABLE,
+      "assignmentId"
+    );
 
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
@@ -63,7 +67,7 @@ const createEmployee = async (event) => {
         dateOfBirth: requestBody.dateOfBirth,
         officeEmailAddress: requestBody.officeEmailAddress,
         // Add other employee details here...
-        assignmentId: nextAssignmentId // Set the assignmentId here
+        assignmentId: newAssignmentId // Set the assignmentId here
       }),
     };
     const createResult = await client.send(new PutItemCommand(params));
@@ -99,10 +103,7 @@ const createEmployee = async (event) => {
       throw new Error("Incorrect Designation!");
     }
 
-    const newAssignmentId = await autoIncreamentId(
-      process.env.ASSIGNMENTS_TABLE,
-      "assignmentId"
-    );
+    
 
     const assignmentParams = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
