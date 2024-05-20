@@ -48,28 +48,15 @@ const createEmployee = async (event) => {
     console.log("Template ID:", process.env.TEMPLATE_ID)
     await sendEmailNotificationToOnbordingCustomer(requestBody);
 
-    // Fetch the highest highestSerialNumber from the DynamoDB table
-    const highestSerialNumber = await getHighestSerialNumber();
-    console.log("Highest Serial Number:", highestSerialNumber);
-    const nextSerialNumber = highestSerialNumber !== null ? parseInt(highestSerialNumber) + 1 : 1;
-
-    // Fetch the highest assignmentId from the DynamoDB table
-    const highestAssignmentId = await getHighestAssignmentId();
-    console.log("Highest Assignment ID:", highestAssignmentId);
-    const nextAssignmentId = highestAssignmentId !== null ? parseInt(highestAssignmentId) + 1 : 1;
-
-    const highestAttendanceId = await getHighestAttendanceId();
-    console.log("Highest Attendance ID:", highestAttendanceId);
-    const nextAttendanceId = highestAssignmentId !== null ? parseInt(highestAttendanceId) + 1 : 1;
-
-
-    // Update the params object with the assignmentId
-    requestBody.assignmentId = nextAssignmentId;
+    const newEmployeeId = await autoIncreamentId(
+      process.env.EMPLOYEE_TABLE,
+      "employeeId"
+    );
 
     const params = {
       TableName: process.env.EMPLOYEE_TABLE,
       Item: marshall({
-        serialNumber: nextSerialNumber,
+        serialNumber: newEmployeeId,
         employeeId: requestBody.employeeId,
         firstName: requestBody.firstName,
         lastName: requestBody.lastName,
@@ -112,15 +99,15 @@ const createEmployee = async (event) => {
       throw new Error("Incorrect Designation!");
     }
 
-    const highestSerialNumber1 = await getHighestSerialNumber();
-    console.log("Highest Serial Number:", highestSerialNumber1);
-    const nextSerialNumber1 =
-      highestSerialNumber1 !== null ? parseInt(highestSerialNumber1) + 1 : 1;
+    const newAssignmentId = await autoIncreamentId(
+      process.env.ASSIGNMENTS_TABLE,
+      "assignmentId"
+    );
 
     const assignmentParams = {
       TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
-        assignmentId: nextAssignmentId,
+        assignmentId: newAssignmentId,
         employeeId: requestBody.employeeId,
         branchOffice: requestBody.branchOffice,
         designation: requestBody.designation,
@@ -136,10 +123,14 @@ const createEmployee = async (event) => {
 
     const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
 
+    const newAttendanceId = await autoIncreamentId(
+      process.env.ATTENDANCE_TABLE,
+      "assignmentId"
+    );
     const AttendanceParams = {
       TableName: process.env.ATTENDANCE_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
-        attendanceId: nextAttendanceId,
+        attendanceId: newAttendanceId,
         employeeId: requestBody.employeeId,
         // branchOffice: requestBody.branchOffice,
         // designation: requestBody.designation,
@@ -576,6 +567,63 @@ async function getHighestSerialNumber() {
     throw error; // Propagate the error up the call stack
   }
 }
+
+const autoIncreamentId = async (table, id) => {
+  const params = {
+    TableName: table,
+    ProjectionExpression: id,
+    Limit: 1000,
+    ScanIndexForward: false,
+  };
+
+  try {
+    const result = await client.send(new ScanCommand(params));
+    console.log("Method autoIncreamentId DynamoDB Result ", id, " : ", result.Items.length);
+    if (!result.Items || result.Items.length === 0) {
+      return 1;
+    } else {
+      let incrementIdObj;
+      let increamentId;
+      if ("employeeId" === id) {
+        console.log("Create employeeId");
+        const sortedItems = result.Items.filter((item) => item.employeeId && !isNaN(item.employeeId.N));
+        if (sortedItems.length > 0) {
+          sortedItems.sort((a, b) => parseInt(b.employeeId.N) - parseInt(a.employeeId.N));
+          incrementIdObj = sortedItems[0];
+          increamentId = parseInt(incrementIdObj.employeeId.N);
+        } else {
+          increamentId = 0;
+        }
+      } else if ("assignmentId" === id) {
+        console.log("Create assignmentId");
+        const sortedItems = result.Items.filter((item) => item.assignmentId && !isNaN(item.assignmentId.N));
+        if (sortedItems.length > 0) {
+          sortedItems.sort((a, b) => parseInt(b.assignmentId.N) - parseInt(a.assignmentId.N));
+          incrementIdObj = sortedItems[0];
+          increamentId = parseInt(incrementIdObj.assignmentId.N);
+        } else {
+          increamentId = 0;
+        }
+      }else if ("AttendanceId" === id) {
+        console.log("Create AttendanceId");
+        const sortedItems = result.Items.filter((item) => item.attendanceId && !isNaN(item.attendanceId.N));
+        if (sortedItems.length > 0) {
+          sortedItems.sort((a, b) => parseInt(b.attendanceId.N) - parseInt(a.attendanceId.N));
+          incrementIdObj = sortedItems[0];
+          increamentId = parseInt(incrementIdObj.attendanceId.N);
+        } else {
+          increamentId = 0;
+        }
+      }
+      const nextSerialNumber = increamentId !== null ? parseInt(increamentId) + 1 : 1;
+      console.log("New Increament Id", nextSerialNumber);
+      return nextSerialNumber;
+    }
+  } catch (error) {
+    console.error("Error create new Increament id:", error);
+    throw error;
+  }
+};
 
 module.exports = {
   createEmployee,
