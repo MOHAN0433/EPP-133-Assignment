@@ -15,7 +15,7 @@ provider:
     PAYROLL_TABLE: ${self:custom.payrollTableName}
     EDUCATION_TABLE: ${self:custom.educationTableName}
     CERTIFICATION_TABLE: ${self:custom.certificationTableName}
-    EMPLOYEE_ATTENDANCE: ${self:custom.employeeAttendanceTableName}
+    EMPLOYEE_ATTENDANCE: employee_attendance
     BUCKET: employee-certification-documents
     SENDGRID_API_KEY: "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"
     API_Key_ID: "j-Cqgw36SP6L2W5HfIM-vA"
@@ -39,7 +39,7 @@ provider:
         - !GetAtt payrollTable.Arn
         - !GetAtt educationTable.Arn
         - !GetAtt certificationTable.Arn
-        - !GetAtt employeeAttendanceTableName.Arn
+        - arn:aws:dynamodb:us-east-1:722017363230:table/employee_attendance
         - "arn:aws:s3:::education0433123/*"  # S3 bucket name
         - "arn:aws:s3:::employee-certification-documents/*"
 custom:
