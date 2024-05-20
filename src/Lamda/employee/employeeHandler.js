@@ -32,21 +32,16 @@ const createEmployee = async (event) => {
     const requestBody = JSON.parse(event.body);
 
     // Check if the employeeId already exists
-    const employeeIdExists = await isEmployeeIdExists(requestBody.employeeId);
-    if (employeeIdExists) {
-      throw new Error("EmployeeId already exists.");
-    }
+    // const employeeIdExists = await isEmployeeIdExists(requestBody.employeeId);
+    // if (employeeIdExists) {
+    //   throw new Error("EmployeeId already exists.");
+    // }
 
-    // Check if the email address already exists
-    const emailExists = await isEmailExists(requestBody.officeEmailAddress);
-    if (emailExists) {
-      throw new Error("Email address already exists.");
-    }
-
-    console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
-    console.log("Sender Email ID:", process.env.SENDER_MAIL_ID);
-    console.log("Template ID:", process.env.TEMPLATE_ID)
-    await sendEmailNotificationToOnbordingCustomer(requestBody);
+    // // Check if the email address already exists
+    // const emailExists = await isEmailExists(requestBody.officeEmailAddress);
+    // if (emailExists) {
+    //   throw new Error("Email address already exists.");
+    // }
 
     const newEmployeeId = await autoIncreamentId(
       process.env.EMPLOYEE_TABLE,
@@ -105,24 +100,24 @@ const createEmployee = async (event) => {
 
     
 
-    const assignmentParams = {
-      TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
-      Item: marshall({
-        assignmentId: newAssignmentId,
-        employeeId: requestBody.employeeId,
-        branchOffice: requestBody.branchOffice,
-        designation: requestBody.designation,
-        onsite: onsite,
-        department: requestBody.department || null,
-        framework: requestBody.framework || null,
-        coreTechnology: requestBody.coreTechnology || null,
-        reportingManager: requestBody.reportingManager || null,
-        billableResource: requestBody.billableResource || null,
-        createdDateTime: formattedDate,
-      }),
-    };
+    // const assignmentParams = {
+    //   TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
+    //   Item: marshall({
+    //     assignmentId: newAssignmentId,
+    //     employeeId: requestBody.employeeId,
+    //     branchOffice: requestBody.branchOffice,
+    //     designation: requestBody.designation,
+    //     onsite: onsite,
+    //     department: requestBody.department || null,
+    //     framework: requestBody.framework || null,
+    //     coreTechnology: requestBody.coreTechnology || null,
+    //     reportingManager: requestBody.reportingManager || null,
+    //     billableResource: requestBody.billableResource || null,
+    //     createdDateTime: formattedDate,
+    //   }),
+    // };
 
-    const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
+    // const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
 
     const newAttendanceId = await autoIncreamentId(
       process.env.ATTENDANCE_TABLE,
