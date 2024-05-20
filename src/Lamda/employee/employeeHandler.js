@@ -36,25 +36,25 @@ const createEmployee = async (event) => {
   try {
     const requestBody = JSON.parse(event.body);
 
-    const validationResponse = validateEmployeeDetails(requestBody);
-    console.log(
-      `valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `
-    );
+    // const validationResponse = validateEmployeeDetails(requestBody);
+    // console.log(
+    //   `valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `
+    // );
 
-    if (!validationResponse.validation) {
-      console.log(validationResponse.validationMessage);
-      response.statusCode = 400;
-      response.body = JSON.stringify({
-        ErrorMessage: validationResponse.validationMessage,
-      });
-      return response;
-    }
+    // if (!validationResponse.validation) {
+    //   console.log(validationResponse.validationMessage);
+    //   response.statusCode = 400;
+    //   response.body = JSON.stringify({
+    //     ErrorMessage: validationResponse.validationMessage,
+    //   });
+    //   return response;
+    // }
 
-    const emailExists = await isEmailExists(requestBody.officialEmailId);
-    if (emailExists) {
-      console.log("Email address already exists.");
-      throw new Error("Email address already exists.");
-    }
+    // const emailExists = await isEmailExists(requestBody.officialEmailId);
+    // if (emailExists) {
+    //   console.log("Email address already exists.");
+    //   throw new Error("Email address already exists.");
+    // }
     const newEmployeeId = await autoIncreamentId(
       process.env.EMPLOYEE_TABLE,
       "employeeId"
