@@ -136,7 +136,7 @@ const createEmployee = async (event) => {
       "attendanceId"
     );
     const AttendanceParams = {
-      TableName: process.env.ATTENDANCE_TABLE, // Use ASSIGNMENTS_TABLE environment variable
+      TableName: process.env.EMPLOYEE_ATTENDANCE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
         attendanceId: newAttendanceId,
         employeeId: requestBody.employeeId,
