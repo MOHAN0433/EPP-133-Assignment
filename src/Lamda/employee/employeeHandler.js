@@ -148,8 +148,8 @@ const createEmployee = async (event) => {
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
       data: {
-        employeeId: newEmployeeId,
-        assignmentId: newAssignmentId,
+        attendanceId: attendanceId,
+        //assignmentId: newAssignmentId,
       },
     });
   } catch (e) {
@@ -576,8 +576,8 @@ const autoIncreamentId = async (table, id) => {
         } else {
           increamentId = 0;
         }
-      }else if ("AttendanceId" === id) {
-        console.log("Create AttendanceId");
+      }else if ("attendanceId" === id) {
+        console.log("Create attendanceId");
         const sortedItems = result.Items.filter((item) => item.attendanceId && !isNaN(item.attendanceId.N));
         if (sortedItems.length > 0) {
           sortedItems.sort((a, b) => parseInt(b.attendanceId.N) - parseInt(a.attendanceId.N));
