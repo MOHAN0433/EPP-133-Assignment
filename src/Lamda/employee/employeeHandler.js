@@ -121,7 +121,7 @@ const createEmployee = async (event) => {
 
     const newAttendanceId = await autoIncreamentId(
       process.env.ATTENDANCE_TABLE,
-      "assignmentId"
+      "attendanceId"
     );
     const AttendanceParams = {
       TableName: process.env.ATTENDANCE_TABLE, // Use ASSIGNMENTS_TABLE environment variable
