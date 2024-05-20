@@ -42,6 +42,7 @@ provider:
         - arn:aws:dynamodb:us-east-1:722017363230:table/employee_attendance
         - "arn:aws:s3:::education0433123/*"  # S3 bucket name
         - "arn:aws:s3:::employee-certification-documents/*"
+        - arn:aws:dynamodb:us-east-1:533267426082:table/employee_attendance
 custom:
   employeeTableName: employee-Details-${self:provider.stage}
   assignmentTableName: assignment-Details-${self:provider.stage}
