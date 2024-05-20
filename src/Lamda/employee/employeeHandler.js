@@ -58,6 +58,11 @@ const createEmployee = async (event) => {
     console.log("Highest Assignment ID:", highestAssignmentId);
     const nextAssignmentId = highestAssignmentId !== null ? parseInt(highestAssignmentId) + 1 : 1;
 
+    const highestAttendanceId = await getHighestAttendanceId();
+    console.log("Highest Attendance ID:", highestAttendanceId);
+    const nextAttendanceId = highestAssignmentId !== null ? parseInt(highestAttendanceId) + 1 : 1;
+
+
     // Update the params object with the assignmentId
     requestBody.assignmentId = nextAssignmentId;
 
@@ -131,6 +136,25 @@ const createEmployee = async (event) => {
 
     const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
 
+    const AttendanceParams = {
+      TableName: process.env.ATTENDANCE_TABLE, // Use ASSIGNMENTS_TABLE environment variable
+      Item: marshall({
+        assignmentId: nextAttendanceId,
+        employeeId: requestBody.employeeId,
+        // branchOffice: requestBody.branchOffice,
+        // designation: requestBody.designation,
+        // onsite: onsite,
+        // department: requestBody.department || null,
+        // framework: requestBody.framework || null,
+        // coreTechnology: requestBody.coreTechnology || null,
+        // reportingManager: requestBody.reportingManager || null,
+        // billableResource: requestBody.billableResource || null,
+        createdDateTime: formattedDate,
+      }),
+    };
+
+    const createAttendenceResult = await client.send(new PutItemCommand(AttendanceParams));
+
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
       employeeId: requestBody.employeeId,
@@ -147,6 +171,8 @@ const createEmployee = async (event) => {
   }
   return response;
 };
+
+
 
 const sendEmailNotificationToOnbordingCustomer = async (employee) => {
   console.log("inside the notification method");
