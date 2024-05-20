@@ -52,25 +52,25 @@ const createEmployee = async (event) => {
       process.env.EMPLOYEE_TABLE,
       "employeeId"
     );
-    const newAssignmentId = await autoIncreamentId(
-      process.env.ASSIGNMENTS_TABLE,
-      "assignmentId"
-    );
+    // const newAssignmentId = await autoIncreamentId(
+    //   process.env.ASSIGNMENTS_TABLE,
+    //   "assignmentId"
+    // );
 
-    const params = {
-      TableName: process.env.EMPLOYEE_TABLE,
-      Item: marshall({
-        serialNumber: newEmployeeId,
-        employeeId: requestBody.employeeId,
-        firstName: requestBody.firstName,
-        lastName: requestBody.lastName,
-        dateOfBirth: requestBody.dateOfBirth,
-        officeEmailAddress: requestBody.officeEmailAddress,
-        // Add other employee details here...
-        assignmentId: newAssignmentId // Set the assignmentId here
-      }),
-    };
-    const createResult = await client.send(new PutItemCommand(params));
+    // const params = {
+    //   TableName: process.env.EMPLOYEE_TABLE,
+    //   Item: marshall({
+    //     serialNumber: newEmployeeId,
+    //     employeeId: requestBody.employeeId,
+    //     firstName: requestBody.firstName,
+    //     lastName: requestBody.lastName,
+    //     dateOfBirth: requestBody.dateOfBirth,
+    //     officeEmailAddress: requestBody.officeEmailAddress,
+    //     // Add other employee details here...
+    //     assignmentId: newAssignmentId // Set the assignmentId here
+    //   }),
+    // };
+    // const createResult = await client.send(new PutItemCommand(params));
 
     const requiredAssignmentFields = [
       "designation",
