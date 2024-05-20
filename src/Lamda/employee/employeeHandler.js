@@ -132,7 +132,7 @@ const createEmployee = async (event) => {
     );
 
     const newAttendanceId = await autoIncreamentId(
-      process.env.ATTENDANCE_TABLE,
+      process.env.EMPLOYEE_ATTENDANCE,
       "attendanceId"
     );
     const AttendanceParams = {
