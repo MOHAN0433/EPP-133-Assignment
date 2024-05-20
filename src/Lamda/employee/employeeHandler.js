@@ -139,7 +139,7 @@ const createEmployee = async (event) => {
     const AttendanceParams = {
       TableName: process.env.ATTENDANCE_TABLE, // Use ASSIGNMENTS_TABLE environment variable
       Item: marshall({
-        assignmentId: nextAttendanceId,
+        attendanceId: nextAttendanceId,
         employeeId: requestBody.employeeId,
         // branchOffice: requestBody.branchOffice,
         // designation: requestBody.designation,
