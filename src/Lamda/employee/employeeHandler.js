@@ -27,97 +27,109 @@ const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss"); //forma
 
 const createEmployee = async (event) => {
   console.log("Create employee details");
-  const response = { statusCode: httpStatusCodes.SUCCESS };
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
   try {
     const requestBody = JSON.parse(event.body);
 
-    // Check if the employeeId already exists
-    // const employeeIdExists = await isEmployeeIdExists(requestBody.employeeId);
-    // if (employeeIdExists) {
-    //   throw new Error("EmployeeId already exists.");
-    // }
+    const validationResponse = validateEmployeeDetails(requestBody);
+    console.log(
+      `valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `
+    );
 
-    // // Check if the email address already exists
-    // const emailExists = await isEmailExists(requestBody.officeEmailAddress);
-    // if (emailExists) {
-    //   throw new Error("Email address already exists.");
-    // }
+    if (!validationResponse.validation) {
+      console.log(validationResponse.validationMessage);
+      response.statusCode = 400;
+      response.body = JSON.stringify({
+        ErrorMessage: validationResponse.validationMessage,
+      });
+      return response;
+    }
 
+    const emailExists = await isEmailExists(requestBody.officialEmailId);
+    if (emailExists) {
+      console.log("Email address already exists.");
+      throw new Error("Email address already exists.");
+    }
     const newEmployeeId = await autoIncreamentId(
       process.env.EMPLOYEE_TABLE,
       "employeeId"
     );
+    console.log("new employee id : ", newEmployeeId);
+    const params = {
+      TableName: process.env.EMPLOYEE_TABLE,
+      Item: marshall({
+        employeeId: newEmployeeId,
+        firstName: requestBody.firstName,
+        lastName: requestBody.lastName,
+        name: `${requestBody.firstName} ${requestBody.lastName}`,
+        dateOfBirth: requestBody.dateOfBirth,
+        officialEmailId: requestBody.officialEmailId,
+        designation: requestBody.designation || null,
+        branchOffice: requestBody.branchOffice || null,
+        password: requestBody.password || null,
+        gender: requestBody.gender || null,
+        ssnNumber: requestBody.ssnNumber || null,
+        maritalStatus: requestBody.maritalStatus || null,
+        nationality: requestBody.nationality || null,
+        passportNumber: requestBody.passportNumber || null,
+        mobileNumber: requestBody.mobileNumber || null,
+        permanentAddress: requestBody.permanentAddress || null,
+        contactPerson: requestBody.contactPerson || null,
+        personalEmailAddress: requestBody.personalEmailAddress || null,
+        presentAddress: requestBody.presentAddress || null,
+        contactNumber: requestBody.contactNumber || null,
+        joiningDate: requestBody.joiningDate || null,
+        emergencyContactPerson: requestBody.emergencyContactPerson || null,
+        panNumber: requestBody.panNumber || null,
+        emergencyContactNumber: requestBody.emergencyContactNumber || null,
+        resignedDate: requestBody.resignedDate || null,
+        relievedDate: requestBody.relievedDate || null,
+        leaveStructure: requestBody.leaveStructure || null,
+        department: requestBody.department || null,
+        aadhaarNumber: requestBody.aadhaarNumber || null,
+        role: requestBody.role || null,
+        status: "active",
+        isAbsconded: "No",
+        createdDateTime: formattedDate,
+        updatedDateTime: null,
+      }),
+    };
+    const createResult = await client.send(new PutItemCommand(params));
+    let onsite = "No";
+    if (requestBody.branchOffice === "San Antonio, USA") {
+      onsite = "Yes";
+    }
     const newAssignmentId = await autoIncreamentId(
       process.env.ASSIGNMENTS_TABLE,
       "assignmentId"
     );
-
-    const params = {
-      TableName: process.env.EMPLOYEE_TABLE,
+    const assignmentParams = {
+      TableName: process.env.ASSIGNMENTS_TABLE,
       Item: marshall({
-        serialNumber: newEmployeeId,
-        employeeId: requestBody.employeeId,
-        firstName: requestBody.firstName,
-        lastName: requestBody.lastName,
-        dateOfBirth: requestBody.dateOfBirth,
-        officeEmailAddress: requestBody.officeEmailAddress,
-        // Add other employee details here...
-        //assignmentId: newAssignmentId // Set the assignmentId here
+        assignmentId: newAssignmentId,
+        employeeId: newEmployeeId,
+        branchOffice: requestBody.branchOffice || null,
+        role: requestBody.role || null,
+        designation: requestBody.designation || null,
+        onsite: onsite,
+        department: requestBody.department || null,
+        framework: requestBody.framework || null,
+        coreTechnology: requestBody.coreTechnology || null,
+        managerId: requestBody.managerId || null,
+        reportingManager: requestBody.reportingManager || null,
+        billableResource: requestBody.billableResource || null,
+        createdDateTime: formattedDate,
+        updatedDateTime: null,
       }),
     };
-    const createResult = await client.send(new PutItemCommand(params));
-
-    const requiredAssignmentFields = [
-      "designation",
-      "branchOffice",
-    ];
-    if (!requiredAssignmentFields.every((field) => requestBody[field])) {
-      throw new Error("Required Assignment Fields are missing.");
-    }
-
-    // Set onsite based on branchOffice
-    let onsite = "No"; // Default value
-    if (requestBody.branchOffice === "San Antonio, USA") {
-      onsite = "Yes";
-    }
-    if (
-      requestBody.branchOffice === null ||
-      !["San Antonio, USA", "Bangalore, INDIA"].includes(
-        requestBody.branchOffice
-      )
-    ) {
-      throw new Error("Incorrect BranchOffice");
-    }
-    if (requestBody.designation === null || !["Software Engineer Trainee", "Software Engineer", "Senior Software Engineer", 
-                                             "Testing Engineer Trainee", "Testing Engineer", "Senior Testing Engineer", 
-                                             "Tech Lead", "Testing Lead", "Manager", "Project Manager", "Senior Manager", 
-                                             "Analyst", "Senior Analyst", "Architect", "Senior Architect", "Solution Architect", 
-                                             "Scrum Master", "Data Engineer"].includes(
-    requestBody.designation)
-    ) { 
-      throw new Error("Incorrect Designation!");
-    }
-
-    
-
-    // const assignmentParams = {
-    //   TableName: process.env.ASSIGNMENTS_TABLE, // Use ASSIGNMENTS_TABLE environment variable
-    //   Item: marshall({
-    //     assignmentId: newAssignmentId,
-    //     employeeId: requestBody.employeeId,
-    //     branchOffice: requestBody.branchOffice,
-    //     designation: requestBody.designation,
-    //     onsite: onsite,
-    //     department: requestBody.department || null,
-    //     framework: requestBody.framework || null,
-    //     coreTechnology: requestBody.coreTechnology || null,
-    //     reportingManager: requestBody.reportingManager || null,
-    //     billableResource: requestBody.billableResource || null,
-    //     createdDateTime: formattedDate,
-    //   }),
-    // };
-
-    // const createAssignmentResult = await client.send(new PutItemCommand(assignmentParams));
+    const createAssignmentResult = await client.send(
+      new PutItemCommand(assignmentParams)
+    );
 
     const newAttendanceId = await autoIncreamentId(
       process.env.ATTENDANCE_TABLE,
@@ -128,24 +140,17 @@ const createEmployee = async (event) => {
       Item: marshall({
         attendanceId: newAttendanceId,
         employeeId: requestBody.employeeId,
-        // branchOffice: requestBody.branchOffice,
-        // designation: requestBody.designation,
-        // onsite: onsite,
-        // department: requestBody.department || null,
-        // framework: requestBody.framework || null,
-        // coreTechnology: requestBody.coreTechnology || null,
-        // reportingManager: requestBody.reportingManager || null,
-        // billableResource: requestBody.billableResource || null,
         createdDateTime: formattedDate,
       }),
     };
-
+ 
     const createAttendenceResult = await client.send(new PutItemCommand(AttendanceParams));
-
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
-      employeeId: requestBody.employeeId,
-      assignmentId: nextAssignmentId
+      data: {
+        employeeId: newEmployeeId,
+        assignmentId: newAssignmentId,
+      },
     });
   } catch (e) {
     console.error(e);
@@ -157,35 +162,6 @@ const createEmployee = async (event) => {
     });
   }
   return response;
-};
-
-
-
-const sendEmailNotificationToOnbordingCustomer = async (employee) => {
-  console.log("inside the notification method");
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const resetPasswordLink = `https://dev.d3k5lezo15oi2f.amplifyapp.com/resetPassword`;
-  console.log("reset ped link", resetPasswordLink);
-  console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
-  const msg = {
-    to: employee.officeEmailAddress,
-    from: process.env.SENDER_MAIL_ID, // Your verified SendGrid sender email
-    templateId: process.env.TEMPLATE_ID, // Your SendGrid dynamic template ID
-    dynamic_template_data: {
-      Employee_Name: `${employee.firstName} ${employee.lastName}`,
-      Email: employee.officeEmailAddress,
-      Employee_Portal_Access_Link: resetPasswordLink,
-    },
-  };
-  console.log("all the values assigned message", msg);
- 
-  try {
-    console.log("inside the try block of send email method");
-    await sgMail.send(msg);
-    console.log(`Email sent to ${employee.officeEmailAddress}`);
-  } catch (error) {
-    console.error(`Failed to send email: ${error.message}`);
-  }
 };
 
 
