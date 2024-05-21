@@ -24,6 +24,7 @@ const {
 } = require("../../environment/appconfig");
 const currentDate = Date.now(); // get the current date and time in milliseconds
 const formattedDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss"); //formating date
+const attendanceFormattedDate = moment(currentDate).format("YYYY-MM-DD");
 
 const createEmployee = async (event) => {
   console.log("Create employee details");
@@ -138,7 +139,15 @@ const createEmployee = async (event) => {
       Item: marshall({
         attendanceId: newAttendanceId,
         employeeId: requestBody.employeeId,
-        createdDateTime: formattedDate,
+        checkInTime:"",
+        checkOutTime: "",
+        date: attendanceFormattedDate,
+        day_status: "Absent",
+        early_checkout: "",
+        late_in: "",
+        shift_name: "",
+        short_hours: "",
+        worked_hours: ""
       }),
     };
  
