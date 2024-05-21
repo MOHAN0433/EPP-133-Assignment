@@ -148,8 +148,9 @@ const createEmployee = async (event) => {
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
       data: {
+        employeeId: newEmployeeId,
         attendanceId: newAttendanceId,
-        //assignmentId: newAssignmentId,
+        assignmentId: newAssignmentId,
       },
     });
   } catch (e) {
