@@ -99,7 +99,7 @@ const createEmployee = async (event) => {
         updatedDateTime: null,
       }),
     };
-    const createResult = await client.send(new PutItemCommand(params));
+    
     let onsite = "No";
     if (requestBody.branchOffice === "San Antonio, USA") {
       onsite = "Yes";
@@ -127,16 +127,14 @@ const createEmployee = async (event) => {
         updatedDateTime: null,
       }),
     };
-    const createAssignmentResult = await client.send(
-      new PutItemCommand(assignmentParams)
-    );
+    
 
     const newAttendanceId = await autoIncreamentId(
       process.env.EMPLOYEE_ATTENDANCE,
       "attendanceId"
     );
     const AttendanceParams = {
-      TableName: process.env.EMPLOYEE_ATTENDANCE, // Use ASSIGNMENTS_TABLE environment variable
+      TableName: process.env.EMPLOYEE_ATTENDANCE,
       Item: marshall({
         attendanceId: newAttendanceId,
         employeeId: requestBody.employeeId,
@@ -144,6 +142,10 @@ const createEmployee = async (event) => {
       }),
     };
  
+    const createResult = await client.send(new PutItemCommand(params));
+    const createAssignmentResult = await client.send(
+      new PutItemCommand(assignmentParams)
+    );
     const createAttendenceResult = await client.send(new PutItemCommand(AttendanceParams));
     response.body = JSON.stringify({
       message: httpStatusMessages.SUCCESSFULLY_CREATED_EMPLOYEE_DETAILS,
