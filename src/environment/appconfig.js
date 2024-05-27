@@ -39,7 +39,9 @@ const httpStatusCodes = {
     SUCCESSFULLY_RETRIEVED_EDUCATION_FOR_EMPLOYEE : "Successfully retrieved education details.",
     FAILED_TO_RETRIEVE_EDUCATION : "Failed to Retriev education details.",
     EDUCATION_DETAILS_NOT_FOUND : "Education details not found.",
-    SUCCESSFULLY_RETRIEVED_EDUCATION_DETAILS : "Successfully retrieved education details."
+    SUCCESSFULLY_RETRIEVED_EDUCATION_DETAILS : "Successfully retrieved education details.",
+    SUCCESSFULLY_UPDATED_EDUCATION_DETAILS: "Successfully updated education details.",
+    FAILED_TO_UPDATE_EDUCATION_DETAILS: "Failed to update Education Details."
     
 
 

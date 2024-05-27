@@ -404,8 +404,133 @@ const geteducationDetailByEducationId = async (event) => {
   return response;
 };
 
+const updateEducation = async (event) => {
+  console.log("update education details");
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
+  try {
+    const requestBody = JSON.parse(event.body);
+    console.log("Request Body:", requestBody);
+    const { educationId, employeeId } = event.queryStringParameters;
+
+    const validateEducationParams = {
+      TableName: process.env.EDUCATION_TABLE,
+      Key: {
+        educationId: { N: educationId },
+      },
+    };
+    const { Item } = await client.send(
+      new GetItemCommand(validateEducationParams)
+    );
+    console.log({ Item });
+    if (!Item) {
+      console.log("Education details not found.");
+      response.statusCode = httpStatusCodes.NOT_FOUND;
+      response.body = JSON.stringify({
+        message: "Education details not found.",
+      });
+      return response;
+    }
+    const employeePermission = await employeePermissions(employeeId);
+
+    // const objKeys = Object.keys(requestBody).filter((key) =>
+    //   updateEducationAllowedFields.includes(key)
+    // );
+    // console.log(`Certification with objKeys ${objKeys} `);
+    // const validationResponse = validateUpdateCertificationDetails(requestBody);
+    // console.log(
+    //   `valdation : ${validationResponse.validation} message: ${validationResponse.validationMessage} `
+    // );
+
+    // if (!validationResponse.validation) {
+    //   console.log(validationResponse.validationMessage);
+    //   response.statusCode = 400;
+    //   response.body = JSON.stringify({
+    //     message: validationResponse.validationMessage,
+    //   });
+    //   return response;
+    // }
+
+    const currentDate = Date.now();
+    const updateDate = moment(currentDate).format("MM-DD-YYYY HH:mm:ss");
+    const params = {
+      TableName: process.env.EDUCATION_TABLE,
+      Key: { educationId: { N: educationId } },
+      UpdateExpression: `SET ${objKeys
+        .map((_, index) => `#key${index} = :value${index}`)
+        .join(", ")}, #updatedDateTime = :updatedDateTime`,
+      ExpressionAttributeNames: {
+        ...objKeys.reduce(
+          (acc, key, index) => ({
+            ...acc,
+            [`#key${index}`]: key,
+          }),
+          {}
+        ),
+        "#updatedDateTime": "updatedDateTime",
+      },
+      ExpressionAttributeValues: marshall({
+        ...objKeys.reduce(
+          (acc, key, index) => ({
+            ...acc,
+            [`:value${index}`]: requestBody[key],
+          }),
+          {}
+        ),
+        ":updatedDateTime": updateDate,
+      }),
+    };
+    const updateResult = await client.send(new UpdateItemCommand(params));
+    console.log("Successfully updated Education details.");
+    response.body = JSON.stringify({
+      message: httpStatusMessages.SUCCESSFULLY_UPDATED_EDUCATION_DETAILS,
+      educationId: educationId,
+    });
+  } catch (e) {
+    console.error(e);
+    response.statusCode = 400;
+    response.body = JSON.stringify({
+      message: httpStatusMessages.FAILED_TO_UPDATE_EDUCATION_DETAILS,
+      errorMsg: e.message,
+    });
+  }
+  return response;
+};
+
+const employeePermissions = async (employeeId) => {
+  console.log(`Inside employeePermissions`);
+  const response = {
+    statusCode: httpStatusCodes.SUCCESS,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+  };
+  const getItemParams = {
+    TableName: process.env.EMPLOYEE_TABLE,
+    Key: { employeeId: { N: employeeId } },
+  };
+  const { Item } = await client.send(new GetItemCommand(getItemParams));
+  if (!Item) {
+    console.log(`Employee with employeeId ${employeeId} not found`);
+    throw new Error("Employee not found");
+  }
+  const role = Item && Item.role && Item.role.S;
+  console.log(`role ${role} `);
+  if (role === "HR" || role === "Developer" || role === "Manager") {
+    console.log(`User have Permission`);
+  } else {
+    console.log(`User does not have Permission`);
+    throw new Error("User does not have Permission");
+  }
+};
+
 module.exports = {
   createEducation,
+  updateEducation,
   uploadEducation,
   geteducationDetailsByEmployeeId,
   geteducationDetailByEducationId

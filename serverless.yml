@@ -222,6 +222,21 @@ functions:
             parameters:
               querystrings:
                 educationId: true
+  educationUpdate:
+    handler: src/Lamda/education/educationHandler.updateEducation
+    name: educationUpdate
+    memorySize: 128
+    timeout: 120
+    events:
+      - http:
+          path: education/update
+          method: PUT
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                educationId: true
+                employeeId: true
 
 resources:
   Resources:
